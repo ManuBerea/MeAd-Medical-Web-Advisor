@@ -1,0 +1,7 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /mead-geography-service
+spring:
+  application:
+    name: mead-geography-service
