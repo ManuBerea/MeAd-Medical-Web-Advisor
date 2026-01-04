@@ -2,7 +2,6 @@ package com.mead.conditions.controller;
 
 import com.mead.conditions.dto.ConditionDtos;
 import com.mead.conditions.service.ConditionService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,11 +25,7 @@ public class ConditionsController {
     }
 
     @GetMapping("/conditions/{id}")
-    public ResponseEntity<?> get(@PathVariable String id) {
-        try {
-            return ResponseEntity.ok(service.get(id));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+    public ConditionDtos.ConditionDetail get(@PathVariable String id) {
+        return service.get(id);
     }
 }

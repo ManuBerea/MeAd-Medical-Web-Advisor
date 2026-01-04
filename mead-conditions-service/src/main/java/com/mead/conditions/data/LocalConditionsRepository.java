@@ -15,6 +15,7 @@ public class LocalConditionsRepository {
 
     private final RdfService rdf;
     private final Map<String, LocalCondition> conditionsMap = new ConcurrentHashMap<>();
+    private volatile List<LocalCondition> cachedAll = List.of();
 
     public LocalConditionsRepository(RdfService rdf) {
         this.rdf = rdf;
@@ -31,6 +32,7 @@ public class LocalConditionsRepository {
         for (LocalCondition c : all) {
             conditionsMap.put(c.identifier(), c);
         }
+        cachedAll = List.copyOf(all);
     }
 
     public record LocalCondition(
@@ -40,9 +42,7 @@ public class LocalConditionsRepository {
     ) {}
 
     public List<LocalCondition> findAll() {
-        return conditionsMap.values().stream()
-                .sorted(Comparator.comparing(LocalCondition::identifier))
-                .toList();
+        return cachedAll;
     }
 
     public Optional<LocalCondition> findById(String id) {
