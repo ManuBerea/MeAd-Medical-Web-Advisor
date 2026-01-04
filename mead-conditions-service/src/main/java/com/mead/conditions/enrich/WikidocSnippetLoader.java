@@ -3,7 +3,9 @@ package com.mead.conditions.enrich;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Component
 public class WikidocSnippetLoader {
@@ -11,10 +13,12 @@ public class WikidocSnippetLoader {
     public String loadSnippet(String conditionId) {
         String path = "wikidoc/" + conditionId + ".md";
         try {
-            var res = new ClassPathResource(path);
-            if (!res.exists()) return null;
-            try (var in = res.getInputStream()) {
-                return new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
+            ClassPathResource resource = new ClassPathResource(path);
+            if (!resource.exists()) {
+                return null;
+            }
+            try (InputStream inputStream = resource.getInputStream()) {
+                return new String(inputStream.readAllBytes(), UTF_8).trim();
             }
         } catch (Exception e) {
             return null;

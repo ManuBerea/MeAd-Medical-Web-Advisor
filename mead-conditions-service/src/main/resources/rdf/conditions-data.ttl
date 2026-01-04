@@ -13,7 +13,6 @@ condition:seasonal-allergic-rhinitis
     a schema:MedicalCondition ;
     schema:identifier "seasonal-allergic-rhinitis" ;
     schema:name "Seasonal allergic rhinitis"@en ;
-# DBpedia does not have a dedicated "Seasonal allergic rhinitis" page; the topic is covered under Allergic_rhinitis (hay fever).
     schema:sameAs
         <https://www.wikidata.org/entity/Q3740609>,
         <http://dbpedia.org/resource/Allergic_rhinitis> .

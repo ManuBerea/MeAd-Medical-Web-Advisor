@@ -18,6 +18,7 @@ import java.util.List;
 public class WikidataClient {
 
     private static final Logger log = LoggerFactory.getLogger(WikidataClient.class);
+    private static final String SPARQL_RESULTS_JSON = "application/sparql-results+json";
 
     @Value("${mead.external.wikidata.endpoint}")
     private String endpoint;
@@ -29,60 +30,58 @@ public class WikidataClient {
     private long timeoutMs;
 
     public record WikidataEnrichment(
-            String description,       // schema:description (en)
-            List<String> symptoms,    // P780 labels
-            List<String> riskFactors, // P5642 labels
-            String image              // ONE usable URL
+            String description,
+            List<String> symptoms,
+            List<String> riskFactors,
+            String image
     ) {}
 
     public WikidataEnrichment enrichFromEntityUri(String wikidataEntityUri) {
-        String qid = qidFromEntityUri(wikidataEntityUri);
+        String entityId = qidFromEntityUri(wikidataEntityUri);
 
         String description = selectFirstString("""
-            PREFIX wd: <http://www.wikidata.org/entity/>
-            PREFIX schema: <http://schema.org/>
-            SELECT ?desc WHERE {
-              wd:%s schema:description ?desc .
-              FILTER(LANG(?desc) = "en")
-            } LIMIT 1
-            """.formatted(qid), "desc");
+                PREFIX wd: <http://www.wikidata.org/entity/>
+                PREFIX schema: <http://schema.org/>
+                SELECT ?desc WHERE {
+                  wd:%s schema:description ?desc .
+                  FILTER(LANG(?desc) = "en")
+                } LIMIT 1
+                """.formatted(entityId), "desc");
 
-        // NOTE: bd: prefix is required for bd:serviceParam in label service. :contentReference[oaicite:2]{index=2}
         List<String> symptoms = selectStrings("""
-            PREFIX wd: <http://www.wikidata.org/entity/>
-            PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-            PREFIX wikibase: <http://wikiba.se/ontology#>
-            PREFIX bd: <http://www.bigdata.com/rdf#>
-
-            SELECT DISTINCT ?symptomLabel WHERE {
-              wd:%s wdt:P780 ?symptom .
-              SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-            } LIMIT 30
-            """.formatted(qid), "symptomLabel");
+                PREFIX wd: <http://www.wikidata.org/entity/>
+                PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+                PREFIX wikibase: <http://wikiba.se/ontology#>
+                PREFIX bd: <http://www.bigdata.com/rdf#>
+                
+                SELECT DISTINCT ?symptomLabel WHERE {
+                  wd:%s wdt:P780 ?symptom .
+                  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+                } LIMIT 30
+                """.formatted(entityId), "symptomLabel");
 
         List<String> riskFactors = selectStrings("""
-            PREFIX wd: <http://www.wikidata.org/entity/>
-            PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-            PREFIX wikibase: <http://wikiba.se/ontology#>
-            PREFIX bd: <http://www.bigdata.com/rdf#>
+                PREFIX wd: <http://www.wikidata.org/entity/>
+                PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+                PREFIX wikibase: <http://wikiba.se/ontology#>
+                PREFIX bd: <http://www.bigdata.com/rdf#>
+                
+                SELECT DISTINCT ?rfLabel WHERE {
+                  wd:%s wdt:P5642 ?rf .
+                  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+                } LIMIT 30
+                """.formatted(entityId), "rfLabel");
 
-            SELECT DISTINCT ?rfLabel WHERE {
-              wd:%s wdt:P5642 ?rf .
-              SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-            } LIMIT 30
-            """.formatted(qid), "rfLabel");
+        String rawImageNode = selectFirstAnyNodeAsString("""
+                PREFIX wd: <http://www.wikidata.org/entity/>
+                PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+                
+                SELECT ?img WHERE {
+                  wd:%s wdt:P18 ?img .
+                } LIMIT 1
+                """.formatted(entityId));
 
-        // Image (P18) — take the first one
-        String rawImg = selectFirstAnyNodeAsString("""
-            PREFIX wd: <http://www.wikidata.org/entity/>
-            PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-
-            SELECT ?img WHERE {
-              wd:%s wdt:P18 ?img .
-            } LIMIT 1
-            """.formatted(qid), "img");
-
-        String imageUrl = normalizeToCommonsFilePath(rawImg);
+        String imageUrl = normalizeToCommonsFilePath(rawImageNode);
 
         return new WikidataEnrichment(description, symptoms, riskFactors, imageUrl);
     }
@@ -95,30 +94,28 @@ public class WikidataClient {
      * Normalizes a Wikidata P18 value to a single, working direct URL.
      * Handles:
      * - literal filename: "Asthma.jpg"
-     * - URI: http://commons.wikimedia.org/wiki/Special:FilePath/Obesity-waist%20circumference.svg
+     * - URI: <a href="http://commons.wikimedia.org/wiki/Special:FilePath/Obesity-waist%20circumference.svg">...</a>
      */
-    private static String normalizeToCommonsFilePath(String raw) {
-        if (raw == null || raw.isBlank()) return null;
+    private static String normalizeToCommonsFilePath(String input) {
+        if (input == null || input.isBlank()) return null;
 
-        String s = raw;
-
-        // If it already contains Special:FilePath/, keep only the tail and rebuild once (avoid double prefix)
-        int idx = s.lastIndexOf("Special:FilePath/");
-        if (idx >= 0) {
-            String tail = s.substring(idx + "Special:FilePath/".length());
+        // If it already contains Special: FilePath/, keep only the tail and rebuild once (avoid double prefix)
+        int filePathIndex = input.lastIndexOf("Special:FilePath/");
+        if (filePathIndex >= 0) {
+            String tail = input.substring(filePathIndex + "Special:FilePath/".length());
             return "https://commons.wikimedia.org/wiki/Special:FilePath/" + tail;
         }
 
-        // If it's already a commons URL, just force https
-        if (s.startsWith("http://commons.wikimedia.org/")) {
-            return "https://commons.wikimedia.org/" + s.substring("http://commons.wikimedia.org/".length());
+        // If it's already a common URL, just force https
+        if (input.startsWith("http://commons.wikimedia.org/")) {
+            return "https://commons.wikimedia.org/" + input.substring("http://commons.wikimedia.org/".length());
         }
-        if (s.startsWith("https://commons.wikimedia.org/")) {
-            return s;
+        if (input.startsWith("https://commons.wikimedia.org/")) {
+            return input;
         }
 
         // Otherwise treat it like a filename
-        String filename = s;
+        String filename = input;
         if (filename.startsWith("File:")) filename = filename.substring("File:".length());
         filename = filename.replace(" ", "_");
         return "https://commons.wikimedia.org/wiki/Special:FilePath/" + urlEncode(filename);
@@ -128,37 +125,37 @@ public class WikidataClient {
         return URLEncoder.encode(s, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
-    private List<String> selectStrings(String sparql, String var) {
-        List<String> out = new ArrayList<>();
-        try (QueryExecutionHTTP exec = (QueryExecutionHTTP) QueryExecutionHTTPBuilder
+    private List<String> selectStrings(String sparql, String varName) {
+        List<String> results = new ArrayList<>();
+        try (QueryExecutionHTTP queryExecution = (QueryExecutionHTTP) QueryExecutionHTTPBuilder
                 .service(endpoint)
                 .query(sparql)
                 .httpHeader("User-Agent", userAgent)
-                .acceptHeader("application/sparql-results+json")
+                .acceptHeader(SPARQL_RESULTS_JSON)
                 .timeout(timeoutMs)
                 .build()) {
 
-            ResultSet rs = exec.execSelect();
-            while (rs.hasNext()) {
-                QuerySolution row = rs.next();
-                RDFNode node = row.get(var);
+            ResultSet resultSet = queryExecution.execSelect();
+            while (resultSet.hasNext()) {
+                QuerySolution row = resultSet.next();
+                RDFNode node = row.get(varName);
                 if (node == null) continue;
-                if (node.isLiteral()) out.add(node.asLiteral().getString());
-                else if (node.isResource()) out.add(node.asResource().getURI());
-                else out.add(node.toString());
+                if (node.isLiteral()) results.add(node.asLiteral().getString());
+                else if (node.isResource()) results.add(node.asResource().getURI());
+                else results.add(node.toString());
             }
         } catch (Exception e) {
-            log.warn("Wikidata query failed for var {}: {}", var, e.getMessage());
+            log.warn("Wikidata query failed for var {}: {}", varName, e.getMessage());
         }
-        return out;
+        return results;
     }
 
-    private String selectFirstString(String sparql, String var) {
-        List<String> vals = selectStrings(sparql, var);
-        return vals.isEmpty() ? null : vals.get(0);
+    private String selectFirstString(String sparql, String varName) {
+        List<String> values = selectStrings(sparql, varName);
+        return values.isEmpty() ? null : values.get(0);
     }
 
-    private String selectFirstAnyNodeAsString(String sparql, String var) {
-        return selectFirstString(sparql, var);
+    private String selectFirstAnyNodeAsString(String sparql) {
+        return selectFirstString(sparql, "img");
     }
 }

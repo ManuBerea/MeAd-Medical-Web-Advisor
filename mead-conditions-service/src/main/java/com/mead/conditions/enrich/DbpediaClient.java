@@ -14,66 +14,68 @@ import java.util.stream.Collectors;
 @Component
 public class DbpediaClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DbpediaClient.class);
+
+    private static final String DBO_ABSTRACT = "http://dbpedia.org/ontology/abstract";
+    private static final String DBO_DESCRIPTION = "http://dbpedia.org/ontology/description";
+    private static final String RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment";
+    private static final String SPARQL_RESULTS_JSON = "application/sparql-results+json";
+
     @Value("${mead.external.dbpedia.endpoint}")
     private String endpoint;
 
     @Value("${mead.external.dbpedia.timeout-ms:8000}")
     private long timeoutMs;
 
-    /** abstract -> description -> comment */
     public String englishDescription(String dbpediaResourceUri) {
-        String abs = queryEnglishLiteral(dbpediaResourceUri, "http://dbpedia.org/ontology/abstract");
-        if (abs != null) return abs;
+        String abstractLiteral = queryEnglishLiteral(dbpediaResourceUri, DBO_ABSTRACT);
+        if (abstractLiteral != null) return abstractLiteral;
 
-        String desc = queryEnglishLiteral(dbpediaResourceUri, "http://dbpedia.org/ontology/description");
-        if (desc != null) return desc;
+        String descriptionLiteral = queryEnglishLiteral(dbpediaResourceUri, DBO_DESCRIPTION);
+        if (descriptionLiteral != null) return descriptionLiteral;
 
-        return queryEnglishLiteral(dbpediaResourceUri, "http://www.w3.org/2000/01/rdf-schema#comment");
+        return queryEnglishLiteral(dbpediaResourceUri, RDFS_COMMENT);
     }
 
-    /** Best-effort: returns a usable thumbnail URL if present (often a commons Special:FilePath URL with ?width=...) */
     public String thumbnailUrl(String dbpediaResourceUri) {
-        String q = """
+        String sparqlQuery = """
             PREFIX dbo: <http://dbpedia.org/ontology/>
-            SELECT ?t WHERE {
-              <%s> dbo:thumbnail ?t .
+            SELECT ?thumbnail WHERE {
+              <%s> dbo:thumbnail ?thumbnail .
             } LIMIT 1
             """.formatted(dbpediaResourceUri);
 
-        RDFNode n = selectFirstNode(q, "t");
-        if (n == null) return null;
-        String url = n.isResource() ? n.asResource().getURI() : n.toString();
+        RDFNode thumbnailNode = selectFirstNode(sparqlQuery);
+        if (thumbnailNode == null) return null;
+        String url = thumbnailNode.isResource() ? thumbnailNode.asResource().getURI() : thumbnailNode.toString();
 
-        // Remove width param if present (still usable either way)
-        int qIdx = url.indexOf('?');
-        return (qIdx >= 0) ? url.substring(0, qIdx) : url;
+        // Remove the width param if present (still usable either way)
+        int queryIndex = url.indexOf('?');
+        return (queryIndex >= 0) ? url.substring(0, queryIndex) : url;
     }
 
-    /** Symptoms: try dbo:symptom (rare) and dbp:symptoms (common for medical infoboxes) */
     public List<String> symptoms(String dbpediaResourceUri) {
-        // 1) dbo:symptom (resource values)
-        List<String> dbo = selectEnglishLabels("""
+        List<String> ontologySymptoms = selectEnglishLabels("""
             PREFIX dbo: <http://dbpedia.org/ontology/>
             PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             SELECT DISTINCT ?label WHERE {
-              <%s> dbo:symptom ?x .
-              ?x rdfs:label ?label .
+              <%s> dbo:symptom ?symptomResource .
+              ?symptomResource rdfs:label ?label .
               FILTER(LANG(?label)="en")
             } LIMIT 50
-            """.formatted(dbpediaResourceUri), "label");
+            """.formatted(dbpediaResourceUri));
 
-        if (!dbo.isEmpty()) return dbo;
+        if (!ontologySymptoms.isEmpty()) return ontologySymptoms;
 
-        // 2) dbp:symptoms (usually literal string like "Increased fat")
-        List<String> raw = selectLiteralStrings("""
+        List<String> propertySymptoms = selectLiteralStrings("""
             PREFIX dbp: <http://dbpedia.org/property/>
-            SELECT DISTINCT ?s WHERE {
-              <%s> dbp:symptoms ?s .
-              FILTER(LANG(?s)="en" || LANG(?s) = "")
+            SELECT DISTINCT ?symptomLiteral WHERE {
+              <%s> dbp:symptoms ?symptomLiteral .
+              FILTER(LANG(?symptomLiteral)="en" || LANG(?symptomLiteral) = "")
             } LIMIT 10
-            """.formatted(dbpediaResourceUri), "s");
+            """.formatted(dbpediaResourceUri), "symptomLiteral");
 
-        return splitList(raw);
+        return splitList(propertySymptoms);
     }
 
     /**
@@ -85,128 +87,125 @@ public class DbpediaClient {
     public List<String> riskFactorsOrRisks(String dbpediaResourceUri) {
         List<String> causes = new ArrayList<>();
 
-        // dbo:medicalCause (resources -> labels)
         causes.addAll(selectEnglishLabels("""
             PREFIX dbo: <http://dbpedia.org/ontology/>
             PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
             SELECT DISTINCT ?label WHERE {
-              <%s> dbo:medicalCause ?x .
-              ?x rdfs:label ?label .
+              <%s> dbo:medicalCause ?causeResource .
+              ?causeResource rdfs:label ?label .
               FILTER(LANG(?label)="en")
             } LIMIT 50
-            """.formatted(dbpediaResourceUri), "label"));
+            """.formatted(dbpediaResourceUri)));
 
-        // dbp:causes (literal string list)
         causes.addAll(splitList(selectLiteralStrings("""
             PREFIX dbp: <http://dbpedia.org/property/>
-            SELECT DISTINCT ?c WHERE {
-              <%s> dbp:causes ?c .
-              FILTER(LANG(?c)="en" || LANG(?c) = "")
+            SELECT DISTINCT ?causeLiteral WHERE {
+              <%s> dbp:causes ?causeLiteral .
+              FILTER(LANG(?causeLiteral)="en" || LANG(?causeLiteral) = "")
             } LIMIT 10
-            """.formatted(dbpediaResourceUri), "c")));
+            """.formatted(dbpediaResourceUri), "causeLiteral")));
 
-        causes = dedupe(causes);
+        causes = removeDuplicates(causes);
         if (!causes.isEmpty()) return causes;
 
-        // If no causes, fall back to complications ("risks")
         List<String> risks = splitList(selectLiteralStrings("""
             PREFIX dbp: <http://dbpedia.org/property/>
-            SELECT DISTINCT ?c WHERE {
-              <%s> dbp:complications ?c .
-              FILTER(LANG(?c)="en" || LANG(?c) = "")
+            SELECT DISTINCT ?complicationLiteral WHERE {
+              <%s> dbp:complications ?complicationLiteral .
+              FILTER(LANG(?complicationLiteral)="en" || LANG(?complicationLiteral) = "")
             } LIMIT 10
-            """.formatted(dbpediaResourceUri), "c"));
+            """.formatted(dbpediaResourceUri), "complicationLiteral"));
 
-        // dbo:complications sometimes exists too
         risks.addAll(splitList(selectLiteralStrings("""
             PREFIX dbo: <http://dbpedia.org/ontology/>
-            SELECT DISTINCT ?c WHERE {
-              <%s> dbo:complications ?c .
-              FILTER(LANG(?c)="en" || LANG(?c) = "")
+            SELECT DISTINCT ?complicationLiteral WHERE {
+              <%s> dbo:complications ?complicationLiteral .
+              FILTER(LANG(?complicationLiteral)="en" || LANG(?complicationLiteral) = "")
             } LIMIT 10
-            """.formatted(dbpediaResourceUri), "c")));
+            """.formatted(dbpediaResourceUri), "complicationLiteral")));
 
-        return dedupe(risks);
+        return removeDuplicates(risks);
     }
 
-    // ---------- helpers ----------
-
     private String queryEnglishLiteral(String subjectUri, String predicateUri) {
-        String q = """
-            SELECT ?txt WHERE {
-              <%s> <%s> ?txt .
-              FILTER(LANG(?txt) = "en")
+        String sparqlQuery = """
+            SELECT ?text WHERE {
+              <%s> <%s> ?text .
+              FILTER(LANG(?text) = "en")
             } LIMIT 1
             """.formatted(subjectUri, predicateUri);
 
-        try (QueryExecutionHTTP exec = (QueryExecutionHTTP) QueryExecutionHTTPBuilder
+        try (QueryExecutionHTTP queryExecution = (QueryExecutionHTTP) QueryExecutionHTTPBuilder
                 .service(endpoint)
-                .query(q)
-                .acceptHeader("application/sparql-results+json")
+                .query(sparqlQuery)
+                .acceptHeader(SPARQL_RESULTS_JSON)
                 .timeout(timeoutMs)
                 .build()) {
 
-            ResultSet rs = exec.execSelect();
-            if (!rs.hasNext()) return null;
-            return rs.next().getLiteral("txt").getString();
+            ResultSet resultSet = queryExecution.execSelect();
+            if (!resultSet.hasNext()) return null;
+            return resultSet.next().getLiteral("text").getString();
         } catch (Exception e) {
+            log.warn("DBpedia query failed for subject {} and predicate {}: {}", subjectUri, predicateUri, e.getMessage());
             return null;
         }
     }
 
-    private RDFNode selectFirstNode(String sparql, String var) {
-        try (QueryExecutionHTTP exec = (QueryExecutionHTTP) QueryExecutionHTTPBuilder
+    private RDFNode selectFirstNode(String sparql) {
+        try (QueryExecutionHTTP queryExecution = (QueryExecutionHTTP) QueryExecutionHTTPBuilder
                 .service(endpoint)
                 .query(sparql)
-                .acceptHeader("application/sparql-results+json")
+                .acceptHeader(SPARQL_RESULTS_JSON)
                 .timeout(timeoutMs)
                 .build()) {
 
-            ResultSet rs = exec.execSelect();
-            if (!rs.hasNext()) return null;
-            return rs.next().get(var);
+            ResultSet resultSet = queryExecution.execSelect();
+            if (!resultSet.hasNext()) return null;
+            return resultSet.next().get("thumbnail");
         } catch (Exception e) {
+            log.warn("DBpedia query failed for var {}: {}", "thumbnail", e.getMessage());
             return null;
         }
     }
 
-    private List<String> selectLiteralStrings(String sparql, String var) {
-        List<String> out = new ArrayList<>();
-        try (QueryExecutionHTTP exec = (QueryExecutionHTTP) QueryExecutionHTTPBuilder
+    private List<String> selectLiteralStrings(String sparql, String varName) {
+        List<String> results = new ArrayList<>();
+        try (QueryExecutionHTTP queryExecution = (QueryExecutionHTTP) QueryExecutionHTTPBuilder
                 .service(endpoint)
                 .query(sparql)
-                .acceptHeader("application/sparql-results+json")
+                .acceptHeader(SPARQL_RESULTS_JSON)
                 .timeout(timeoutMs)
                 .build()) {
 
-            ResultSet rs = exec.execSelect();
-            while (rs.hasNext()) {
-                QuerySolution row = rs.next();
-                RDFNode n = row.get(var);
-                if (n != null && n.isLiteral()) out.add(n.asLiteral().getString());
+            ResultSet resultSet = queryExecution.execSelect();
+            while (resultSet.hasNext()) {
+                QuerySolution row = resultSet.next();
+                RDFNode node = row.get(varName);
+                if (node != null && node.isLiteral()) {
+                    results.add(node.asLiteral().getString());
+                }
             }
         } catch (Exception e) {
-            // ignore
+            log.warn("DBpedia query failed for var {}: {}", varName, e.getMessage());
         }
-        return out;
+        return results;
     }
 
-    private List<String> selectEnglishLabels(String sparql, String var) {
-        return selectLiteralStrings(sparql, var);
+    private List<String> selectEnglishLabels(String sparql) {
+        return selectLiteralStrings(sparql, "label");
     }
 
-    private static List<String> splitList(List<String> raw) {
-        // DBpedia infobox fields often store comma-separated lists in one literal.
-        return raw.stream()
+    private static List<String> splitList(List<String> rawList) {
+        return rawList.stream()
                 .flatMap(s -> Arrays.stream(s.split(",")))
                 .map(String::trim)
                 .filter(x -> !x.isBlank())
                 .collect(Collectors.toList());
     }
 
-    private static List<String> dedupe(List<String> in) {
-        Map<String, String> caseMap = new LinkedHashMap<>();
-        in.forEach(s -> caseMap.putIfAbsent(s.toLowerCase(), s));
-        return new ArrayList<>(caseMap.values());
+    private static List<String> removeDuplicates(List<String> inputList) {
+        Map<String, String> caseInsensitiveMap = new LinkedHashMap<>();
+        inputList.forEach(s -> caseInsensitiveMap.putIfAbsent(s.toLowerCase(), s));
+        return new ArrayList<>(caseInsensitiveMap.values());
     }
 }

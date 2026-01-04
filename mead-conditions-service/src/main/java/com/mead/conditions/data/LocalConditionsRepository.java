@@ -24,51 +24,51 @@ public class LocalConditionsRepository {
     ) {}
 
     public List<LocalCondition> findAll() {
-        String q = """
-            PREFIX schema: <https://schema.org/>
-            SELECT ?identifier ?name ?sameAs WHERE {
-              ?c a schema:MedicalCondition ;
-                 schema:identifier ?identifier ;
-                 schema:name ?name ;
-                 schema:sameAs ?sameAs .
-            }
-            ORDER BY ?identifier
-            """;
+        String sparqlQuery = """
+                PREFIX schema: <https://schema.org/>
+                SELECT ?identifier ?name ?sameAs WHERE {
+                  ?condition a schema:MedicalCondition ;
+                             schema:identifier ?identifier ;
+                             schema:name ?name ;
+                             schema:sameAs ?sameAs .
+                }
+                ORDER BY ?identifier
+                """;
 
         return Txn.calculateRead(rdf.getDataset(), () -> {
-            Map<String, String> idToName = new LinkedHashMap<>();
-            Map<String, List<String>> idToSameAs = new LinkedHashMap<>();
+            Map<String, String> identifierToNameMap = new LinkedHashMap<>();
+            Map<String, List<String>> identifierToSameAsMap = new LinkedHashMap<>();
 
-            try (QueryExecution exec = QueryExecutionFactory.create(q, rdf.getDataset())) {
-                ResultSet rs = exec.execSelect();
-                while (rs.hasNext()) {
-                    QuerySolution row = rs.next();
-                    String id = row.getLiteral("identifier").getString();
+            try (QueryExecution queryExecution = QueryExecutionFactory.create(sparqlQuery, rdf.getDataset())) {
+                ResultSet resultSet = queryExecution.execSelect();
+                while (resultSet.hasNext()) {
+                    QuerySolution row = resultSet.next();
+                    String identifier = row.getLiteral("identifier").getString();
                     String name = row.getLiteral("name").getString();
 
                     RDFNode sameAsNode = row.get("sameAs");
-                    String sameAs = sameAsNode.isResource()
+                    String sameAsUri = sameAsNode.isResource()
                             ? sameAsNode.asResource().getURI()
                             : sameAsNode.toString();
 
-                    idToName.putIfAbsent(id, name);
-                    idToSameAs.computeIfAbsent(id, k -> new ArrayList<>()).add(sameAs);
+                    identifierToNameMap.putIfAbsent(identifier, name);
+                    identifierToSameAsMap.computeIfAbsent(identifier, k -> new ArrayList<>()).add(sameAsUri);
                 }
             }
 
-            List<LocalCondition> out = new ArrayList<>();
-            for (String id : idToName.keySet()) {
-                out.add(new LocalCondition(
-                        id,
-                        idToName.get(id),
-                        List.copyOf(idToSameAs.getOrDefault(id, List.of()))
+            List<LocalCondition> localConditions = new ArrayList<>();
+            for (String identifier : identifierToNameMap.keySet()) {
+                localConditions.add(new LocalCondition(
+                        identifier,
+                        identifierToNameMap.get(identifier),
+                        List.copyOf(identifierToSameAsMap.getOrDefault(identifier, List.of()))
                 ));
             }
-            return out;
+            return localConditions;
         });
     }
 
     public Optional<LocalCondition> findById(String id) {
-        return findAll().stream().filter(c -> c.identifier().equals(id)).findFirst();
+        return findAll().stream().filter(condition -> condition.identifier().equals(id)).findFirst();
     }
 }

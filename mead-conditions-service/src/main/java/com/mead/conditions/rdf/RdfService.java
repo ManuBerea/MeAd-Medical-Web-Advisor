@@ -21,7 +21,7 @@ public class RdfService {
 
     // Dataset (instead of plain Model) lets us use safe read/write transactions.
     @Getter
-    public final Dataset dataset = DatasetFactory.createTxnMem();
+    private final Dataset dataset = DatasetFactory.createTxnMem();
 
     @PostConstruct
     public void loadRdfOnStartup() {
