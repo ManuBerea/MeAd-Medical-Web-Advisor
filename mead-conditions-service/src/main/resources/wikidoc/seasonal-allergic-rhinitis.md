@@ -1,0 +1,5 @@
+Seasonal allergic rhinitis (often called “hay fever”) is an allergic reaction to airborne allergens, most commonly pollen. It tends to appear at certain times of the year.
+
+Typical symptoms include sneezing, a runny or blocked nose, itchy eyes, and watery eyes. Some people also feel tired or have trouble sleeping due to nasal blockage.
+
+Treatment often includes antihistamines, nasal sprays (such as steroid sprays), and reducing exposure to allergens (for example, keeping windows closed during high pollen days).

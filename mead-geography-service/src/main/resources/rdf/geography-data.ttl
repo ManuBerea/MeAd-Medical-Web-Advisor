@@ -1,13 +1,16 @@
-@prefix schema: <https://schema.org/> .
-@prefix region:  <https://mead.example/region/> .
-@prefix indicator:  <https://mead.example/indicator/> .
+@prefix schema:    <https://schema.org/> .
+@prefix region:    <https://mead.example/region/> .
+@prefix indicator: <https://mead.example/indicator/> .
 
 # Regions / Places
 
 region:romania
     a schema:Place ;
     schema:identifier "romania" ;
-    schema:name "Romania"@en .
+    schema:name "Romania"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q218> ,
+        <http://dbpedia.org/resource/Romania> .
 
 region:bucuresti-ilfov
     a schema:Place ;
@@ -21,21 +24,21 @@ region:nord-est
     schema:name "Nord-Est"@ro ;
     schema:containedInPlace region:romania .
 
-# Indicator definitions (definition-level; values loaded separately as Observations)
+# Indicators (definitions of what is being measured)
 
 indicator:obesity-prevalence
     a schema:Dataset ;
     schema:identifier "obesity-prevalence" ;
     schema:name "Obesity prevalence"@en ;
-    schema:variableMeasured "Obesity prevalence"@en ;
-    schema:measurementTechnique "Survey / official statistics"@en .
+    schema:variableMeasured "Percent of adults with obesity"@en ;
+    schema:measurementTechnique "Official statistics / surveys"@en .
 
 indicator:population-density
     a schema:Dataset ;
     schema:identifier "population-density" ;
     schema:name "Population density"@en ;
     schema:variableMeasured "People per square kilometer"@en ;
-    schema:measurementTechnique "Census / official statistics"@en .
+    schema:measurementTechnique "Official statistics"@en .
 
 indicator:pm25
     a schema:Dataset ;

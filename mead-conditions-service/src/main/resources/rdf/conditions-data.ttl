@@ -5,28 +5,39 @@ condition:asthma
     a schema:MedicalCondition ;
     schema:identifier "asthma" ;
     schema:name "Asthma"@en ;
-    schema:sameAs <https://www.wikidata.org/entity/Q35869> .
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q35869>,
+        <http://dbpedia.org/resource/Asthma> .
 
 condition:seasonal-allergic-rhinitis
     a schema:MedicalCondition ;
     schema:identifier "seasonal-allergic-rhinitis" ;
     schema:name "Seasonal allergic rhinitis"@en ;
-    schema:sameAs <https://www.wikidata.org/entity/Q3740609> .
+# DBpedia does not have a dedicated "Seasonal allergic rhinitis" page; the topic is covered under Allergic_rhinitis (hay fever).
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q3740609>,
+        <http://dbpedia.org/resource/Allergic_rhinitis> .
 
 condition:type-2-diabetes
     a schema:MedicalCondition ;
     schema:identifier "type-2-diabetes" ;
     schema:name "Type 2 diabetes"@en ;
-    schema:sameAs <https://www.wikidata.org/entity/Q3025883> .
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q3025883>,
+        <http://dbpedia.org/resource/Type_2_diabetes> .
 
 condition:obesity
     a schema:MedicalCondition ;
     schema:identifier "obesity" ;
     schema:name "Obesity"@en ;
-    schema:sameAs <https://www.wikidata.org/entity/Q12174> .
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q12174>,
+        <http://dbpedia.org/resource/Obesity> .
 
 condition:lactose-intolerance
     a schema:MedicalCondition ;
     schema:identifier "lactose-intolerance" ;
     schema:name "Lactose intolerance"@en ;
-    schema:sameAs <https://www.wikidata.org/entity/Q219223> .
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q219223>,
+        <http://dbpedia.org/resource/Lactose_intolerance> .
