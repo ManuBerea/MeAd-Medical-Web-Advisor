@@ -1,0 +1,52 @@
+@prefix schema: <https://schema.org/> .
+@prefix region:  <https://mead.example/region/> .
+@prefix indicator:  <https://mead.example/indicator/> .
+
+# Regions / Places
+
+region:romania
+    a schema:Place ;
+    schema:identifier "romania" ;
+    schema:name "Romania"@en .
+
+region:bucuresti-ilfov
+    a schema:Place ;
+    schema:identifier "bucuresti-ilfov" ;
+    schema:name "București-Ilfov"@ro ;
+    schema:containedInPlace region:romania .
+
+region:nord-est
+    a schema:Place ;
+    schema:identifier "nord-est" ;
+    schema:name "Nord-Est"@ro ;
+    schema:containedInPlace region:romania .
+
+# Indicator definitions (definition-level; values loaded separately as Observations)
+
+indicator:obesity-prevalence
+    a schema:Dataset ;
+    schema:identifier "obesity-prevalence" ;
+    schema:name "Obesity prevalence"@en ;
+    schema:variableMeasured "Obesity prevalence"@en ;
+    schema:measurementTechnique "Survey / official statistics"@en .
+
+indicator:population-density
+    a schema:Dataset ;
+    schema:identifier "population-density" ;
+    schema:name "Population density"@en ;
+    schema:variableMeasured "People per square kilometer"@en ;
+    schema:measurementTechnique "Census / official statistics"@en .
+
+indicator:pm25
+    a schema:Dataset ;
+    schema:identifier "pm25" ;
+    schema:name "PM2.5 air pollution"@en ;
+    schema:variableMeasured "PM2.5 concentration"@en ;
+    schema:measurementTechnique "Air quality monitoring"@en .
+
+indicator:urbanization
+    a schema:Dataset ;
+    schema:identifier "urbanization" ;
+    schema:name "Urbanization rate"@en ;
+    schema:variableMeasured "Percent of population living in urban areas"@en ;
+    schema:measurementTechnique "Official statistics"@en .

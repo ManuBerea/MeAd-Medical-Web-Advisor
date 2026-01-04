@@ -1,0 +1,32 @@
+@prefix schema: <https://schema.org/> .
+@prefix condition: <https://mead.example/condition/> .
+
+condition:asthma
+    a schema:MedicalCondition ;
+    schema:identifier "asthma" ;
+    schema:name "Asthma"@en ;
+    schema:sameAs <https://www.wikidata.org/entity/Q35869> .
+
+condition:seasonal-allergic-rhinitis
+    a schema:MedicalCondition ;
+    schema:identifier "seasonal-allergic-rhinitis" ;
+    schema:name "Seasonal allergic rhinitis"@en ;
+    schema:sameAs <https://www.wikidata.org/entity/Q3740609> .
+
+condition:type-2-diabetes
+    a schema:MedicalCondition ;
+    schema:identifier "type-2-diabetes" ;
+    schema:name "Type 2 diabetes"@en ;
+    schema:sameAs <https://www.wikidata.org/entity/Q3025883> .
+
+condition:obesity
+    a schema:MedicalCondition ;
+    schema:identifier "obesity" ;
+    schema:name "Obesity"@en ;
+    schema:sameAs <https://www.wikidata.org/entity/Q12174> .
+
+condition:lactose-intolerance
+    a schema:MedicalCondition ;
+    schema:identifier "lactose-intolerance" ;
+    schema:name "Lactose intolerance"@en ;
+    schema:sameAs <https://www.wikidata.org/entity/Q219223> .
