@@ -1,6 +1,6 @@
 package com.mead.conditions.controller;
 
-import com.mead.conditions.rdf.RdfService;
+import com.mead.conditions.service.RdfService;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.Lang;

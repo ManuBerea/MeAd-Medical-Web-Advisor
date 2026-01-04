@@ -1,4 +1,4 @@
-package com.mead.conditions.rdf;
+package com.mead.conditions.service;
 
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;

@@ -1,8 +1,8 @@
 package com.mead.conditions.service;
 
-import com.mead.conditions.data.LocalConditionsRepository.LocalCondition;
-import com.mead.conditions.dto.ConditionDtos;
-import com.mead.conditions.data.LocalConditionsRepository;
+import com.mead.conditions.repository.ConditionsRepository.LocalCondition;
+import com.mead.conditions.dto.ConditionDto;
+import com.mead.conditions.repository.ConditionsRepository;
 import com.mead.conditions.enrich.DbpediaClient;
 import com.mead.conditions.enrich.WikidataClient;
 import com.mead.conditions.enrich.WikidataClient.WikidataEnrichment;
@@ -20,12 +20,12 @@ public class ConditionService {
     private static final String SCHEMA_ORG_CONTEXT = "https://schema.org/";
     private static final String MEAD_CONDITION_BASE_URL = "https://mead.example/condition/";
 
-    private final LocalConditionsRepository repo;
+    private final ConditionsRepository repo;
     private final WikidataClient wikidata;
     private final DbpediaClient dbpedia;
     private final WikidocSnippetLoader wikidoc;
 
-    public ConditionService(LocalConditionsRepository repo,
+    public ConditionService(ConditionsRepository repo,
                             WikidataClient wikidata,
                             DbpediaClient dbpedia,
                             WikidocSnippetLoader wikidoc) {
@@ -35,13 +35,13 @@ public class ConditionService {
         this.wikidoc = wikidoc;
     }
 
-    public List<ConditionDtos.ConditionSummary> list() {
+    public List<ConditionDto.ConditionSummary> list() {
         return repo.findAll().stream()
-                .map(c -> new ConditionDtos.ConditionSummary(c.identifier(), c.name(), c.sameAs()))
+                .map(c -> new ConditionDto.ConditionSummary(c.identifier(), c.name(), c.sameAs()))
                 .toList();
     }
 
-    public ConditionDtos.ConditionDetail get(String conditionId) {
+    public ConditionDto.ConditionDetail get(String conditionId) {
         LocalCondition localCondition = repo.findById(conditionId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown condition: " + conditionId));
 
@@ -103,7 +103,7 @@ public class ConditionService {
 
         String snippet = snippetFuture.join();
 
-        return new ConditionDtos.ConditionDetail(
+        return new ConditionDto.ConditionDetail(
                 SCHEMA_ORG_CONTEXT,
                 MEAD_CONDITION_BASE_URL + conditionId,
                 "MedicalCondition",

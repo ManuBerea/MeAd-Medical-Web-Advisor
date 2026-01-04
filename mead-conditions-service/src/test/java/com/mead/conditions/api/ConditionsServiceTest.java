@@ -1,7 +1,7 @@
 package com.mead.conditions.api;
 
-import com.mead.conditions.dto.ConditionDtos;
-import com.mead.conditions.data.LocalConditionsRepository;
+import com.mead.conditions.dto.ConditionDto;
+import com.mead.conditions.repository.ConditionsRepository;
 import com.mead.conditions.enrich.DbpediaClient;
 import com.mead.conditions.enrich.WikidataClient;
 import com.mead.conditions.enrich.WikidocSnippetLoader;
@@ -17,7 +17,7 @@ import static org.mockito.Mockito.*;
 
 class ConditionServiceTest {
 
-    private LocalConditionsRepository repo;
+    private ConditionsRepository repo;
     private WikidataClient wikidata;
     private DbpediaClient dbpedia;
     private WikidocSnippetLoader wikidoc;
@@ -25,7 +25,7 @@ class ConditionServiceTest {
 
     @BeforeEach
     void setUp() {
-        repo = mock(LocalConditionsRepository.class);
+        repo = mock(ConditionsRepository.class);
         wikidata = mock(WikidataClient.class);
         dbpedia = mock(DbpediaClient.class);
         wikidoc = mock(WikidocSnippetLoader.class);
@@ -35,7 +35,7 @@ class ConditionServiceTest {
 
     @Test
     void prefersDbpediaDescription_overWikidataDescription() {
-        var local = new LocalConditionsRepository.LocalCondition(
+        var local = new ConditionsRepository.LocalCondition(
                 "asthma", "Asthma",
                 List.of("http://dbpedia.org/resource/Asthma", "https://www.wikidata.org/entity/Q35869")
         );
@@ -53,14 +53,14 @@ class ConditionServiceTest {
 
         when(wikidoc.loadSnippet("asthma")).thenReturn("snippet");
 
-        ConditionDtos.ConditionDetail detail = service.get("asthma");
+        ConditionDto.ConditionDetail detail = service.get("asthma");
 
         assertThat(detail.description()).isEqualTo("dbpedia desc");
     }
 
     @Test
     void fallsBackToWikidataDescription_whenDbpediaNull() {
-        var local = new LocalConditionsRepository.LocalCondition(
+        var local = new ConditionsRepository.LocalCondition(
                 "asthma", "Asthma",
                 List.of("http://dbpedia.org/resource/Asthma", "https://www.wikidata.org/entity/Q35869")
         );
@@ -77,14 +77,14 @@ class ConditionServiceTest {
 
         when(wikidoc.loadSnippet("asthma")).thenReturn("snippet");
 
-        ConditionDtos.ConditionDetail detail = service.get("asthma");
+        ConditionDto.ConditionDetail detail = service.get("asthma");
 
         assertThat(detail.description()).isEqualTo("wd desc");
     }
 
     @Test
     void symptomsPreferWikidata_fallbackToDbpediaWhenWikidataEmpty() {
-        var local = new LocalConditionsRepository.LocalCondition(
+        var local = new ConditionsRepository.LocalCondition(
                 "obesity", "Obesity",
                 List.of("http://dbpedia.org/resource/Obesity", "https://www.wikidata.org/entity/Q12174")
         );
@@ -117,7 +117,7 @@ class ConditionServiceTest {
 
     @Test
     void imagePreferWikidata_fallbackToDbpediaThumbnailWhenNull() {
-        var local = new LocalConditionsRepository.LocalCondition(
+        var local = new ConditionsRepository.LocalCondition(
                 "obesity", "Obesity",
                 List.of("http://dbpedia.org/resource/Obesity", "https://www.wikidata.org/entity/Q12174")
         );

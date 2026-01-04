@@ -1,7 +1,7 @@
 package com.mead.conditions.api;
 
 import com.mead.conditions.controller.ConditionsController;
-import com.mead.conditions.dto.ConditionDtos;
+import com.mead.conditions.dto.ConditionDto;
 import com.mead.conditions.service.ConditionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ class ConditionsControllerWebTest {
 
     @Test
     void getCondition_returns200_andJson() throws Exception {
-        var detail = new ConditionDtos.ConditionDetail(
+        var detail = new ConditionDto.ConditionDetail(
                 "https://schema.org/",
                 "https://mead.example/condition/asthma",
                 "MedicalCondition",
@@ -61,7 +61,7 @@ class ConditionsControllerWebTest {
     @Test
     void listConditions_returns200() throws Exception {
         when(conditionService.list()).thenReturn(List.of(
-                new ConditionDtos.ConditionSummary("asthma", "Asthma",
+                new ConditionDto.ConditionSummary("asthma", "Asthma",
                         List.of("http://dbpedia.org/resource/Asthma", "https://www.wikidata.org/entity/Q35869"))
         ));
 

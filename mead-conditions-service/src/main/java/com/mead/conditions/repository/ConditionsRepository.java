@@ -1,6 +1,6 @@
-package com.mead.conditions.data;
+package com.mead.conditions.repository;
 
-import com.mead.conditions.rdf.RdfService;
+import com.mead.conditions.service.RdfService;
 import jakarta.annotation.PostConstruct;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.RDFNode;
@@ -11,13 +11,13 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class LocalConditionsRepository {
+public class ConditionsRepository {
 
     private final RdfService rdf;
     private final Map<String, LocalCondition> conditionsMap = new ConcurrentHashMap<>();
     private volatile List<LocalCondition> cachedAll = List.of();
 
-    public LocalConditionsRepository(RdfService rdf) {
+    public ConditionsRepository(RdfService rdf) {
         this.rdf = rdf;
     }
 

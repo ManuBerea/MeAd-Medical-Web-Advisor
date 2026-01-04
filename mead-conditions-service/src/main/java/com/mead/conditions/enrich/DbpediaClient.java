@@ -4,6 +4,7 @@ import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.sparql.exec.http.QueryExecutionHTTP;
 import org.apache.jena.sparql.exec.http.QueryExecutionHTTPBuilder;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 @Component
 public class DbpediaClient {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(DbpediaClient.class);
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(DbpediaClient.class);
 
     private static final String DBO_ABSTRACT = "http://dbpedia.org/ontology/abstract";
     private static final String DBO_DESCRIPTION = "http://dbpedia.org/ontology/description";
@@ -52,7 +53,6 @@ public class DbpediaClient {
         if (thumbnailNode == null) return null;
         String url = thumbnailNode.isResource() ? thumbnailNode.asResource().getURI() : thumbnailNode.toString();
 
-        // Remove the width param if present (still usable either way)
         int queryIndex = url.indexOf('?');
         return (queryIndex >= 0) ? url.substring(0, queryIndex) : url;
     }

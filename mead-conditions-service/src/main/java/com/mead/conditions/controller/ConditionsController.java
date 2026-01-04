@@ -1,6 +1,6 @@
 package com.mead.conditions.controller;
 
-import com.mead.conditions.dto.ConditionDtos;
+import com.mead.conditions.dto.ConditionDto;
 import com.mead.conditions.service.ConditionService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,12 +20,12 @@ public class ConditionsController {
     }
 
     @GetMapping("/conditions")
-    public List<ConditionDtos.ConditionSummary> list() {
+    public List<ConditionDto.ConditionSummary> list() {
         return service.list();
     }
 
     @GetMapping("/conditions/{id}")
-    public ConditionDtos.ConditionDetail get(@PathVariable String id) {
+    public ConditionDto.ConditionDetail get(@PathVariable String id) {
         return service.get(id);
     }
 }
