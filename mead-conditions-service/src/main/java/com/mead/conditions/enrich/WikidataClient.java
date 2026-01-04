@@ -7,12 +7,14 @@ import org.apache.jena.sparql.exec.http.QueryExecutionHTTPBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Component
 public class WikidataClient {
@@ -36,19 +38,20 @@ public class WikidataClient {
             String image
     ) {}
 
+    @Cacheable("wikidataEnrichment")
     public WikidataEnrichment enrichFromEntityUri(String wikidataEntityUri) {
         String entityId = qidFromEntityUri(wikidataEntityUri);
 
-        String description = selectFirstString("""
+        CompletableFuture<String> descriptionFuture = CompletableFuture.supplyAsync(() -> selectFirstString("""
                 PREFIX wd: <http://www.wikidata.org/entity/>
                 PREFIX schema: <http://schema.org/>
                 SELECT ?desc WHERE {
                   wd:%s schema:description ?desc .
                   FILTER(LANG(?desc) = "en")
                 } LIMIT 1
-                """.formatted(entityId), "desc");
+                """.formatted(entityId), "desc"));
 
-        List<String> symptoms = selectStrings("""
+        CompletableFuture<List<String>> symptomsFuture = CompletableFuture.supplyAsync(() -> selectStrings("""
                 PREFIX wd: <http://www.wikidata.org/entity/>
                 PREFIX wdt: <http://www.wikidata.org/prop/direct/>
                 PREFIX wikibase: <http://wikiba.se/ontology#>
@@ -58,9 +61,9 @@ public class WikidataClient {
                   wd:%s wdt:P780 ?symptom .
                   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
                 } LIMIT 30
-                """.formatted(entityId), "symptomLabel");
+                """.formatted(entityId), "symptomLabel"));
 
-        List<String> riskFactors = selectStrings("""
+        CompletableFuture<List<String>> riskFactorsFuture = CompletableFuture.supplyAsync(() -> selectStrings("""
                 PREFIX wd: <http://www.wikidata.org/entity/>
                 PREFIX wdt: <http://www.wikidata.org/prop/direct/>
                 PREFIX wikibase: <http://wikiba.se/ontology#>
@@ -70,20 +73,25 @@ public class WikidataClient {
                   wd:%s wdt:P5642 ?rf .
                   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
                 } LIMIT 30
-                """.formatted(entityId), "rfLabel");
+                """.formatted(entityId), "rfLabel"));
 
-        String rawImageNode = selectFirstAnyNodeAsString("""
+        CompletableFuture<String> imageFuture = CompletableFuture.supplyAsync(() -> selectFirstAnyNodeAsString("""
                 PREFIX wd: <http://www.wikidata.org/entity/>
                 PREFIX wdt: <http://www.wikidata.org/prop/direct/>
                 
                 SELECT ?img WHERE {
                   wd:%s wdt:P18 ?img .
                 } LIMIT 1
-                """.formatted(entityId));
+                """.formatted(entityId)));
 
-        String imageUrl = normalizeToCommonsFilePath(rawImageNode);
+        CompletableFuture.allOf(descriptionFuture, symptomsFuture, riskFactorsFuture, imageFuture).join();
 
-        return new WikidataEnrichment(description, symptoms, riskFactors, imageUrl);
+        return new WikidataEnrichment(
+                descriptionFuture.join(),
+                symptomsFuture.join(),
+                riskFactorsFuture.join(),
+                normalizeToCommonsFilePath(imageFuture.join())
+        );
     }
 
     public static String qidFromEntityUri(String wikidataEntityUri) {

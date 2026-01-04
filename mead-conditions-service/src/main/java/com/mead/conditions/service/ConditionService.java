@@ -10,6 +10,7 @@ import com.mead.conditions.enrich.WikidocSnippetLoader;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class ConditionService {
@@ -47,29 +48,60 @@ public class ConditionService {
         String wikidataUri = pickSameAs(localCondition.sameAs(), WIKIDATA_ENTITY_MARKER);
         String dbpediaUri = pickSameAs(localCondition.sameAs(), DBPEDIA_RESOURCE_MARKER);
 
-        WikidataEnrichment wikidataEnrichment = (wikidataUri != null)
-                ? wikidata.enrichFromEntityUri(wikidataUri)
-                : new WikidataEnrichment(null, List.of(), List.of(), null);
+        CompletableFuture<WikidataEnrichment> wikidataFuture = CompletableFuture.supplyAsync(() ->
+                (wikidataUri != null)
+                        ? wikidata.enrichFromEntityUri(wikidataUri)
+                        : new WikidataEnrichment(null, List.of(), List.of(), null)
+        );
 
-        String dbpediaText = (dbpediaUri != null) ? dbpedia.englishDescription(dbpediaUri) : null;
-        String description = (dbpediaText != null && !dbpediaText.isBlank()) ? dbpediaText : wikidataEnrichment.description();
+        CompletableFuture<String> dbpediaDescFuture = CompletableFuture.supplyAsync(() ->
+                (dbpediaUri != null) ? dbpedia.englishDescription(dbpediaUri) : null
+        );
+
+        CompletableFuture<List<String>> dbpediaSymptomsFuture = CompletableFuture.supplyAsync(() ->
+                (dbpediaUri != null) ? dbpedia.symptoms(dbpediaUri) : List.of()
+        );
+
+        CompletableFuture<List<String>> dbpediaRiskFactorsFuture = CompletableFuture.supplyAsync(() ->
+                (dbpediaUri != null) ? dbpedia.riskFactorsOrRisks(dbpediaUri) : List.of()
+        );
+
+        CompletableFuture<String> dbpediaThumbnailFuture = CompletableFuture.supplyAsync(() ->
+                (dbpediaUri != null) ? dbpedia.thumbnailUrl(dbpediaUri) : null
+        );
+
+        CompletableFuture<String> snippetFuture = CompletableFuture.supplyAsync(() ->
+                wikidoc.loadSnippet(conditionId)
+        );
+
+        CompletableFuture.allOf(
+                wikidataFuture, dbpediaDescFuture, dbpediaSymptomsFuture,
+                dbpediaRiskFactorsFuture, dbpediaThumbnailFuture, snippetFuture
+        ).join();
+
+        WikidataEnrichment wikidataEnrichment = wikidataFuture.join();
+        String dbpediaText = dbpediaDescFuture.join();
+
+        String description = (dbpediaText != null && !dbpediaText.isBlank())
+                ? dbpediaText
+                : wikidataEnrichment.description();
 
         List<String> symptoms = wikidataEnrichment.symptoms();
-        if ((symptoms == null || symptoms.isEmpty()) && dbpediaUri != null) {
-            symptoms = dbpedia.symptoms(dbpediaUri);
+        if ((symptoms == null || symptoms.isEmpty())) {
+            symptoms = dbpediaSymptomsFuture.join();
         }
 
         List<String> riskFactors = wikidataEnrichment.riskFactors();
-        if ((riskFactors == null || riskFactors.isEmpty()) && dbpediaUri != null) {
-            riskFactors = dbpedia.riskFactorsOrRisks(dbpediaUri);
+        if ((riskFactors == null || riskFactors.isEmpty())) {
+            riskFactors = dbpediaRiskFactorsFuture.join();
         }
 
         String image = wikidataEnrichment.image();
-        if ((image == null || image.isBlank()) && dbpediaUri != null) {
-            image = dbpedia.thumbnailUrl(dbpediaUri);
+        if ((image == null || image.isBlank())) {
+            image = dbpediaThumbnailFuture.join();
         }
 
-        String snippet = wikidoc.loadSnippet(conditionId);
+        String snippet = snippetFuture.join();
 
         return new ConditionDtos.ConditionDetail(
                 SCHEMA_ORG_CONTEXT,

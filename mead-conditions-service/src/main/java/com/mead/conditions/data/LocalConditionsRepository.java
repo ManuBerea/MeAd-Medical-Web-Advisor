@@ -1,20 +1,36 @@
 package com.mead.conditions.data;
 
 import com.mead.conditions.rdf.RdfService;
+import jakarta.annotation.PostConstruct;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.system.Txn;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class LocalConditionsRepository {
 
     private final RdfService rdf;
+    private final Map<String, LocalCondition> conditionsMap = new ConcurrentHashMap<>();
 
     public LocalConditionsRepository(RdfService rdf) {
         this.rdf = rdf;
+    }
+
+    @PostConstruct
+    public void init() {
+        refresh();
+    }
+
+    public void refresh() {
+        List<LocalCondition> all = fetchAllFromRdf();
+        conditionsMap.clear();
+        for (LocalCondition c : all) {
+            conditionsMap.put(c.identifier(), c);
+        }
     }
 
     public record LocalCondition(
@@ -24,6 +40,16 @@ public class LocalConditionsRepository {
     ) {}
 
     public List<LocalCondition> findAll() {
+        return conditionsMap.values().stream()
+                .sorted(Comparator.comparing(LocalCondition::identifier))
+                .toList();
+    }
+
+    public Optional<LocalCondition> findById(String id) {
+        return Optional.ofNullable(conditionsMap.get(id));
+    }
+
+    private List<LocalCondition> fetchAllFromRdf() {
         String sparqlQuery = """
                 PREFIX schema: <https://schema.org/>
                 SELECT ?identifier ?name ?sameAs WHERE {
@@ -66,9 +92,5 @@ public class LocalConditionsRepository {
             }
             return localConditions;
         });
-    }
-
-    public Optional<LocalCondition> findById(String id) {
-        return findAll().stream().filter(condition -> condition.identifier().equals(id)).findFirst();
     }
 }

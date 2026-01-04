@@ -5,6 +5,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.sparql.exec.http.QueryExecutionHTTP;
 import org.apache.jena.sparql.exec.http.QueryExecutionHTTPBuilder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -27,6 +28,7 @@ public class DbpediaClient {
     @Value("${mead.external.dbpedia.timeout-ms:8000}")
     private long timeoutMs;
 
+    @Cacheable("dbpediaDescription")
     public String englishDescription(String dbpediaResourceUri) {
         String abstractLiteral = queryEnglishLiteral(dbpediaResourceUri, DBO_ABSTRACT);
         if (abstractLiteral != null) return abstractLiteral;
@@ -37,6 +39,7 @@ public class DbpediaClient {
         return queryEnglishLiteral(dbpediaResourceUri, RDFS_COMMENT);
     }
 
+    @Cacheable("dbpediaThumbnail")
     public String thumbnailUrl(String dbpediaResourceUri) {
         String sparqlQuery = """
             PREFIX dbo: <http://dbpedia.org/ontology/>
@@ -54,6 +57,7 @@ public class DbpediaClient {
         return (queryIndex >= 0) ? url.substring(0, queryIndex) : url;
     }
 
+    @Cacheable("dbpediaSymptoms")
     public List<String> symptoms(String dbpediaResourceUri) {
         List<String> ontologySymptoms = selectEnglishLabels("""
             PREFIX dbo: <http://dbpedia.org/ontology/>
@@ -84,6 +88,7 @@ public class DbpediaClient {
      * - dbo:medicalCause (resources)
      * - dbo:complications/dbp:complications (these are "risks" rather than causes; we include them if causes are missing)
      */
+    @Cacheable("dbpediaRiskFactors")
     public List<String> riskFactorsOrRisks(String dbpediaResourceUri) {
         List<String> causes = new ArrayList<>();
 
