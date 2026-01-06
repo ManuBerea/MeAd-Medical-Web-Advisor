@@ -14,8 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConditionsRepository {
 
     private final RdfService rdf;
-    private final Map<String, LocalCondition> conditionsMap = new ConcurrentHashMap<>();
-    private volatile List<LocalCondition> cachedAll = List.of();
+    private final Map<String, Condition> conditionsMap = new ConcurrentHashMap<>();
+    private volatile List<Condition> cachedConditions = List.of();
 
     public ConditionsRepository(RdfService rdf) {
         this.rdf = rdf;
@@ -27,29 +27,29 @@ public class ConditionsRepository {
     }
 
     public void refresh() {
-        List<LocalCondition> all = fetchAllFromRdf();
+        List<Condition> conditions = fetchAllFromRdf();
         conditionsMap.clear();
-        for (LocalCondition c : all) {
-            conditionsMap.put(c.identifier(), c);
+        for (Condition condition : conditions) {
+            conditionsMap.put(condition.identifier(), condition);
         }
-        cachedAll = List.copyOf(all);
+        cachedConditions = List.copyOf(conditions);
     }
 
-    public record LocalCondition(
+    public record Condition(
             String identifier,
             String name,
             List<String> sameAs
     ) {}
 
-    public List<LocalCondition> findAll() {
-        return cachedAll;
+    public List<Condition> findAll() {
+        return cachedConditions;
     }
 
-    public Optional<LocalCondition> findById(String id) {
+    public Optional<Condition> findById(String id) {
         return Optional.ofNullable(conditionsMap.get(id));
     }
 
-    private List<LocalCondition> fetchAllFromRdf() {
+    private List<Condition> fetchAllFromRdf() {
         String sparqlQuery = """
                 PREFIX schema: <https://schema.org/>
                 SELECT ?identifier ?name ?sameAs WHERE {
@@ -82,15 +82,15 @@ public class ConditionsRepository {
                 }
             }
 
-            List<LocalCondition> localConditions = new ArrayList<>();
+            List<Condition> conditions = new ArrayList<>();
             for (String identifier : identifierToNameMap.keySet()) {
-                localConditions.add(new LocalCondition(
+                conditions.add(new Condition(
                         identifier,
                         identifierToNameMap.get(identifier),
                         List.copyOf(identifierToSameAsMap.getOrDefault(identifier, List.of()))
                 ));
             }
-            return localConditions;
+            return conditions;
         });
     }
 }

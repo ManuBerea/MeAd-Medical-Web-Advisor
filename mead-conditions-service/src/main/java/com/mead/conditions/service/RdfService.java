@@ -25,10 +25,10 @@ public class RdfService {
 
     @PostConstruct
     public void loadRdfOnStartup() {
-        try (InputStream in = rdfFile.getInputStream()) {
+        try (InputStream input = rdfFile.getInputStream()) {
             Txn.executeWrite(dataset, () -> {
                 // Load into the default graph of this dataset.
-                RDFDataMgr.read(dataset.getDefaultModel(), in, Lang.TURTLE);
+                RDFDataMgr.read(dataset.getDefaultModel(), input, Lang.TURTLE);
             });
         } catch (Exception e) {
             throw new IllegalStateException("Failed to load RDF file: " + rdfFile, e);

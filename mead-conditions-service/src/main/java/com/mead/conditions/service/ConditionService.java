@@ -1,7 +1,8 @@
 package com.mead.conditions.service;
 
-import com.mead.conditions.repository.ConditionsRepository.LocalCondition;
-import com.mead.conditions.dto.ConditionDto;
+import com.mead.conditions.dto.ConditionDto.ConditionDetail;
+import com.mead.conditions.dto.ConditionDto.ConditionSummary;
+import com.mead.conditions.repository.ConditionsRepository.Condition;
 import com.mead.conditions.repository.ConditionsRepository;
 import com.mead.conditions.enrich.DbpediaClient;
 import com.mead.conditions.enrich.WikidataClient;
@@ -35,18 +36,18 @@ public class ConditionService {
         this.wikidoc = wikidoc;
     }
 
-    public List<ConditionDto.ConditionSummary> list() {
+    public List<ConditionSummary> list() {
         return repo.findAll().stream()
-                .map(c -> new ConditionDto.ConditionSummary(c.identifier(), c.name(), c.sameAs()))
+                .map(c -> new ConditionSummary(c.identifier(), c.name(), c.sameAs()))
                 .toList();
     }
 
-    public ConditionDto.ConditionDetail get(String conditionId) {
-        LocalCondition localCondition = repo.findById(conditionId)
+    public ConditionDetail get(String conditionId) {
+        Condition condition = repo.findById(conditionId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown condition: " + conditionId));
 
-        String wikidataUri = pickSameAs(localCondition.sameAs(), WIKIDATA_ENTITY_MARKER);
-        String dbpediaUri = pickSameAs(localCondition.sameAs(), DBPEDIA_RESOURCE_MARKER);
+        String wikidataUri = pickSameAs(condition.sameAs(), WIKIDATA_ENTITY_MARKER);
+        String dbpediaUri = pickSameAs(condition.sameAs(), DBPEDIA_RESOURCE_MARKER);
 
         CompletableFuture<WikidataEnrichment> wikidataFuture = CompletableFuture.supplyAsync(() ->
                 (wikidataUri != null)
@@ -103,17 +104,17 @@ public class ConditionService {
 
         String snippet = snippetFuture.join();
 
-        return new ConditionDto.ConditionDetail(
+        return new ConditionDetail(
                 SCHEMA_ORG_CONTEXT,
                 MEAD_CONDITION_BASE_URL + conditionId,
                 "MedicalCondition",
-                localCondition.identifier(),
-                localCondition.name(),
+                condition.identifier(),
+                condition.name(),
                 description,
                 image,
                 symptoms == null ? List.of() : symptoms,
                 riskFactors == null ? List.of() : riskFactors,
-                localCondition.sameAs(),
+                condition.sameAs(),
                 snippet
         );
     }

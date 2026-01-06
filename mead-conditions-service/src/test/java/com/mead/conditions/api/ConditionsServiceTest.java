@@ -35,7 +35,7 @@ class ConditionServiceTest {
 
     @Test
     void prefersDbpediaDescription_overWikidataDescription() {
-        var local = new ConditionsRepository.LocalCondition(
+        var local = new ConditionsRepository.Condition(
                 "asthma", "Asthma",
                 List.of("http://dbpedia.org/resource/Asthma", "https://www.wikidata.org/entity/Q35869")
         );
@@ -60,7 +60,7 @@ class ConditionServiceTest {
 
     @Test
     void fallsBackToWikidataDescription_whenDbpediaNull() {
-        var local = new ConditionsRepository.LocalCondition(
+        var local = new ConditionsRepository.Condition(
                 "asthma", "Asthma",
                 List.of("http://dbpedia.org/resource/Asthma", "https://www.wikidata.org/entity/Q35869")
         );
@@ -84,7 +84,7 @@ class ConditionServiceTest {
 
     @Test
     void symptomsPreferWikidata_fallbackToDbpediaWhenWikidataEmpty() {
-        var local = new ConditionsRepository.LocalCondition(
+        var local = new ConditionsRepository.Condition(
                 "obesity", "Obesity",
                 List.of("http://dbpedia.org/resource/Obesity", "https://www.wikidata.org/entity/Q12174")
         );
@@ -117,7 +117,7 @@ class ConditionServiceTest {
 
     @Test
     void imagePreferWikidata_fallbackToDbpediaThumbnailWhenNull() {
-        var local = new ConditionsRepository.LocalCondition(
+        var local = new ConditionsRepository.Condition(
                 "obesity", "Obesity",
                 List.of("http://dbpedia.org/resource/Obesity", "https://www.wikidata.org/entity/Q12174")
         );
