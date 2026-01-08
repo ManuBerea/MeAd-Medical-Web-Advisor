@@ -6,7 +6,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
@@ -14,16 +18,9 @@ import java.util.function.Supplier;
 @Component
 public class DbpediaClient {
 
-    private static final String SOURCE_TAG = "DBpedia";
-    private static final String CACHE_DBPEDIA_ENRICHMENT = "dbpediaEnrichment";
-
     private static final String DBO = "http://dbpedia.org/ontology/";
     private static final String DBP = "http://dbpedia.org/property/";
     private static final String RDFS = "http://www.w3.org/2000/01/rdf-schema#";
-
-    private static final String DBO_ABSTRACT = DBO + "abstract";
-    private static final String DBO_DESCRIPTION = DBO + "description";
-    private static final String RDFS_COMMENT = RDFS + "comment";
 
     private static final String LANG_EN = "en";
 
@@ -53,7 +50,7 @@ public class DbpediaClient {
             String thumbnail
     ) {}
 
-    @Cacheable(CACHE_DBPEDIA_ENRICHMENT)
+    @Cacheable("dbpediaEnrichment")
     public DbpediaEnrichment enrichFromResourceUri(String dbpediaResourceUri) {
         CompletableFuture<String> descriptionFuture = future(() -> fetchEnglishDescription(dbpediaResourceUri));
         CompletableFuture<List<String>> symptomsFuture = future(() -> fetchSymptoms(dbpediaResourceUri));
@@ -71,13 +68,13 @@ public class DbpediaClient {
     }
 
     private String fetchEnglishDescription(String resourceUri) {
-        String v1 = queryEnglishLiteral(resourceUri, DBO_ABSTRACT);
-        if (v1 != null) return v1;
+        String abstractText = queryEnglishLiteral(resourceUri, DBO + "abstract");
+        if (abstractText != null) return abstractText;
 
-        String v2 = queryEnglishLiteral(resourceUri, DBO_DESCRIPTION);
-        if (v2 != null) return v2;
+        String descriptionText = queryEnglishLiteral(resourceUri, DBO + "description");
+        if (descriptionText != null) return descriptionText;
 
-        return queryEnglishLiteral(resourceUri, RDFS_COMMENT);
+        return queryEnglishLiteral(resourceUri, RDFS + "comment");
     }
 
     private String fetchThumbnailUrl(String resourceUri) {
@@ -182,7 +179,7 @@ public class DbpediaClient {
                 Map.of(),
                 sparqlQuery,
                 varName,
-                SOURCE_TAG
+                "DBpedia"
         );
     }
 

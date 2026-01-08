@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -13,13 +14,9 @@ import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 import static com.mead.conditions.config.AsyncConfig.MEAD_EXECUTOR;
-import static java.net.URLEncoder.encode;
 
 @Component
 public class WikidataClient {
-
-    private static final String SOURCE_TAG = "Wikidata";
-    private static final String CACHE_WIKIDATA_ENRICHMENT = "wikidataEnrichment";
 
     private static final String WD = "http://www.wikidata.org/entity/";
     private static final String WDT = "http://www.wikidata.org/prop/direct/";
@@ -56,14 +53,14 @@ public class WikidataClient {
             String image
     ) {}
 
-    @Cacheable(CACHE_WIKIDATA_ENRICHMENT)
+    @Cacheable("wikidataEnrichment")
     public WikidataEnrichment enrichFromEntityUri(String wikidataEntityUri) {
-        String qid = qidFromEntityUri(wikidataEntityUri);
+        String entityUriId = wikidataEntityUri.substring(wikidataEntityUri.lastIndexOf('/') + 1);
 
-        CompletableFuture<String> descriptionFuture = future(() -> fetchDescription(qid));
-        CompletableFuture<List<String>> symptomsFuture = future(() -> fetchSymptoms(qid));
-        CompletableFuture<List<String>> riskFactorsFuture = future(() -> fetchRiskFactors(qid));
-        CompletableFuture<String> imageFuture = future(() -> fetchImageUrl(qid));
+        CompletableFuture<String> descriptionFuture = future(() -> fetchDescription(entityUriId));
+        CompletableFuture<List<String>> symptomsFuture = future(() -> fetchSymptoms(entityUriId));
+        CompletableFuture<List<String>> riskFactorsFuture = future(() -> fetchRiskFactors(entityUriId));
+        CompletableFuture<String> imageFuture = future(() -> fetchImageUrl(entityUriId));
 
         CompletableFuture.allOf(descriptionFuture, symptomsFuture, riskFactorsFuture, imageFuture).join();
 
@@ -75,7 +72,7 @@ public class WikidataClient {
         );
     }
 
-    private String fetchDescription(String qid) {
+    private String fetchDescription(String entityUriId) {
         String sparqlQuery = """
                 PREFIX wd: <%s>
                 PREFIX schema: <%s>
@@ -83,12 +80,12 @@ public class WikidataClient {
                   wd:%s schema:description ?desc .
                   FILTER(LANG(?desc) = "%s")
                 } LIMIT %d
-                """.formatted(WD, SCHEMA, qid, LANG_EN, LIMIT_DESCRIPTION);
+                """.formatted(WD, SCHEMA, entityUriId, LANG_EN, LIMIT_DESCRIPTION);
 
         return sparql.selectFirstString(request(sparqlQuery, "desc"));
     }
 
-    private List<String> fetchSymptoms(String qid) {
+    private List<String> fetchSymptoms(String entityUriId) {
         String sparqlQuery = """
                 PREFIX wd: <%s>
                 PREFIX wdt: <%s>
@@ -99,12 +96,12 @@ public class WikidataClient {
                   wd:%s wdt:P780 ?symptom .
                   SERVICE wikibase:label { bd:serviceParam wikibase:language "%s". }
                 } LIMIT %d
-                """.formatted(WD, WDT, WIKIBASE, BD, qid, LANG_EN, LIMIT_LIST);
+                """.formatted(WD, WDT, WIKIBASE, BD, entityUriId, LANG_EN, LIMIT_LIST);
 
         return sparql.selectStrings(request(sparqlQuery, "symptomLabel"));
     }
 
-    private List<String> fetchRiskFactors(String qid) {
+    private List<String> fetchRiskFactors(String entityUriId) {
         String sparqlQuery = """
                 PREFIX wd: <%s>
                 PREFIX wdt: <%s>
@@ -115,22 +112,22 @@ public class WikidataClient {
                   wd:%s wdt:P5642 ?rf .
                   SERVICE wikibase:label { bd:serviceParam wikibase:language "%s". }
                 } LIMIT %d
-                """.formatted(WD, WDT, WIKIBASE, BD, qid, LANG_EN, LIMIT_LIST);
+                """.formatted(WD, WDT, WIKIBASE, BD, entityUriId, LANG_EN, LIMIT_LIST);
 
         return sparql.selectStrings(request(sparqlQuery, "rfLabel"));
     }
 
-    private String fetchImageUrl(String qid) {
+    private String fetchImageUrl(String entityUriId) {
         String sparqlQuery = """
                 PREFIX wd: <%s>
                 PREFIX wdt: <%s>
                 SELECT ?img WHERE {
                   wd:%s wdt:P18 ?img .
                 } LIMIT 1
-                """.formatted(WD, WDT, qid);
+                """.formatted(WD, WDT, entityUriId);
 
         String raw = sparql.selectFirstString(request(sparqlQuery, "img"));
-        return commonsFileUrl(raw);
+        return normalizeWikidataP18ToCommonsUrl(raw);
     }
 
     private SparqlHttpClient.SelectRequest request(String sparqlQuery, String varName) {
@@ -140,7 +137,7 @@ public class WikidataClient {
                 Map.of(SparqlHttpClient.HEADER_USER_AGENT, userAgent),
                 sparqlQuery,
                 varName,
-                SOURCE_TAG
+                "Wikidata"
         );
     }
 
@@ -148,32 +145,30 @@ public class WikidataClient {
         return CompletableFuture.supplyAsync(supplier, meadExecutor);
     }
 
-    public static String qidFromEntityUri(String wikidataEntityUri) {
-        return wikidataEntityUri.substring(wikidataEntityUri.lastIndexOf('/') + 1);
-    }
-
     private static final String COMMONS_FILEPATH = "https://commons.wikimedia.org/wiki/Special:FilePath/";
     private static final String COMMONS_HTTPS_URL = "https://commons.wikimedia.org/";
     private static final String COMMONS_HTTP_URL = "http://commons.wikimedia.org/";
 
-    private static String commonsFileUrl(String input) {
-        if (input == null || input.isBlank()) return null;
+    private static String normalizeWikidataP18ToCommonsUrl(String wikidataImageValue) {
+        if (wikidataImageValue == null || wikidataImageValue.isBlank()) {
+            return null;
+        }
 
-        int idx = input.lastIndexOf("Special:FilePath/");
+        int idx = wikidataImageValue.lastIndexOf("Special:FilePath/");
         if (idx >= 0) {
-            String tail = input.substring(idx + "Special:FilePath/".length());
+            String tail = wikidataImageValue.substring(idx + "Special:FilePath/".length());
             return COMMONS_FILEPATH + tail;
         }
 
-        if (input.startsWith(COMMONS_HTTP_URL)) {
-            return COMMONS_HTTPS_URL + input.substring(COMMONS_HTTP_URL.length());
+        if (wikidataImageValue.startsWith(COMMONS_HTTP_URL)) {
+            return COMMONS_HTTPS_URL + wikidataImageValue.substring(COMMONS_HTTP_URL.length());
         }
-        if (input.startsWith(COMMONS_HTTPS_URL)) {
-            return input;
+        if (wikidataImageValue.startsWith(COMMONS_HTTPS_URL)) {
+            return wikidataImageValue;
         }
 
-        String filename = input.startsWith("File:") ? input.substring("File:".length()) : input;
+        String filename = wikidataImageValue.startsWith("File:") ? wikidataImageValue.substring("File:".length()) : wikidataImageValue;
         filename = filename.replace(" ", "_");
-        return COMMONS_FILEPATH + encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
+        return COMMONS_FILEPATH + URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
     }
 }
