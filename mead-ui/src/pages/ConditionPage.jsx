@@ -3,12 +3,63 @@ import { Link, useParams } from "react-router-dom";
 import { fetchConditionDetail } from "../api/conditionsApi.js";
 
 export default function ConditionPage() {
+    const normalizeImageKey = (url) => {
+        if (!url) return "";
+        const trimmed = url.trim();
+        if (!trimmed) return "";
+        const cut = trimmed.split(/[?#]/)[0];
+        const lower = cut.toLowerCase();
+        const uploadMarker = "upload.wikimedia.org/";
+        const filePathMarker = "special:filepath/";
+        const redirectMarker = "special:redirect/file/";
+        const filePageMarker = "/wiki/file:";
+        const filePrefix = "file:";
+
+        const safeDecode = (value) => {
+            try {
+                return decodeURIComponent(value);
+            } catch {
+                return value;
+            }
+        };
+
+        if (lower.includes(uploadMarker)) {
+            const parts = cut.split("/");
+            return safeDecode(parts[parts.length - 1]).toLowerCase();
+        }
+
+        const extractAfterMarker = (marker) => {
+            const idx = lower.indexOf(marker);
+            if (idx < 0) return "";
+            return safeDecode(cut.substring(idx + marker.length)).toLowerCase();
+        };
+
+        if (lower.includes(filePathMarker)) {
+            return extractAfterMarker(filePathMarker);
+        }
+
+        if (lower.includes(redirectMarker)) {
+            return extractAfterMarker(redirectMarker);
+        }
+
+        if (lower.includes(filePageMarker)) {
+            return extractAfterMarker(filePageMarker);
+        }
+
+        if (lower.startsWith(filePrefix)) {
+            return safeDecode(cut.substring(filePrefix.length)).toLowerCase();
+        }
+
+        return lower;
+    };
+
     const { id } = useParams();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState("");
     const [activeIndex, setActiveIndex] = useState(0);
     const [touchStartX, setTouchStartX] = useState(null);
+    const [hiddenImages, setHiddenImages] = useState(() => new Set());
 
     useEffect(() => {
         let alive = true;
@@ -32,19 +83,31 @@ export default function ConditionPage() {
         const combined = data.images?.length ? data.images : data.image ? [data.image] : [];
         const deduped = new Map();
         combined.forEach((url) => {
-            if (!url) return;
-            const key = url.toLowerCase();
+            const key = normalizeImageKey(url);
+            if (!key) return;
             if (!deduped.has(key)) deduped.set(key, url);
         });
         return Array.from(deduped.values());
     }, [data]);
 
+    const visibleImages = useMemo(() => {
+        if (hiddenImages.size === 0) return images;
+        return images.filter((url) => !hiddenImages.has(normalizeImageKey(url)));
+    }, [images, hiddenImages]);
+
     useEffect(() => {
         setActiveIndex(0);
-    }, [images.length]);
+        setHiddenImages(new Set());
+    }, [id]);
 
-    const totalImages = images.length;
-    const currentImage = totalImages ? images[activeIndex] : null;
+    useEffect(() => {
+        if (activeIndex >= visibleImages.length && visibleImages.length > 0) {
+            setActiveIndex(0);
+        }
+    }, [activeIndex, visibleImages.length]);
+
+    const totalImages = visibleImages.length;
+    const currentImage = totalImages ? visibleImages[activeIndex] : null;
 
     const showPrev = () => {
         if (!totalImages) return;
@@ -71,6 +134,18 @@ export default function ConditionPage() {
             }
         }
         setTouchStartX(null);
+    };
+
+    const handleImageError = () => {
+        if (!currentImage) return;
+        const key = normalizeImageKey(currentImage);
+        if (!key) return;
+        setHiddenImages((prev) => {
+            if (prev.has(key)) return prev;
+            const next = new Set(prev);
+            next.add(key);
+            return next;
+        });
     };
 
     if (loading) return <p className="status">Loading...</p>;
@@ -101,6 +176,7 @@ export default function ConditionPage() {
                                     alt={data.name}
                                     property="image"
                                     className="carousel-image"
+                                    onError={handleImageError}
                                 />
                                 {totalImages > 1 && (
                                     <>
@@ -125,7 +201,7 @@ export default function ConditionPage() {
                             </div>
                             {totalImages > 1 && (
                                 <div className="carousel-dots">
-                                    {images.map((_, index) => (
+                                    {visibleImages.map((_, index) => (
                                         <button
                                             key={`${data.id}-${index}`}
                                             type="button"

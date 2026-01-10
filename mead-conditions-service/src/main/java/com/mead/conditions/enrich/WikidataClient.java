@@ -27,7 +27,7 @@ public class WikidataClient {
     private static final String LANG_EN = "en";
     private static final int LIMIT_DESCRIPTION = 1;
     private static final int LIMIT_LIST = 30;
-    private static final int LIMIT_IMAGES = 50;
+    private static final int LIMIT_IMAGES = 10;
 
     @Value("${mead.external.wikidata.endpoint}")
     private String endpoint;

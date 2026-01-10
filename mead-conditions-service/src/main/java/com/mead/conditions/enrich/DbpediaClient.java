@@ -29,7 +29,7 @@ public class DbpediaClient {
     private static final int LIMIT_LITERALS = 10;
     private static final int LIMIT_ONE = 1;
     private static final int LIMIT_LABELS = 50;
-    private static final int LIMIT_IMAGES = 50;
+    private static final int LIMIT_IMAGES = 10;
 
     @Value("${mead.external.dbpedia.endpoint}")
     private String endpoint;
