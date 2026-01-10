@@ -69,7 +69,7 @@ export default function HomePage() {
                 <div className="hero-copy">
                     <p className="eyebrow">Project focus</p>
                     <h1 className="hero-title">
-                        MeAd helps high-school students explore medical conditions through multimedia stories.
+                        MeAd helps high-school students explore medical conditions
                     </h1>
                     <p className="hero-subtitle">
                         Learn about common diseases, allergies, food intolerance, obesity, and disorders, plus how they affect the human body.
