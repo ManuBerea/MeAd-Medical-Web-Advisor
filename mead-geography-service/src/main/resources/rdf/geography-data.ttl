@@ -1,6 +1,7 @@
 @prefix schema:    <https://schema.org/> .
 @prefix region:    <https://mead.example/region/> .
 @prefix indicator: <https://mead.example/indicator/> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
 
 # Regions / Places
 
@@ -53,3 +54,309 @@ indicator:urbanization
     schema:name "Urbanization rate"@en ;
     schema:variableMeasured "Percent of population living in urban areas"@en ;
     schema:measurementTechnique "Official statistics"@en .
+
+indicator:industrial-employment-share
+    a schema:Dataset ;
+    schema:identifier "industrial-employment-share" ;
+    schema:name "Industrial employment share"@en ;
+    schema:variableMeasured "Percent of employed population working in industry"@en ;
+    schema:measurementTechnique "Labor force surveys"@en .
+
+# Observations (indicator values over time)
+
+<https://mead.example/observation/obesity-prevalence/romania/2018>
+    a schema:Observation ;
+    schema:observationAbout region:romania ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2018"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 18.7 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/romania/2019>
+    a schema:Observation ;
+    schema:observationAbout region:romania ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2019"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 19.1 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/romania/2020>
+    a schema:Observation ;
+    schema:observationAbout region:romania ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2020"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 19.7 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/romania/2021>
+    a schema:Observation ;
+    schema:observationAbout region:romania ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2021"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 20.4 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/romania/2022>
+    a schema:Observation ;
+    schema:observationAbout region:romania ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 21.2 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/bucuresti-ilfov/2018>
+    a schema:Observation ;
+    schema:observationAbout region:bucuresti-ilfov ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2018"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 17.1 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/bucuresti-ilfov/2019>
+    a schema:Observation ;
+    schema:observationAbout region:bucuresti-ilfov ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2019"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 17.6 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/bucuresti-ilfov/2020>
+    a schema:Observation ;
+    schema:observationAbout region:bucuresti-ilfov ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2020"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 18.2 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/bucuresti-ilfov/2021>
+    a schema:Observation ;
+    schema:observationAbout region:bucuresti-ilfov ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2021"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 18.9 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/bucuresti-ilfov/2022>
+    a schema:Observation ;
+    schema:observationAbout region:bucuresti-ilfov ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 19.6 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/nord-est/2018>
+    a schema:Observation ;
+    schema:observationAbout region:nord-est ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2018"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 18.9 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/nord-est/2019>
+    a schema:Observation ;
+    schema:observationAbout region:nord-est ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2019"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 19.3 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/nord-est/2020>
+    a schema:Observation ;
+    schema:observationAbout region:nord-est ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2020"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 20.0 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/nord-est/2021>
+    a schema:Observation ;
+    schema:observationAbout region:nord-est ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2021"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 20.6 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/obesity-prevalence/nord-est/2022>
+    a schema:Observation ;
+    schema:observationAbout region:nord-est ;
+    schema:measuredProperty indicator:obesity-prevalence ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 21.1 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/population-density/romania/2022>
+    a schema:Observation ;
+    schema:observationAbout region:romania ;
+    schema:measuredProperty indicator:population-density ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 83.0 ;
+        schema:unitText "people/km2"
+    ] .
+
+<https://mead.example/observation/population-density/bucuresti-ilfov/2022>
+    a schema:Observation ;
+    schema:observationAbout region:bucuresti-ilfov ;
+    schema:measuredProperty indicator:population-density ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 1300.0 ;
+        schema:unitText "people/km2"
+    ] .
+
+<https://mead.example/observation/population-density/nord-est/2022>
+    a schema:Observation ;
+    schema:observationAbout region:nord-est ;
+    schema:measuredProperty indicator:population-density ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 70.0 ;
+        schema:unitText "people/km2"
+    ] .
+
+<https://mead.example/observation/pm25/romania/2022>
+    a schema:Observation ;
+    schema:observationAbout region:romania ;
+    schema:measuredProperty indicator:pm25 ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 15.3 ;
+        schema:unitText "ug/m3"
+    ] .
+
+<https://mead.example/observation/pm25/bucuresti-ilfov/2022>
+    a schema:Observation ;
+    schema:observationAbout region:bucuresti-ilfov ;
+    schema:measuredProperty indicator:pm25 ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 18.9 ;
+        schema:unitText "ug/m3"
+    ] .
+
+<https://mead.example/observation/pm25/nord-est/2022>
+    a schema:Observation ;
+    schema:observationAbout region:nord-est ;
+    schema:measuredProperty indicator:pm25 ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 12.6 ;
+        schema:unitText "ug/m3"
+    ] .
+
+<https://mead.example/observation/urbanization/romania/2022>
+    a schema:Observation ;
+    schema:observationAbout region:romania ;
+    schema:measuredProperty indicator:urbanization ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 55.0 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/urbanization/bucuresti-ilfov/2022>
+    a schema:Observation ;
+    schema:observationAbout region:bucuresti-ilfov ;
+    schema:measuredProperty indicator:urbanization ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 87.0 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/urbanization/nord-est/2022>
+    a schema:Observation ;
+    schema:observationAbout region:nord-est ;
+    schema:measuredProperty indicator:urbanization ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 43.0 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/industrial-employment-share/romania/2022>
+    a schema:Observation ;
+    schema:observationAbout region:romania ;
+    schema:measuredProperty indicator:industrial-employment-share ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 24.0 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/industrial-employment-share/bucuresti-ilfov/2022>
+    a schema:Observation ;
+    schema:observationAbout region:bucuresti-ilfov ;
+    schema:measuredProperty indicator:industrial-employment-share ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 19.0 ;
+        schema:unitText "percent"
+    ] .
+
+<https://mead.example/observation/industrial-employment-share/nord-est/2022>
+    a schema:Observation ;
+    schema:observationAbout region:nord-est ;
+    schema:measuredProperty indicator:industrial-employment-share ;
+    schema:observationDate "2022"^^xsd:gYear ;
+    schema:value [
+        a schema:QuantitativeValue ;
+        schema:value 27.0 ;
+        schema:unitText "percent"
+    ] .
