@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -171,7 +172,7 @@ public class WikidataClient {
         int idx = wikidataImageValue.lastIndexOf("Special:FilePath/");
         if (idx >= 0) {
             String tail = wikidataImageValue.substring(idx + "Special:FilePath/".length());
-            return COMMONS_FILEPATH + tail;
+            return COMMONS_FILEPATH + normalizeCommonsFilename(tail);
         }
 
         if (wikidataImageValue.startsWith(COMMONS_HTTP_URL)) {
@@ -182,8 +183,19 @@ public class WikidataClient {
         }
 
         String filename = wikidataImageValue.startsWith("File:") ? wikidataImageValue.substring("File:".length()) : wikidataImageValue;
-        filename = filename.replace(" ", "_");
-        return COMMONS_FILEPATH + URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
+        return COMMONS_FILEPATH + normalizeCommonsFilename(filename);
+    }
+
+    private static String normalizeCommonsFilename(String filename) {
+        if (filename == null || filename.isBlank()) return "";
+        String cleaned = filename;
+        try {
+            cleaned = URLDecoder.decode(cleaned, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException ignored) {
+        }
+        cleaned = cleaned.replace(" ", "_");
+        String encoded = URLEncoder.encode(cleaned, StandardCharsets.UTF_8).replace("+", "%20");
+        return encoded.replace("%20", "_");
     }
 
     private static List<String> removeDuplicates(List<String> inputList) {
