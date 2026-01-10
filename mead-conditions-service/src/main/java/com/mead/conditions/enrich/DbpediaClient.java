@@ -20,16 +20,13 @@ public class DbpediaClient {
 
     private static final String DBO = "http://dbpedia.org/ontology/";
     private static final String DBP = "http://dbpedia.org/property/";
-    private static final String FOAF = "http://xmlns.com/foaf/0.1/";
     private static final String RDFS = "http://www.w3.org/2000/01/rdf-schema#";
-    private static final String SCHEMA = "http://schema.org/";
 
     private static final String LANG_EN = "en";
 
     private static final int LIMIT_ONE = 1;
     private static final int LIMIT_LABELS = 50;
     private static final int LIMIT_LITERALS = 10;
-    private static final int LIMIT_IMAGES = 50;
 
     @Value("${mead.external.dbpedia.endpoint}")
     private String endpoint;
@@ -58,15 +55,14 @@ public class DbpediaClient {
         CompletableFuture<String> descriptionFuture = future(() -> fetchEnglishDescription(dbpediaResourceUri));
         CompletableFuture<List<String>> symptomsFuture = future(() -> fetchSymptoms(dbpediaResourceUri));
         CompletableFuture<List<String>> riskFactorsFuture = future(() -> fetchRiskFactors(dbpediaResourceUri));
-        CompletableFuture<List<String>> imagesFuture = future(() -> fetchImageUrls(dbpediaResourceUri));
 
-        CompletableFuture.allOf(descriptionFuture, symptomsFuture, riskFactorsFuture, imagesFuture).join();
+        CompletableFuture.allOf(descriptionFuture, symptomsFuture, riskFactorsFuture).join();
 
         return new DbpediaEnrichment(
                 descriptionFuture.join(),
                 symptomsFuture.join(),
                 riskFactorsFuture.join(),
-                imagesFuture.join()
+                List.of()
         );
     }
 
@@ -78,28 +74,6 @@ public class DbpediaClient {
         if (descriptionText != null) return descriptionText;
 
         return queryEnglishLiteral(resourceUri, RDFS + "comment");
-    }
-
-    private List<String> fetchImageUrls(String resourceUri) {
-        String sparqlQuery = """
-                PREFIX dbo: <%s>
-                PREFIX dbp: <%s>
-                PREFIX foaf: <%s>
-                PREFIX schema: <%s>
-                SELECT DISTINCT ?img WHERE {
-                  { <%s> dbo:thumbnail ?img . }
-                  UNION { <%s> foaf:depiction ?img . }
-                  UNION { <%s> schema:image ?img . }
-                  UNION { <%s> dbp:image ?img . }
-                } LIMIT %d
-                """.formatted(DBO, DBP, FOAF, SCHEMA, resourceUri, resourceUri, resourceUri, resourceUri, LIMIT_IMAGES);
-
-        List<String> raw = sparql.selectStrings(request(sparqlQuery, "img"));
-        List<String> normalized = raw.stream()
-                .map(DbpediaClient::stripQueryParams)
-                .filter(s -> s != null && !s.isBlank())
-                .toList();
-        return removeDuplicates(normalized);
     }
 
     private List<String> fetchSymptoms(String resourceUri) {
@@ -211,9 +185,4 @@ public class DbpediaClient {
         return new ArrayList<>(map.values());
     }
 
-    private static String stripQueryParams(String url) {
-        if (url == null) return null;
-        int q = url.indexOf('?');
-        return q >= 0 ? url.substring(0, q) : url;
-    }
 }
