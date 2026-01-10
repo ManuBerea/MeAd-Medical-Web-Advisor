@@ -1,0 +1,1 @@
+﻿Generalized anxiety disorder involves excessive, hard to control worry about everyday matters. It can cause restlessness, muscle tension, trouble sleeping, and difficulty concentrating. Treatment often includes therapy, stress management, and sometimes medication.

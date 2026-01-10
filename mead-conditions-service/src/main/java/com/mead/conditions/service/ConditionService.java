@@ -11,9 +11,12 @@ import com.mead.conditions.enrich.WikidocSnippetLoader;
 import com.mead.conditions.repository.ConditionsRepository.Condition;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+
+import static com.mead.conditions.enrich.ImageNormalizer.*;
 
 @Service
 public class ConditionService {
@@ -115,9 +118,9 @@ public class ConditionService {
     }
 
     private static List<String> combineAndNormalizeImages(List<String> firstList, List<String> secondList) {
-        List<String> combined = new java.util.ArrayList<>();
+        List<String> combined = new ArrayList<>();
         if (firstList != null) combined.addAll(firstList);
         if (secondList != null) combined.addAll(secondList);
-        return com.mead.conditions.enrich.ImageNormalizer.normalize(combined);
+        return normalize(combined);
     }
 }

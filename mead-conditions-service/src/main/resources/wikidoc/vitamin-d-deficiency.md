@@ -1,0 +1,1 @@
+﻿Vitamin D deficiency occurs when the body does not get enough vitamin D from sunlight, diet, or absorption. It can lead to bone pain, muscle weakness, and increased fracture risk. Treatment includes supplements and safe sun exposure.

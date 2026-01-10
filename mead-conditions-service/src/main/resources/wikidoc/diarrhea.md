@@ -1,0 +1,1 @@
+﻿Diarrhea is frequent, loose, or watery stools, often caused by infections, food intolerance, or medications. It can lead to dehydration, especially in children and older adults. Treatment focuses on fluids and electrolyte replacement and addressing the cause.

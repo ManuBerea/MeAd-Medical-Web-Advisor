@@ -1,0 +1,1 @@
+﻿Attention deficit hyperactivity disorder is a neurodevelopmental condition marked by inattention, hyperactivity, and impulsivity that interfere with daily life. Symptoms often start in childhood and can persist into adulthood. Treatment may include behavioral strategies, school or workplace supports, and medication.

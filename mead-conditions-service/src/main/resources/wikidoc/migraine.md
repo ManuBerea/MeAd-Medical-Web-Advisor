@@ -1,0 +1,1 @@
+﻿Migraine is a type of headache that can cause intense throbbing pain, often on one side of the head. It may be accompanied by nausea, sensitivity to light or sound, and sometimes aura. Treatment includes pain relief, preventive medications, and trigger management.

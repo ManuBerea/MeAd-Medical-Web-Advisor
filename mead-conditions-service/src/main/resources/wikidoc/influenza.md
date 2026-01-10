@@ -1,0 +1,1 @@
+﻿Influenza is a contagious viral respiratory illness that spreads seasonally. Symptoms include fever, chills, body aches, cough, and fatigue. Most people recover with rest and fluids, while antivirals may help if started early.

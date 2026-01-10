@@ -1,0 +1,1 @@
+﻿Hyperlipidemia is an elevation of fats in the blood, such as cholesterol or triglycerides. It increases the risk of cardiovascular disease. Management includes diet, exercise, and sometimes medications like statins.

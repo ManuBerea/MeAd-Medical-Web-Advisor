@@ -1,0 +1,1 @@
+﻿Astigmatism is a common vision problem caused by an irregularly shaped cornea or lens. It results in blurred or distorted vision at all distances. Glasses, contact lenses, or refractive surgery can correct it.

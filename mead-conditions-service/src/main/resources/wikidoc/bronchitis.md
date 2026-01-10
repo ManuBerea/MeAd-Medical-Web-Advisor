@@ -1,0 +1,1 @@
+﻿Bronchitis is inflammation of the bronchial tubes, often following a viral infection. It leads to cough, mucus production, and chest discomfort. Acute bronchitis usually improves with rest and fluids, while chronic bronchitis requires long term management.

@@ -1,0 +1,1 @@
+﻿Hypertension, or high blood pressure, is a chronic condition that increases the risk of heart disease and stroke. It often has no symptoms and is detected with routine measurements. Management includes lifestyle changes and, when needed, medication.

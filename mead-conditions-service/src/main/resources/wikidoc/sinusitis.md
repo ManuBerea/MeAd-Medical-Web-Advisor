@@ -1,0 +1,1 @@
+﻿Sinusitis is inflammation of the sinuses, often after a viral infection or due to allergies. It can cause facial pressure, nasal congestion, thick drainage, and reduced sense of smell. Treatment may include saline rinses, decongestants, or antibiotics when bacterial.

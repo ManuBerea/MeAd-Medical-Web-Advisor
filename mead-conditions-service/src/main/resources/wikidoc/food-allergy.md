@@ -1,0 +1,1 @@
+﻿Food allergy is an immune reaction to certain foods such as peanuts, tree nuts, milk, eggs, or shellfish. Symptoms can include hives, swelling, stomach pain, vomiting, or breathing problems and may be severe. Management focuses on avoiding the trigger food and carrying emergency medication if prescribed.

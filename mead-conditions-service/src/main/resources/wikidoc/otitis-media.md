@@ -1,0 +1,1 @@
+﻿Otitis media is a middle ear infection, common in children, often following a cold. Symptoms include ear pain, fever, irritability, and sometimes temporary hearing loss. Many cases resolve on their own, while others need pain relief or antibiotics.

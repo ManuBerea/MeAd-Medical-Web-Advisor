@@ -1,0 +1,1 @@
+﻿Tension headache is the most common type of headache, often described as a tight band of pressure around the head. It can be triggered by stress, poor posture, or muscle tension. Treatment includes rest, stretching, and over the counter pain relievers.

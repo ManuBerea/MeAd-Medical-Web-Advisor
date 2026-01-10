@@ -1,0 +1,1 @@
+﻿Dental caries, or tooth decay, happens when bacteria produce acids that damage tooth enamel. It can cause toothache, sensitivity, and cavities. Prevention includes brushing with fluoride, flossing, and regular dental care.

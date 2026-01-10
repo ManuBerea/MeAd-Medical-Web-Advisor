@@ -1,0 +1,1 @@
+﻿Conjunctivitis is inflammation of the conjunctiva, the thin membrane covering the white of the eye and inner eyelids. It can be caused by viruses, bacteria, allergies, or irritants and leads to redness, discharge, and discomfort. Treatment depends on the cause and may include lubricating drops, antihistamines, or antibiotics.

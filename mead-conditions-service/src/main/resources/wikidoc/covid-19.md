@@ -1,0 +1,1 @@
+﻿COVID-19 is a respiratory illness caused by the SARS-CoV-2 virus. Symptoms range from mild to severe and can include fever, cough, shortness of breath, loss of taste or smell, and fatigue. Prevention includes vaccination, and treatment depends on severity.

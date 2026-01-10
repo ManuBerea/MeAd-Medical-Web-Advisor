@@ -1,0 +1,1 @@
+﻿The common cold is a mild viral infection of the upper respiratory tract. It causes runny or stuffy nose, sore throat, cough, and sneezing. Treatment focuses on symptom relief, and most cases resolve within a week or two.

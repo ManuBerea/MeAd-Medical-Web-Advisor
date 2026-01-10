@@ -1,0 +1,1 @@
+﻿Gastroenteritis is inflammation of the stomach and intestines, usually due to viral or bacterial infection. It causes nausea, vomiting, diarrhea, and abdominal cramps. Most cases resolve with rest and hydration.

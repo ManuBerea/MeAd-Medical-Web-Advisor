@@ -1,0 +1,1 @@
+﻿Headache is pain or discomfort in the head or face and can have many causes. It may be tension related, migraine related, or due to illness, dehydration, or eye strain. Most headaches improve with rest, hydration, and over the counter pain relief.

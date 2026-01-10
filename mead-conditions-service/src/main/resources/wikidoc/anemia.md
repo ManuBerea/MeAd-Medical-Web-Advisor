@@ -1,0 +1,1 @@
+﻿Anemia is a condition where the blood has a reduced ability to carry oxygen, often due to low hemoglobin. Symptoms include fatigue, weakness, pale skin, and shortness of breath. Treatment depends on the cause and may include diet changes, supplements, or addressing blood loss.

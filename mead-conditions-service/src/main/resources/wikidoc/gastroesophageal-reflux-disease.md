@@ -1,0 +1,1 @@
+﻿Gastroesophageal reflux disease is a condition where stomach acid frequently flows back into the esophagus. This causes heartburn, regurgitation, and sometimes cough or throat irritation. Treatment includes diet changes, medications, and in severe cases surgery.
