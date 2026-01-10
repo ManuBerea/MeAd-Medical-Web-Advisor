@@ -27,6 +27,7 @@ public class WikidataClient {
     private static final String LANG_EN = "en";
     private static final int LIMIT_DESCRIPTION = 1;
     private static final int LIMIT_LIST = 30;
+    private static final int LIMIT_IMAGES = 50;
 
     @Value("${mead.external.wikidata.endpoint}")
     private String endpoint;
@@ -50,7 +51,7 @@ public class WikidataClient {
             String description,
             List<String> symptoms,
             List<String> riskFactors,
-            String image
+            List<String> images
     ) {}
 
     @Cacheable("wikidataEnrichment")
@@ -60,15 +61,15 @@ public class WikidataClient {
         CompletableFuture<String> descriptionFuture = future(() -> fetchDescription(entityUriId));
         CompletableFuture<List<String>> symptomsFuture = future(() -> fetchSymptoms(entityUriId));
         CompletableFuture<List<String>> riskFactorsFuture = future(() -> fetchRiskFactors(entityUriId));
-        CompletableFuture<String> imageFuture = future(() -> fetchImageUrl(entityUriId));
+        CompletableFuture<List<String>> imagesFuture = future(() -> fetchImageUrls(entityUriId));
 
-        CompletableFuture.allOf(descriptionFuture, symptomsFuture, riskFactorsFuture, imageFuture).join();
+        CompletableFuture.allOf(descriptionFuture, symptomsFuture, riskFactorsFuture, imagesFuture).join();
 
         return new WikidataEnrichment(
                 descriptionFuture.join(),
                 symptomsFuture.join(),
                 riskFactorsFuture.join(),
-                imageFuture.join()
+                imagesFuture.join()
         );
     }
 
@@ -117,17 +118,17 @@ public class WikidataClient {
         return sparql.selectStrings(request(sparqlQuery, "rfLabel"));
     }
 
-    private String fetchImageUrl(String entityUriId) {
+    private List<String> fetchImageUrls(String entityUriId) {
         String sparqlQuery = """
                 PREFIX wd: <%s>
                 PREFIX wdt: <%s>
                 SELECT ?img WHERE {
                   wd:%s wdt:P18 ?img .
-                } LIMIT 1
-                """.formatted(WD, WDT, entityUriId);
+                } LIMIT %d
+                """.formatted(WD, WDT, entityUriId, LIMIT_IMAGES);
 
-        String raw = sparql.selectFirstString(request(sparqlQuery, "img"));
-        return normalizeWikidataP18ToCommonsUrl(raw);
+        List<String> raw = sparql.selectStrings(request(sparqlQuery, "img"));
+        return normalizeWikidataImages(raw);
     }
 
     private SparqlHttpClient.SelectRequest request(String sparqlQuery, String varName) {
@@ -148,6 +149,19 @@ public class WikidataClient {
     private static final String COMMONS_FILEPATH = "https://commons.wikimedia.org/wiki/Special:FilePath/";
     private static final String COMMONS_HTTPS_URL = "https://commons.wikimedia.org/";
     private static final String COMMONS_HTTP_URL = "http://commons.wikimedia.org/";
+
+    private static List<String> normalizeWikidataImages(List<String> rawImages) {
+        if (rawImages == null || rawImages.isEmpty()) {
+            return List.of();
+        }
+
+        List<String> normalized = rawImages.stream()
+                .map(WikidataClient::normalizeWikidataP18ToCommonsUrl)
+                .filter(s -> s != null && !s.isBlank())
+                .toList();
+
+        return removeDuplicates(normalized);
+    }
 
     private static String normalizeWikidataP18ToCommonsUrl(String wikidataImageValue) {
         if (wikidataImageValue == null || wikidataImageValue.isBlank()) {
@@ -170,5 +184,11 @@ public class WikidataClient {
         String filename = wikidataImageValue.startsWith("File:") ? wikidataImageValue.substring("File:".length()) : wikidataImageValue;
         filename = filename.replace(" ", "_");
         return COMMONS_FILEPATH + URLEncoder.encode(filename, StandardCharsets.UTF_8).replace("+", "%20");
+    }
+
+    private static List<String> removeDuplicates(List<String> inputList) {
+        Map<String, String> map = new java.util.LinkedHashMap<>();
+        inputList.forEach(s -> map.putIfAbsent(s.toLowerCase(), s));
+        return List.copyOf(map.values());
     }
 }

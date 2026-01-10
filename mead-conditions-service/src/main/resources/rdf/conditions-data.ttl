@@ -331,13 +331,13 @@ condition:vitamin-d-deficiency
         <https://www.wikidata.org/entity/Q4138762>,
         <http://dbpedia.org/resource/Vitamin_D_deficiency> .
 
-condition:acute-bronchitis
+condition:scabies
     a schema:MedicalCondition ;
-    schema:identifier "acute-bronchitis" ;
-    schema:name "Acute bronchitis"@en ;
+    schema:identifier "scabies" ;
+    schema:name "Scabies"@en ;
     schema:sameAs
-        <https://www.wikidata.org/entity/Q1900400>,
-        <http://dbpedia.org/resource/Acute_bronchitis> .
+        <https://www.wikidata.org/entity/Q167178>,
+        <http://dbpedia.org/resource/Scabies> .
 
 condition:epilepsy
     a schema:MedicalCondition ;

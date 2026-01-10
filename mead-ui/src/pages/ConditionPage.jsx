@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { fetchConditionDetail } from "../api/conditionsApi.js";
 
@@ -7,6 +7,8 @@ export default function ConditionPage() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState("");
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [touchStartX, setTouchStartX] = useState(null);
 
     useEffect(() => {
         let alive = true;
@@ -24,6 +26,52 @@ export default function ConditionPage() {
         })();
         return () => { alive = false; };
     }, [id]);
+
+    const images = useMemo(() => {
+        if (!data) return [];
+        const combined = data.images?.length ? data.images : data.image ? [data.image] : [];
+        const deduped = new Map();
+        combined.forEach((url) => {
+            if (!url) return;
+            const key = url.toLowerCase();
+            if (!deduped.has(key)) deduped.set(key, url);
+        });
+        return Array.from(deduped.values());
+    }, [data]);
+
+    useEffect(() => {
+        setActiveIndex(0);
+    }, [images.length]);
+
+    const totalImages = images.length;
+    const currentImage = totalImages ? images[activeIndex] : null;
+
+    const showPrev = () => {
+        if (!totalImages) return;
+        setActiveIndex((prev) => (prev - 1 + totalImages) % totalImages);
+    };
+
+    const showNext = () => {
+        if (!totalImages) return;
+        setActiveIndex((prev) => (prev + 1) % totalImages);
+    };
+
+    const handleTouchStart = (event) => {
+        setTouchStartX(event.touches[0].clientX);
+    };
+
+    const handleTouchEnd = (event) => {
+        if (touchStartX == null) return;
+        const delta = event.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(delta) > 40) {
+            if (delta > 0) {
+                showPrev();
+            } else {
+                showNext();
+            }
+        }
+        setTouchStartX(null);
+    };
 
     if (loading) return <p className="status">Loading...</p>;
     if (err) return <p className="status error">Error: {err}</p>;
@@ -45,13 +93,49 @@ export default function ConditionPage() {
                         <h1 property="name">{data.name}</h1>
                         <p className="muted">id: {data.id}</p>
                     </div>
-                    {data.image && (
-                        <div className="image-frame">
-                            <img
-                                src={data.image}
-                                alt={data.name}
-                                property="image"
-                            />
+                    {currentImage && (
+                        <div className="carousel" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+                            <div className="carousel-frame image-frame">
+                                <img
+                                    src={currentImage}
+                                    alt={data.name}
+                                    property="image"
+                                    className="carousel-image"
+                                />
+                                {totalImages > 1 && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            className="carousel-arrow left"
+                                            onClick={showPrev}
+                                            aria-label="Previous image"
+                                        >
+                                            {"<"}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="carousel-arrow right"
+                                            onClick={showNext}
+                                            aria-label="Next image"
+                                        >
+                                            {">"}
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                            {totalImages > 1 && (
+                                <div className="carousel-dots">
+                                    {images.map((_, index) => (
+                                        <button
+                                            key={`${data.id}-${index}`}
+                                            type="button"
+                                            className={`carousel-dot${index === activeIndex ? " active" : ""}`}
+                                            onClick={() => setActiveIndex(index)}
+                                            aria-label={`Show image ${index + 1}`}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </header>

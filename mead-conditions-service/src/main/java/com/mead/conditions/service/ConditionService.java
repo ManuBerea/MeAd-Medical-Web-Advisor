@@ -11,7 +11,9 @@ import com.mead.conditions.enrich.WikidocSnippetLoader;
 import com.mead.conditions.repository.ConditionsRepository.Condition;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -55,13 +57,13 @@ public class ConditionService {
 
         CompletableFuture<WikidataEnrichment> wdFuture = async(() ->
                 wikidataUri == null
-                        ? new WikidataEnrichment(null, List.of(), List.of(), null)
+                        ? new WikidataEnrichment(null, List.of(), List.of(), List.of())
                         : wikidata.enrichFromEntityUri(wikidataUri)
         );
 
         CompletableFuture<DbpediaEnrichment> dbFuture = async(() ->
                 dbpediaUri == null
-                        ? new DbpediaEnrichment(null, List.of(), List.of(), null)
+                        ? new DbpediaEnrichment(null, List.of(), List.of(), List.of())
                         : dbpedia.enrichFromResourceUri(dbpediaUri)
         );
 
@@ -75,7 +77,8 @@ public class ConditionService {
         String description = preferText(db.description(), wd.description());
         List<String> symptoms = preferList(wd.symptoms(), db.symptoms());
         List<String> riskFactors = preferList(wd.riskFactors(), db.riskFactors());
-        String image = preferText(wd.image(), db.thumbnail());
+        List<String> images = mergeImages(wd.images(), db.images());
+        String image = images.isEmpty() ? null : images.get(0);
 
         return new ConditionDetail(
                 SCHEMA_ORG_CONTEXT,
@@ -85,6 +88,7 @@ public class ConditionService {
                 condition.name(),
                 description,
                 image,
+                images,
                 symptoms,
                 riskFactors,
                 condition.sameAs(),
@@ -112,5 +116,20 @@ public class ConditionService {
         if (first != null && !first.isEmpty()) return first;
         if (second != null && !second.isEmpty()) return second;
         return List.of();
+    }
+
+    private static List<String> mergeImages(List<String> first, List<String> second) {
+        Map<String, String> map = new LinkedHashMap<>();
+        addImages(map, first);
+        addImages(map, second);
+        return List.copyOf(map.values());
+    }
+
+    private static void addImages(Map<String, String> map, List<String> images) {
+        if (images == null) return;
+        for (String image : images) {
+            if (image == null || image.isBlank()) continue;
+            map.putIfAbsent(image.toLowerCase(), image);
+        }
     }
 }

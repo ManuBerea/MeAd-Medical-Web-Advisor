@@ -20,6 +20,7 @@ public final class ConditionDto {
             String description,
 
             String image,
+            List<String> images,
 
             List<String> symptoms,
             List<String> riskFactors,

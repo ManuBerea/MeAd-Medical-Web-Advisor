@@ -20,13 +20,16 @@ public class DbpediaClient {
 
     private static final String DBO = "http://dbpedia.org/ontology/";
     private static final String DBP = "http://dbpedia.org/property/";
+    private static final String FOAF = "http://xmlns.com/foaf/0.1/";
     private static final String RDFS = "http://www.w3.org/2000/01/rdf-schema#";
+    private static final String SCHEMA = "http://schema.org/";
 
     private static final String LANG_EN = "en";
 
     private static final int LIMIT_ONE = 1;
     private static final int LIMIT_LABELS = 50;
     private static final int LIMIT_LITERALS = 10;
+    private static final int LIMIT_IMAGES = 50;
 
     @Value("${mead.external.dbpedia.endpoint}")
     private String endpoint;
@@ -47,7 +50,7 @@ public class DbpediaClient {
             String description,
             List<String> symptoms,
             List<String> riskFactors,
-            String thumbnail
+            List<String> images
     ) {}
 
     @Cacheable("dbpediaEnrichment")
@@ -55,15 +58,15 @@ public class DbpediaClient {
         CompletableFuture<String> descriptionFuture = future(() -> fetchEnglishDescription(dbpediaResourceUri));
         CompletableFuture<List<String>> symptomsFuture = future(() -> fetchSymptoms(dbpediaResourceUri));
         CompletableFuture<List<String>> riskFactorsFuture = future(() -> fetchRiskFactors(dbpediaResourceUri));
-        CompletableFuture<String> thumbnailFuture = future(() -> fetchThumbnailUrl(dbpediaResourceUri));
+        CompletableFuture<List<String>> imagesFuture = future(() -> fetchImageUrls(dbpediaResourceUri));
 
-        CompletableFuture.allOf(descriptionFuture, symptomsFuture, riskFactorsFuture, thumbnailFuture).join();
+        CompletableFuture.allOf(descriptionFuture, symptomsFuture, riskFactorsFuture, imagesFuture).join();
 
         return new DbpediaEnrichment(
                 descriptionFuture.join(),
                 symptomsFuture.join(),
                 riskFactorsFuture.join(),
-                thumbnailFuture.join()
+                imagesFuture.join()
         );
     }
 
@@ -77,19 +80,26 @@ public class DbpediaClient {
         return queryEnglishLiteral(resourceUri, RDFS + "comment");
     }
 
-    private String fetchThumbnailUrl(String resourceUri) {
+    private List<String> fetchImageUrls(String resourceUri) {
         String sparqlQuery = """
                 PREFIX dbo: <%s>
-                SELECT ?thumbnail WHERE {
-                  <%s> dbo:thumbnail ?thumbnail .
+                PREFIX dbp: <%s>
+                PREFIX foaf: <%s>
+                PREFIX schema: <%s>
+                SELECT DISTINCT ?img WHERE {
+                  { <%s> dbo:thumbnail ?img . }
+                  UNION { <%s> foaf:depiction ?img . }
+                  UNION { <%s> schema:image ?img . }
+                  UNION { <%s> dbp:image ?img . }
                 } LIMIT %d
-                """.formatted(DBO, resourceUri, LIMIT_ONE);
+                """.formatted(DBO, DBP, FOAF, SCHEMA, resourceUri, resourceUri, resourceUri, resourceUri, LIMIT_IMAGES);
 
-        String url = sparql.selectFirstString(request(sparqlQuery, "thumbnail"));
-        if (url == null) return null;
-
-        int q = url.indexOf('?');
-        return q >= 0 ? url.substring(0, q) : url;
+        List<String> raw = sparql.selectStrings(request(sparqlQuery, "img"));
+        List<String> normalized = raw.stream()
+                .map(DbpediaClient::stripQueryParams)
+                .filter(s -> s != null && !s.isBlank())
+                .toList();
+        return removeDuplicates(normalized);
     }
 
     private List<String> fetchSymptoms(String resourceUri) {
@@ -199,5 +209,11 @@ public class DbpediaClient {
         Map<String, String> map = new LinkedHashMap<>();
         inputList.forEach(s -> map.putIfAbsent(s.toLowerCase(), s));
         return new ArrayList<>(map.values());
+    }
+
+    private static String stripQueryParams(String url) {
+        if (url == null) return null;
+        int q = url.indexOf('?');
+        return q >= 0 ? url.substring(0, q) : url;
     }
 }

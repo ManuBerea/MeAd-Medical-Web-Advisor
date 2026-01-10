@@ -46,12 +46,12 @@ class ConditionServiceTest {
         when(wikidata.enrichFromEntityUri("https://www.wikidata.org/entity/Q35869"))
                 .thenReturn(new WikidataClient.WikidataEnrichment(
                         "wd desc", List.of("wheeze"), List.of("smoking"),
-                        "https://commons.wikimedia.org/wiki/Special:FilePath/Asthma.jpg"
+                        List.of("https://commons.wikimedia.org/wiki/Special:FilePath/Asthma.jpg")
                 ));
 
         when(dbpedia.enrichFromResourceUri("http://dbpedia.org/resource/Asthma"))
                 .thenReturn(new DbpediaEnrichment(
-                        "dbpedia desc", List.of(), List.of(), null
+                        "dbpedia desc", List.of(), List.of(), List.of()
                 ));
 
         when(wikidoc.loadSnippet("asthma")).thenReturn("snippet");
@@ -71,12 +71,12 @@ class ConditionServiceTest {
 
         when(wikidata.enrichFromEntityUri("https://www.wikidata.org/entity/Q35869"))
                 .thenReturn(new WikidataClient.WikidataEnrichment(
-                        "wd desc", List.of(), List.of(), null
+                        "wd desc", List.of(), List.of(), List.of()
                 ));
 
         when(dbpedia.enrichFromResourceUri("http://dbpedia.org/resource/Asthma"))
                 .thenReturn(new DbpediaEnrichment(
-                        "  ", List.of(), List.of(), null
+                        "  ", List.of(), List.of(), List.of()
                 ));
 
         when(wikidoc.loadSnippet("asthma")).thenReturn("snippet");
@@ -96,13 +96,13 @@ class ConditionServiceTest {
 
         when(wikidata.enrichFromEntityUri("https://www.wikidata.org/entity/Q12174"))
                 .thenReturn(new WikidataClient.WikidataEnrichment(
-                        "wd", List.of(), List.of(), null
+                        "wd", List.of(), List.of(), List.of()
                 ));
 
         when(dbpedia.enrichFromResourceUri("http://dbpedia.org/resource/Obesity"))
                 .thenReturn(new DbpediaEnrichment(
                         "db", List.of("Increased fat"), List.of("High-calorie diet"),
-                        "https://commons.wikimedia.org/wiki/Special:FilePath/Obesity.svg"
+                        List.of("https://commons.wikimedia.org/wiki/Special:FilePath/Obesity.svg")
                 ));
 
         when(wikidoc.loadSnippet("obesity")).thenReturn("snippet");
@@ -123,13 +123,13 @@ class ConditionServiceTest {
 
         when(wikidata.enrichFromEntityUri("https://www.wikidata.org/entity/Q12174"))
                 .thenReturn(new WikidataClient.WikidataEnrichment(
-                        "wd", List.of(), List.of(), null
+                        "wd", List.of(), List.of(), List.of()
                 ));
 
         when(dbpedia.enrichFromResourceUri("http://dbpedia.org/resource/Obesity"))
                 .thenReturn(new DbpediaEnrichment(
                         "db", List.of(), List.of(),
-                        "https://commons.wikimedia.org/wiki/Special:FilePath/Obesity.svg"
+                        List.of("https://commons.wikimedia.org/wiki/Special:FilePath/Obesity.svg")
                 ));
 
         when(wikidoc.loadSnippet("obesity")).thenReturn("snippet");
@@ -137,6 +137,7 @@ class ConditionServiceTest {
         ConditionDetail detail = service.get("obesity");
 
         assertThat(detail.image()).isEqualTo("https://commons.wikimedia.org/wiki/Special:FilePath/Obesity.svg");
+        assertThat(detail.images()).containsExactly("https://commons.wikimedia.org/wiki/Special:FilePath/Obesity.svg");
     }
 
     @Test
@@ -149,7 +150,7 @@ class ConditionServiceTest {
         when(repo.findById("x")).thenReturn(Optional.of(condition));
         when(dbpedia.enrichFromResourceUri("http://dbpedia.org/resource/Obesity"))
                 .thenReturn(new DbpediaEnrichment(
-                        "db desc", List.of("s1"), List.of("r1"), "img"
+                        "db desc", List.of("s1"), List.of("r1"), List.of("img")
                 ));
         when(wikidoc.loadSnippet("x")).thenReturn("snippet");
 
@@ -160,6 +161,7 @@ class ConditionServiceTest {
         assertThat(detail.symptoms()).containsExactly("s1");
         assertThat(detail.riskFactors()).containsExactly("r1");
         assertThat(detail.image()).isEqualTo("img");
+        assertThat(detail.images()).containsExactly("img");
     }
 
     @Test
@@ -172,7 +174,7 @@ class ConditionServiceTest {
         when(repo.findById("x")).thenReturn(Optional.of(condition));
         when(wikidata.enrichFromEntityUri("https://www.wikidata.org/entity/Q12174"))
                 .thenReturn(new WikidataClient.WikidataEnrichment(
-                        "wd desc", List.of("s1"), List.of("r1"), "img"
+                        "wd desc", List.of("s1"), List.of("r1"), List.of("img")
                 ));
         when(wikidoc.loadSnippet("x")).thenReturn("snippet");
 
@@ -183,6 +185,7 @@ class ConditionServiceTest {
         assertThat(detail.symptoms()).containsExactly("s1");
         assertThat(detail.riskFactors()).containsExactly("r1");
         assertThat(detail.image()).isEqualTo("img");
+        assertThat(detail.images()).containsExactly("img");
     }
 
     @Test
