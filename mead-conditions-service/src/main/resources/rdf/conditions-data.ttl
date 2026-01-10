@@ -40,3 +40,365 @@ condition:lactose-intolerance
     schema:sameAs
         <https://www.wikidata.org/entity/Q219223>,
         <http://dbpedia.org/resource/Lactose_intolerance> .
+
+condition:hives
+    a schema:MedicalCondition ;
+    schema:identifier "hives" ;
+    schema:name "Hives"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q187440>,
+        <http://dbpedia.org/resource/Hives> .
+
+condition:food-allergy
+    a schema:MedicalCondition ;
+    schema:identifier "food-allergy" ;
+    schema:name "Food allergy"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q171171>,
+        <http://dbpedia.org/resource/Food_allergy> .
+
+condition:adhd
+    a schema:MedicalCondition ;
+    schema:identifier "adhd" ;
+    schema:name "Attention deficit hyperactivity disorder"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q181923>,
+        <http://dbpedia.org/resource/Attention_deficit_hyperactivity_disorder> .
+
+condition:scoliosis
+    a schema:MedicalCondition ;
+    schema:identifier "scoliosis" ;
+    schema:name "Scoliosis"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q174857>,
+        <http://dbpedia.org/resource/Scoliosis> .
+
+condition:myopia
+    a schema:MedicalCondition ;
+    schema:identifier "myopia" ;
+    schema:name "Myopia"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q168403>,
+        <http://dbpedia.org/resource/Myopia> .
+
+condition:conjunctivitis
+    a schema:MedicalCondition ;
+    schema:identifier "conjunctivitis" ;
+    schema:name "Conjunctivitis"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q167844>,
+        <http://dbpedia.org/resource/Conjunctivitis> .
+
+condition:allergic_conjunctivitis
+    a schema:MedicalCondition ;
+    schema:identifier "allergic-conjunctivitis" ;
+    schema:name "Allergic conjunctivitis"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q471521>,
+        <http://dbpedia.org/resource/Allergic_conjunctivitis> .
+
+condition:otitis-media
+    a schema:MedicalCondition ;
+    schema:identifier "otitis-media" ;
+    schema:name "Otitis media"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q223254>,
+        <http://dbpedia.org/resource/Otitis_media> .
+
+condition:sinusitis
+    a schema:MedicalCondition ;
+    schema:identifier "sinusitis" ;
+    schema:name "Sinusitis"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q183344>,
+        <http://dbpedia.org/resource/Sinusitis> .
+
+condition:tonsillitis
+    a schema:MedicalCondition ;
+    schema:identifier "tonsillitis" ;
+    schema:name "Tonsillitis"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q186470>,
+        <http://dbpedia.org/resource/Tonsillitis> .
+
+condition:strep-throat
+    a schema:MedicalCondition ;
+    schema:identifier "strep-throat" ;
+    schema:name "Strep throat"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q840143>,
+        <http://dbpedia.org/resource/Strep_throat> .
+
+condition:influenza
+    a schema:MedicalCondition ;
+    schema:identifier "influenza" ;
+    schema:name "Influenza"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q2840>,
+        <http://dbpedia.org/resource/Influenza> .
+
+condition:common-cold
+    a schema:MedicalCondition ;
+    schema:identifier "common-cold" ;
+    schema:name "Common cold"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q12125>,
+        <http://dbpedia.org/resource/Common_cold> .
+
+condition:covid-19
+    a schema:MedicalCondition ;
+    schema:identifier "covid-19" ;
+    schema:name "COVID-19"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q84263196>,
+        <http://dbpedia.org/resource/COVID-19> .
+
+condition:anemia
+    a schema:MedicalCondition ;
+    schema:identifier "anemia" ;
+    schema:name "Anemia"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q5445>,
+        <http://dbpedia.org/resource/Anemia> .
+
+condition:iron-deficiency-anemia
+    a schema:MedicalCondition ;
+    schema:identifier "iron-deficiency-anemia" ;
+    schema:name "Iron deficiency anemia"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q954674>,
+        <http://dbpedia.org/resource/Iron-deficiency_anemia> .
+
+condition:major-depressive-disorder
+    a schema:MedicalCondition ;
+    schema:identifier "major-depressive-disorder" ;
+    schema:name "Major depressive disorder"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q42844>,
+        <http://dbpedia.org/resource/Major_depressive_disorder> .
+
+condition:generalized-anxiety-disorder
+    a schema:MedicalCondition ;
+    schema:identifier "generalized-anxiety-disorder" ;
+    schema:name "Generalized anxiety disorder"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q845224>,
+        <http://dbpedia.org/resource/Generalized_anxiety_disorder> .
+
+condition:headache
+    a schema:MedicalCondition ;
+    schema:identifier "headache" ;
+    schema:name "Headache"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q86>,
+        <http://dbpedia.org/resource/Headache> .
+
+condition:dermatitis
+    a schema:MedicalCondition ;
+    schema:identifier "dermatitis" ;
+    schema:name "Dermatitis"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q229256>,
+        <http://dbpedia.org/resource/Dermatitis> .
+
+condition:irritable-bowel-syndrome
+    a schema:MedicalCondition ;
+    schema:identifier "irritable-bowel-syndrome" ;
+    schema:name "Irritable bowel syndrome"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q838966>,
+        <http://dbpedia.org/resource/Irritable_bowel_syndrome> .
+
+condition:constipation
+    a schema:MedicalCondition ;
+    schema:identifier "constipation" ;
+    schema:name "Constipation"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q178436>,
+        <http://dbpedia.org/resource/Constipation> .
+
+condition:diarrhea
+    a schema:MedicalCondition ;
+    schema:identifier "diarrhea" ;
+    schema:name "Diarrhea"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q40878>,
+        <http://dbpedia.org/resource/Diarrhea> .
+
+condition:gastroenteritis
+    a schema:MedicalCondition ;
+    schema:identifier "gastroenteritis" ;
+    schema:name "Gastroenteritis"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q156103>,
+        <http://dbpedia.org/resource/Gastroenteritis> .
+
+condition:pneumonia
+    a schema:MedicalCondition ;
+    schema:identifier "pneumonia" ;
+    schema:name "Pneumonia"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q12192>,
+        <http://dbpedia.org/resource/Pneumonia> .
+
+condition:bronchitis
+    a schema:MedicalCondition ;
+    schema:identifier "bronchitis" ;
+    schema:name "Bronchitis"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q173022>,
+        <http://dbpedia.org/resource/Bronchitis> .
+
+condition:appendicitis
+    a schema:MedicalCondition ;
+    schema:identifier "appendicitis" ;
+    schema:name "Appendicitis"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q121041>,
+        <http://dbpedia.org/resource/Appendicitis> .
+
+condition:urinary-tract-infection
+    a schema:MedicalCondition ;
+    schema:identifier "urinary-tract-infection" ;
+    schema:name "Urinary tract infection"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q221668>,
+        <http://dbpedia.org/resource/Urinary_tract_infection> .
+
+condition:gingivitis
+    a schema:MedicalCondition ;
+    schema:identifier "gingivitis" ;
+    schema:name "Gingivitis"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q673083>,
+        <http://dbpedia.org/resource/Gingivitis> .
+
+condition:astigmatism
+    a schema:MedicalCondition ;
+    schema:identifier "astigmatism" ;
+    schema:name "Astigmatism"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q177895>,
+        <http://dbpedia.org/resource/Astigmatism> .
+
+condition:insomnia
+    a schema:MedicalCondition ;
+    schema:identifier "insomnia" ;
+    schema:name "Insomnia"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q1869874>,
+        <http://dbpedia.org/resource/Insomnia> .
+
+
+
+condition:peanut-allergy
+    a schema:MedicalCondition ;
+    schema:identifier "peanut-allergy" ;
+    schema:name "Peanut allergy"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q7157933>,
+        <http://dbpedia.org/resource/Peanut_allergy> .
+
+condition:migraine
+    a schema:MedicalCondition ;
+    schema:identifier "migraine" ;
+    schema:name "Migraine"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q133823>,
+        <http://dbpedia.org/resource/Migraine> .
+
+condition:tension-headache
+    a schema:MedicalCondition ;
+    schema:identifier "tension-headache" ;
+    schema:name "Tension headache"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q1338684>,
+        <http://dbpedia.org/resource/Tension_headache> .
+
+condition:hypertension
+    a schema:MedicalCondition ;
+    schema:identifier "hypertension" ;
+    schema:name "Hypertension"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q95566669>,
+        <http://dbpedia.org/resource/Hypertension> .
+
+condition:vitamin-d-deficiency
+    a schema:MedicalCondition ;
+    schema:identifier "vitamin-d-deficiency" ;
+    schema:name "Vitamin D deficiency"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q4138762>,
+        <http://dbpedia.org/resource/Vitamin_D_deficiency> .
+
+condition:acute-bronchitis
+    a schema:MedicalCondition ;
+    schema:identifier "acute-bronchitis" ;
+    schema:name "Acute bronchitis"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q1900400>,
+        <http://dbpedia.org/resource/Acute_bronchitis> .
+
+condition:epilepsy
+    a schema:MedicalCondition ;
+    schema:identifier "epilepsy" ;
+    schema:name "Epilepsy"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q41571>,
+        <http://dbpedia.org/resource/Epilepsy> .
+
+condition:sleep-apnea
+    a schema:MedicalCondition ;
+    schema:identifier "sleep-apnea" ;
+    schema:name "Sleep apnea"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q213600>,
+        <http://dbpedia.org/resource/Sleep_apnea> .
+
+condition:sleep-disorder
+    a schema:MedicalCondition ;
+    schema:identifier "sleep-disorder" ;
+    schema:name "Sleep disorder"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q177190>,
+        <http://dbpedia.org/resource/Sleep_disorder> .
+
+condition:gastroesophageal-reflux-disease
+    a schema:MedicalCondition ;
+    schema:identifier "gastroesophageal-reflux-disease" ;
+    schema:name "Gastroesophageal reflux disease"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q223591>,
+        <http://dbpedia.org/resource/Gastroesophageal_reflux_disease> .
+
+condition:hyperlipidemia
+    a schema:MedicalCondition ;
+    schema:identifier "hyperlipidemia" ;
+    schema:name "Hyperlipidemia"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q1079120>,
+        <http://dbpedia.org/resource/Hyperlipidemia> .
+
+condition:dental-caries
+    a schema:MedicalCondition ;
+    schema:identifier "dental-caries" ;
+    schema:name "Dental caries"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q133772>,
+        <http://dbpedia.org/resource/Tooth_decay> .
+
+condition:albinism
+    a schema:MedicalCondition ;
+    schema:identifier "albinism" ;
+    schema:name "Albinism"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q81867>,
+        <http://dbpedia.org/resource/Albinism> .
+
+condition:acne
+    a schema:MedicalCondition ;
+    schema:identifier "acne" ;
+    schema:name "Acne"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q79928>,
+        <http://dbpedia.org/resource/Acne> .
