@@ -15,4 +15,4 @@ mead:
       timeout-ms: 8000
     dbpedia:
       endpoint: https://dbpedia.org/sparql
-      timeout-ms: 10000
+      timeout-ms: 8000
