@@ -33,7 +33,6 @@ class ConditionsControllerWebTest {
                 "asthma",
                 "Asthma",
                 "Some description",
-                "https://commons.wikimedia.org/wiki/Special:FilePath/Asthma.jpg",
                 List.of("https://commons.wikimedia.org/wiki/Special:FilePath/Asthma.jpg"),
                 List.of("wheeze"),
                 List.of("smoking"),
@@ -47,7 +46,6 @@ class ConditionsControllerWebTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(jsonPath("$.identifier").value("asthma"))
-                .andExpect(jsonPath("$.image").exists())
                 .andExpect(jsonPath("$.images[0]").exists());
     }
 

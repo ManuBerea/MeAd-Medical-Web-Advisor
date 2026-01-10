@@ -55,10 +55,10 @@ public class DbpediaClient {
 
     @Cacheable("dbpediaEnrichment")
     public DbpediaEnrichment enrichFromResourceUri(String dbpediaResourceUri) {
-        CompletableFuture<String> descriptionFuture = future(() -> fetchEnglishDescription(dbpediaResourceUri));
-        CompletableFuture<List<String>> symptomsFuture = future(() -> fetchSymptoms(dbpediaResourceUri));
-        CompletableFuture<List<String>> riskFactorsFuture = future(() -> fetchRiskFactors(dbpediaResourceUri));
-        CompletableFuture<List<String>> imagesFuture = future(() -> fetchImageUrls(dbpediaResourceUri));
+        CompletableFuture<String> descriptionFuture = executeAsync(() -> fetchEnglishDescription(dbpediaResourceUri));
+        CompletableFuture<List<String>> symptomsFuture = executeAsync(() -> fetchSymptoms(dbpediaResourceUri));
+        CompletableFuture<List<String>> riskFactorsFuture = executeAsync(() -> fetchRiskFactors(dbpediaResourceUri));
+        CompletableFuture<List<String>> imagesFuture = executeAsync(() -> fetchImageUrls(dbpediaResourceUri));
 
         CompletableFuture.allOf(descriptionFuture, symptomsFuture, riskFactorsFuture, imagesFuture).join();
 
@@ -81,7 +81,7 @@ public class DbpediaClient {
     }
 
     private List<String> fetchSymptoms(String resourceUri) {
-        List<String> ontologySymptoms = sparql.selectStrings(request("""
+        List<String> ontologySymptoms = sparql.selectStrings(createRequest("""
                 PREFIX dbo: <%s>
                 PREFIX rdfs: <%s>
                 SELECT DISTINCT ?label WHERE {
@@ -93,7 +93,7 @@ public class DbpediaClient {
 
         if (!ontologySymptoms.isEmpty()) return removeDuplicates(ontologySymptoms);
 
-        List<String> raw = sparql.selectStrings(request("""
+        List<String> rawLiterals = sparql.selectStrings(createRequest("""
                 PREFIX dbp: <%s>
                 SELECT DISTINCT ?symptomLiteral WHERE {
                   <%s> dbp:symptoms ?symptomLiteral .
@@ -101,13 +101,13 @@ public class DbpediaClient {
                 } LIMIT %d
                 """.formatted(DBP, resourceUri, LANG_EN, LIMIT_LITERALS), "symptomLiteral"));
 
-        return removeDuplicates(splitCommaList(raw));
+        return removeDuplicates(splitCommaList(rawLiterals));
     }
 
     private List<String> fetchRiskFactors(String resourceUri) {
-        List<String> causes = new ArrayList<>();
+        List<String> riskFactors = new ArrayList<>();
 
-        causes.addAll(sparql.selectStrings(request("""
+        riskFactors.addAll(sparql.selectStrings(createRequest("""
                 PREFIX dbo: <%s>
                 PREFIX rdfs: <%s>
                 SELECT DISTINCT ?label WHERE {
@@ -117,7 +117,7 @@ public class DbpediaClient {
                 } LIMIT %d
                 """.formatted(DBO, RDFS, resourceUri, LANG_EN, LIMIT_LABELS), "label")));
 
-        causes.addAll(splitCommaList(sparql.selectStrings(request("""
+        riskFactors.addAll(splitCommaList(sparql.selectStrings(createRequest("""
                 PREFIX dbp: <%s>
                 SELECT DISTINCT ?causeLiteral WHERE {
                   <%s> dbp:causes ?causeLiteral .
@@ -125,12 +125,12 @@ public class DbpediaClient {
                 } LIMIT %d
                 """.formatted(DBP, resourceUri, LANG_EN, LIMIT_LITERALS), "causeLiteral"))));
 
-        causes = removeDuplicates(causes);
-        if (!causes.isEmpty()) return causes;
+        riskFactors = removeDuplicates(riskFactors);
+        if (!riskFactors.isEmpty()) return riskFactors;
 
-        List<String> risks = new ArrayList<>();
+        List<String> complications = new ArrayList<>();
 
-        risks.addAll(splitCommaList(sparql.selectStrings(request("""
+        complications.addAll(splitCommaList(sparql.selectStrings(createRequest("""
                 PREFIX dbp: <%s>
                 SELECT DISTINCT ?complicationLiteral WHERE {
                   <%s> dbp:complications ?complicationLiteral .
@@ -138,7 +138,7 @@ public class DbpediaClient {
                 } LIMIT %d
                 """.formatted(DBP, resourceUri, LANG_EN, LIMIT_LITERALS), "complicationLiteral"))));
 
-        risks.addAll(splitCommaList(sparql.selectStrings(request("""
+        complications.addAll(splitCommaList(sparql.selectStrings(createRequest("""
                 PREFIX dbo: <%s>
                 SELECT DISTINCT ?complicationLiteral WHERE {
                   <%s> dbo:complications ?complicationLiteral .
@@ -146,7 +146,7 @@ public class DbpediaClient {
                 } LIMIT %d
                 """.formatted(DBO, resourceUri, LANG_EN, LIMIT_LITERALS), "complicationLiteral"))));
 
-        return removeDuplicates(risks);
+        return removeDuplicates(complications);
     }
 
     private String queryEnglishLiteral(String subjectUri, String predicateUri) {
@@ -157,7 +157,7 @@ public class DbpediaClient {
                 } LIMIT %d
                 """.formatted(subjectUri, predicateUri, LANG_EN, LIMIT_ONE);
 
-        return sparql.selectFirstString(request(sparqlQuery, "text"));
+        return sparql.selectFirstString(createRequest(sparqlQuery, "text"));
     }
 
     private List<String> fetchImageUrls(String resourceUri) {
@@ -174,15 +174,10 @@ public class DbpediaClient {
                 } LIMIT %d
                 """.formatted(DBO, DBP, FOAF, SCHEMA, resourceUri, resourceUri, resourceUri, resourceUri, LIMIT_IMAGES);
 
-        List<String> raw = sparql.selectStrings(request(sparqlQuery, "img"));
-        List<String> normalized = raw.stream()
-                .map(DbpediaClient::stripQueryParams)
-                .filter(s -> s != null && !s.isBlank())
-                .toList();
-        return removeDuplicates(normalized);
+        return sparql.selectStrings(createRequest(sparqlQuery, "img"));
     }
 
-    private SparqlHttpClient.SelectRequest request(String sparqlQuery, String varName) {
+    private SparqlHttpClient.SelectRequest createRequest(String sparqlQuery, String varName) {
         return new SparqlHttpClient.SelectRequest(
                 endpoint,
                 timeoutMs,
@@ -193,7 +188,7 @@ public class DbpediaClient {
         );
     }
 
-    private <T> CompletableFuture<T> future(Supplier<T> supplier) {
+    private <T> CompletableFuture<T> executeAsync(Supplier<T> supplier) {
         return CompletableFuture.supplyAsync(supplier, meadExecutor);
     }
 
@@ -209,11 +204,5 @@ public class DbpediaClient {
         Map<String, String> map = new LinkedHashMap<>();
         inputList.forEach(s -> map.putIfAbsent(s.toLowerCase(), s));
         return new ArrayList<>(map.values());
-    }
-
-    private static String stripQueryParams(String url) {
-        if (url == null) return null;
-        int q = url.indexOf('?');
-        return q >= 0 ? url.substring(0, q) : url;
     }
 }

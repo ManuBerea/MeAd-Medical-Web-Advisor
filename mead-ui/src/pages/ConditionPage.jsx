@@ -1,213 +1,163 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { fetchConditionDetail } from "../api/conditionsApi.js";
+import { getConditionDetails } from "../api/conditionsApi.js";
+
+const SWIPE_DISTANCE_THRESHOLD = 40;
 
 export default function ConditionPage() {
-    const normalizeImageKey = (url) => {
-        if (!url) return "";
-        const trimmed = url.trim();
-        if (!trimmed) return "";
-        const cut = trimmed.split(/[?#]/)[0];
-        const lower = cut.toLowerCase();
-        const uploadMarker = "upload.wikimedia.org/";
-        const filePathMarker = "special:filepath/";
-        const redirectMarker = "special:redirect/file/";
-        const filePageMarker = "/wiki/file:";
-        const filePrefix = "file:";
-
-        const safeDecode = (value) => {
-            try {
-                return decodeURIComponent(value);
-            } catch {
-                return value;
-            }
-        };
-
-        if (lower.includes(uploadMarker)) {
-            const parts = cut.split("/");
-            return safeDecode(parts[parts.length - 1]).toLowerCase();
-        }
-
-        const extractAfterMarker = (marker) => {
-            const idx = lower.indexOf(marker);
-            if (idx < 0) return "";
-            return safeDecode(cut.substring(idx + marker.length)).toLowerCase();
-        };
-
-        if (lower.includes(filePathMarker)) {
-            return extractAfterMarker(filePathMarker);
-        }
-
-        if (lower.includes(redirectMarker)) {
-            return extractAfterMarker(redirectMarker);
-        }
-
-        if (lower.includes(filePageMarker)) {
-            return extractAfterMarker(filePageMarker);
-        }
-
-        if (lower.startsWith(filePrefix)) {
-            return safeDecode(cut.substring(filePrefix.length)).toLowerCase();
-        }
-
-        return lower;
-    };
-
-    const { id } = useParams();
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [err, setErr] = useState("");
-    const [activeIndex, setActiveIndex] = useState(0);
-    const [touchStartX, setTouchStartX] = useState(null);
-    const [hiddenImages, setHiddenImages] = useState(() => new Set());
+    const { id: conditionId } = useParams();
+    const [condition, setCondition] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState("");
+    
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [swipeStartX, setSwipeStartX] = useState(null);
+    const [brokenImageUrls, setBrokenImageUrls] = useState(() => new Set());
 
     useEffect(() => {
-        let alive = true;
-        (async () => {
+        let isMounted = true;
+        
+        async function fetchDetails() {
             try {
-                setErr("");
-                setLoading(true);
-                const d = await fetchConditionDetail(id);
-                if (alive) setData(d);
-            } catch (e) {
-                if (alive) setErr(e.message || String(e));
+                setErrorMessage("");
+                setIsLoading(true);
+                const data = await getConditionDetails(conditionId);
+                if (isMounted) setCondition(data);
+            } catch (err) {
+                if (isMounted) setErrorMessage(err.message || String(err));
             } finally {
-                if (alive) setLoading(false);
+                if (isMounted) setIsLoading(false);
             }
-        })();
-        return () => { alive = false; };
-    }, [id]);
-
-    const images = useMemo(() => {
-        if (!data) return [];
-        const combined = data.images?.length ? data.images : data.image ? [data.image] : [];
-        const deduped = new Map();
-        combined.forEach((url) => {
-            const key = normalizeImageKey(url);
-            if (!key) return;
-            if (!deduped.has(key)) deduped.set(key, url);
-        });
-        return Array.from(deduped.values());
-    }, [data]);
-
-    const visibleImages = useMemo(() => {
-        if (hiddenImages.size === 0) return images;
-        return images.filter((url) => !hiddenImages.has(normalizeImageKey(url)));
-    }, [images, hiddenImages]);
-
-    useEffect(() => {
-        setActiveIndex(0);
-        setHiddenImages(new Set());
-    }, [id]);
-
-    useEffect(() => {
-        if (activeIndex >= visibleImages.length && visibleImages.length > 0) {
-            setActiveIndex(0);
         }
-    }, [activeIndex, visibleImages.length]);
 
-    const totalImages = visibleImages.length;
-    const currentImage = totalImages ? visibleImages[activeIndex] : null;
+        fetchDetails();
+        
+        return () => { isMounted = false; };
+    }, [conditionId]);
 
-    const showPrev = () => {
-        if (!totalImages) return;
-        setActiveIndex((prev) => (prev - 1 + totalImages) % totalImages);
+    // Reset carousel state when switching conditions
+    useEffect(() => {
+        setCurrentImageIndex(0);
+        setBrokenImageUrls(new Set());
+    }, [conditionId]);
+
+    const allImages = useMemo(() => condition?.images || [], [condition]);
+
+    const validImages = useMemo(() => {
+        return allImages.filter((url) => !brokenImageUrls.has(url));
+    }, [allImages, brokenImageUrls]);
+
+    // Ensure index is within bounds if images are removed from the list due to errors
+    useEffect(() => {
+        if (currentImageIndex >= validImages.length && validImages.length > 0) {
+            setCurrentImageIndex(0);
+        }
+    }, [currentImageIndex, validImages.length]);
+
+    const imageCount = validImages.length;
+    const currentImageUrl = imageCount ? validImages[currentImageIndex] : null;
+
+    const navigateToPreviousImage = () => {
+        if (imageCount === 0) return;
+        setCurrentImageIndex((prev) => (prev - 1 + imageCount) % imageCount);
     };
 
-    const showNext = () => {
-        if (!totalImages) return;
-        setActiveIndex((prev) => (prev + 1) % totalImages);
+    const navigateToNextImage = () => {
+        if (imageCount === 0) return;
+        setCurrentImageIndex((prev) => (prev + 1) % imageCount);
     };
 
     const handleTouchStart = (event) => {
-        setTouchStartX(event.touches[0].clientX);
+        setSwipeStartX(event.touches[0].clientX);
     };
 
     const handleTouchEnd = (event) => {
-        if (touchStartX == null) return;
-        const delta = event.changedTouches[0].clientX - touchStartX;
-        if (Math.abs(delta) > 40) {
-            if (delta > 0) {
-                showPrev();
+        if (swipeStartX === null) return;
+        
+        const swipeDistance = event.changedTouches[0].clientX - swipeStartX;
+        
+        if (Math.abs(swipeDistance) > SWIPE_DISTANCE_THRESHOLD) {
+            if (swipeDistance > 0) {
+                navigateToPreviousImage();
             } else {
-                showNext();
+                navigateToNextImage();
             }
         }
-        setTouchStartX(null);
+        setSwipeStartX(null);
     };
 
     const handleImageError = () => {
-        if (!currentImage) return;
-        const key = normalizeImageKey(currentImage);
-        if (!key) return;
-        setHiddenImages((prev) => {
-            if (prev.has(key)) return prev;
-            const next = new Set(prev);
-            next.add(key);
-            return next;
+        if (!currentImageUrl) return;
+        setBrokenImageUrls((prev) => {
+            if (prev.has(currentImageUrl)) return prev;
+            const updatedSet = new Set(prev);
+            updatedSet.add(currentImageUrl);
+            return updatedSet;
         });
     };
 
-    if (loading) return <p className="status">Loading...</p>;
-    if (err) return <p className="status error">Error: {err}</p>;
-    if (!data) return <p className="status">No data.</p>;
+    if (isLoading) return <p className="status">Loading condition details...</p>;
+    if (errorMessage) return <p className="status error">Error: {errorMessage}</p>;
+    if (!condition) return <p className="status">Condition not found.</p>;
 
     return (
         <section className="page">
-            <Link to="/" className="back-link">{"<-"} Back to conditions</Link>
+            <Link to="/" className="back-link">{"←"} Back to conditions</Link>
 
             <article
-                vocab={data.context || "https://schema.org/"}
-                typeof={data.type || "MedicalCondition"}
-                resource={data.id}
+                vocab={condition.context || "https://schema.org/"}
+                typeof={condition.type || "MedicalCondition"}
+                resource={condition.id}
                 className="card detail-card"
             >
                 <header className="detail-header">
-                    <div>
-                        <p className="eyebrow">Condition</p>
-                        <h1 property="name">{data.name}</h1>
-                        <p className="muted">id: {data.id}</p>
+                    <div className="title-group">
+                        <p className="eyebrow">Medical Condition</p>
+                        <h1 property="name">{condition.name}</h1>
+                        <p className="muted">ID: {condition.id}</p>
                     </div>
-                    {currentImage && (
+                    
+                    {currentImageUrl && (
                         <div className="carousel" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
                             <div className="carousel-frame image-frame">
                                 <img
-                                    src={currentImage}
-                                    alt={data.name}
+                                    src={currentImageUrl}
+                                    alt={condition.name}
                                     property="image"
                                     className="carousel-image"
                                     onError={handleImageError}
                                 />
-                                {totalImages > 1 && (
+                                {imageCount > 1 && (
                                     <>
                                         <button
                                             type="button"
                                             className="carousel-arrow left"
-                                            onClick={showPrev}
+                                            onClick={navigateToPreviousImage}
                                             aria-label="Previous image"
                                         >
-                                            {"<"}
+                                            {"‹"}
                                         </button>
                                         <button
                                             type="button"
                                             className="carousel-arrow right"
-                                            onClick={showNext}
+                                            onClick={navigateToNextImage}
                                             aria-label="Next image"
                                         >
-                                            {">"}
+                                            {"›"}
                                         </button>
                                     </>
                                 )}
                             </div>
-                            {totalImages > 1 && (
+                            
+                            {imageCount > 1 && (
                                 <div className="carousel-dots">
-                                    {visibleImages.map((_, index) => (
+                                    {validImages.map((_, index) => (
                                         <button
-                                            key={`${data.id}-${index}`}
+                                            key={`${condition.id}-img-${index}`}
                                             type="button"
-                                            className={`carousel-dot${index === activeIndex ? " active" : ""}`}
-                                            onClick={() => setActiveIndex(index)}
-                                            aria-label={`Show image ${index + 1}`}
+                                            className={`carousel-dot${index === currentImageIndex ? " active" : ""}`}
+                                            onClick={() => setCurrentImageIndex(index)}
+                                            aria-label={`Go to image ${index + 1}`}
                                         />
                                     ))}
                                 </div>
@@ -217,62 +167,67 @@ export default function ConditionPage() {
                 </header>
 
                 <div className="detail-section">
-                    <h2>What is it?</h2>
+                    <h2>Overview</h2>
                     <p property="description">
-                        {data.description || "No description available."}
+                        {condition.description || "No description available."}
                     </p>
                 </div>
 
                 <div className="detail-grid">
-                    <div className="detail-section">
+                    <section className="detail-section">
                         <h2>Symptoms</h2>
-                        {data.symptoms?.length ? (
+                        {condition.symptoms?.length ? (
                             <ul className="info-list">
-                                {data.symptoms.map((s) => (
-                                    <li key={s} property="signOrSymptom">{s}</li>
+                                {condition.symptoms.map((symptom) => (
+                                    <li key={symptom} property="signOrSymptom">{symptom}</li>
                                 ))}
                             </ul>
                         ) : (
-                            <p className="muted">No symptoms found.</p>
+                            <p className="muted">No symptoms documented.</p>
                         )}
-                    </div>
-                    <div className="detail-section">
-                        <h2>Risk factors</h2>
-                        {data.riskFactors?.length ? (
+                    </section>
+                    
+                    <section className="detail-section">
+                        <h2>Risk Factors</h2>
+                        {condition.riskFactors?.length ? (
                             <ul className="info-list">
-                                {data.riskFactors.map((r) => (
-                                    <li key={r} property="riskFactor">{r}</li>
+                                {condition.riskFactors.map((factor) => (
+                                    <li key={factor} property="riskFactor">{factor}</li>
                                 ))}
                             </ul>
                         ) : (
-                            <p className="muted">No risk factors found.</p>
+                            <p className="muted">No risk factors documented.</p>
                         )}
+                    </section>
+                </div>
+
+                <section className="detail-section">
+                    <h2>Clinical Summary</h2>
+                    <div className="snippet-container">
+                        <pre className="snippet">{condition.wikidocSnippet || "No clinical snippet available."}</pre>
                     </div>
-                </div>
+                </section>
 
-                <div className="detail-section">
-                    <h2>Simple explanation</h2>
-                    <pre className="snippet">{data.wikidocSnippet || "No local snippet."}</pre>
-                </div>
+                <section className="detail-section">
+                    <h2>Geography Insights</h2>
+                    <div className="placeholder-box">
+                        <p className="muted">
+                            Coming soon. This section will connect the condition to climate, industrial development,
+                            population density, and cultural factors for a selected region.
+                        </p>
+                    </div>
+                </section>
 
-                <div className="detail-section">
-                    <h2>Geography insights</h2>
-                    <p className="muted">
-                        Coming soon. This section will connect the condition to climate, industrial development,
-                        population density, and cultural factors for a selected region.
-                    </p>
-                </div>
-
-                <div className="detail-section">
-                    <h2>Sources</h2>
+                <footer className="detail-section">
+                    <h2>References & Sources</h2>
                     <ul className="source-list">
-                        {data.sameAs?.map((u) => (
-                            <li key={u}>
-                                <a href={u} target="_blank" rel="noreferrer">{u}</a>
+                        {condition.sameAs?.map((url) => (
+                            <li key={url}>
+                                <a href={url} target="_blank" rel="noreferrer">{url}</a>
                             </li>
                         ))}
                     </ul>
-                </div>
+                </footer>
             </article>
         </section>
     );

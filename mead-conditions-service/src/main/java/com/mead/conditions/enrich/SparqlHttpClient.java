@@ -40,7 +40,7 @@ public class SparqlHttpClient {
             String sourceTag
     ) {}
 
-    private List<String> runSelect(SelectRequest request, Function<QuerySolution, String> mapper) {
+    private List<String> runSelect(SelectRequest request, Function<QuerySolution, String> rowMapper) {
         List<String> results = new ArrayList<>();
 
         try {
@@ -53,11 +53,13 @@ public class SparqlHttpClient {
             Map<String, String> headers = safeHeaders(request.headers());
             headers.forEach(builder::httpHeader);
 
-            try (QueryExecutionHTTP qexec = builder.build()) {
-                ResultSet resultSet = qexec.execSelect();
+            try (QueryExecutionHTTP queryExecution = builder.build()) {
+                ResultSet resultSet = queryExecution.execSelect();
                 while (resultSet.hasNext()) {
-                    String value = mapper.apply(resultSet.next());
-                    if (value != null && !value.isBlank()) results.add(value);
+                    String value = rowMapper.apply(resultSet.next());
+                    if (value != null && !value.isBlank()) {
+                        results.add(value);
+                    }
                 }
             }
 

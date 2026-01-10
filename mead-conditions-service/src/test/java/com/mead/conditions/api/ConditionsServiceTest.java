@@ -136,7 +136,6 @@ class ConditionServiceTest {
 
         ConditionDetail detail = service.get("obesity");
 
-        assertThat(detail.image()).isEqualTo("https://commons.wikimedia.org/wiki/Special:FilePath/Obesity.svg");
         assertThat(detail.images()).containsExactly("https://commons.wikimedia.org/wiki/Special:FilePath/Obesity.svg");
     }
 
@@ -160,7 +159,6 @@ class ConditionServiceTest {
         assertThat(detail.description()).isEqualTo("db desc");
         assertThat(detail.symptoms()).containsExactly("s1");
         assertThat(detail.riskFactors()).containsExactly("r1");
-        assertThat(detail.image()).isEqualTo("img");
         assertThat(detail.images()).containsExactly("img");
     }
 
@@ -184,7 +182,6 @@ class ConditionServiceTest {
         assertThat(detail.description()).isEqualTo("wd desc");
         assertThat(detail.symptoms()).containsExactly("s1");
         assertThat(detail.riskFactors()).containsExactly("r1");
-        assertThat(detail.image()).isEqualTo("img");
         assertThat(detail.images()).containsExactly("img");
     }
 

@@ -62,35 +62,48 @@ public class ConditionsRepository {
                 """;
 
         return Txn.calculateRead(rdf.getDataset(), () -> {
-            Map<String, String> identifierToNameMap = new LinkedHashMap<>();
-            Map<String, List<String>> identifierToSameAsMap = new LinkedHashMap<>();
+            Map<String, ConditionBuilder> builders = new LinkedHashMap<>();
 
             try (QueryExecution queryExecution = QueryExecutionFactory.create(sparqlQuery, rdf.getDataset())) {
                 ResultSet resultSet = queryExecution.execSelect();
                 while (resultSet.hasNext()) {
                     QuerySolution row = resultSet.next();
-                    String identifier = row.getLiteral("identifier").getString();
+                    String id = row.getLiteral("identifier").getString();
                     String name = row.getLiteral("name").getString();
+                    String sameAs = readNodeValue(row.get("sameAs"));
 
-                    RDFNode sameAsNode = row.get("sameAs");
-                    String sameAsUri = sameAsNode.isResource()
-                            ? sameAsNode.asResource().getURI()
-                            : sameAsNode.toString();
-
-                    identifierToNameMap.putIfAbsent(identifier, name);
-                    identifierToSameAsMap.computeIfAbsent(identifier, k -> new ArrayList<>()).add(sameAsUri);
+                    builders.computeIfAbsent(id, k -> new ConditionBuilder(id, name))
+                            .addSameAs(sameAs);
                 }
             }
 
-            List<Condition> conditions = new ArrayList<>();
-            for (String identifier : identifierToNameMap.keySet()) {
-                conditions.add(new Condition(
-                        identifier,
-                        identifierToNameMap.get(identifier),
-                        List.copyOf(identifierToSameAsMap.getOrDefault(identifier, List.of()))
-                ));
-            }
-            return conditions;
+            return builders.values().stream()
+                    .map(ConditionBuilder::build)
+                    .toList();
         });
+    }
+
+    private static String readNodeValue(RDFNode node) {
+        if (node == null) return null;
+        return node.isResource() ? node.asResource().getURI() : node.toString();
+    }
+
+    private static class ConditionBuilder {
+        private final String id;
+        private final String name;
+        private final List<String> sameAsList = new ArrayList<>();
+
+        ConditionBuilder(String id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        void addSameAs(String sameAs) {
+            if (sameAs != null) sameAsList.add(sameAs);
+        }
+
+        Condition build() {
+            return new Condition(id, name, List.copyOf(sameAsList));
+        }
     }
 }

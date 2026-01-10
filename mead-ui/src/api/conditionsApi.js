@@ -1,21 +1,31 @@
-const BASE = import.meta.env.VITE_CONDITIONS_API_BASE_URL;
+const CONDITIONS_API_BASE_URL = import.meta.env.VITE_CONDITIONS_API_BASE_URL;
 
-async function httpGetJson(path) {
-    const res = await fetch(`${BASE}${path}`, {
+/**
+ * Utility to perform API requests to the conditions service.
+ */
+async function fetchFromApi(endpoint) {
+    const response = await fetch(`${CONDITIONS_API_BASE_URL}${endpoint}`, {
         headers: { Accept: "application/json" },
     });
 
-    if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status}: ${text || res.statusText}`);
+    if (!response.ok) {
+        const errorDetail = await response.text().catch(() => "");
+        throw new Error(`API Error (${response.status}): ${errorDetail || response.statusText}`);
     }
-    return res.json();
+    return response.json();
 }
 
-export function fetchConditionsList() {
-    return httpGetJson("/api/v1/conditions");
+/**
+ * Retrieves the full list of medical conditions.
+ */
+export function getAllConditions() {
+    return fetchFromApi("/api/v1/conditions");
 }
 
-export function fetchConditionDetail(id) {
-    return httpGetJson(`/api/v1/conditions/${encodeURIComponent(id)}`);
+/**
+ * Retrieves detailed information for a specific condition.
+ * @param {string} conditionId - The unique identifier of the condition.
+ */
+export function getConditionDetails(conditionId) {
+    return fetchFromApi(`/api/v1/conditions/${encodeURIComponent(conditionId)}`);
 }

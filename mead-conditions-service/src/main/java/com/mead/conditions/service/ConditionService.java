@@ -11,9 +11,7 @@ import com.mead.conditions.enrich.WikidocSnippetLoader;
 import com.mead.conditions.repository.ConditionsRepository.Condition;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -52,33 +50,32 @@ public class ConditionService {
         Condition condition = repo.findById(conditionId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown condition: " + conditionId));
 
-        String wikidataUri = pickSameAs(condition.sameAs(), WIKIDATA_ENTITY_MARKER);
-        String dbpediaUri = pickSameAs(condition.sameAs(), DBPEDIA_RESOURCE_MARKER);
+        String wikidataUri = findUriByMarker(condition.sameAs(), WIKIDATA_ENTITY_MARKER);
+        String dbpediaUri = findUriByMarker(condition.sameAs(), DBPEDIA_RESOURCE_MARKER);
 
-        CompletableFuture<WikidataEnrichment> wdFuture = async(() ->
+        CompletableFuture<WikidataEnrichment> wikidataFuture = executeAsync(() ->
                 wikidataUri == null
                         ? new WikidataEnrichment(null, List.of(), List.of(), List.of())
                         : wikidata.enrichFromEntityUri(wikidataUri)
         );
 
-        CompletableFuture<DbpediaEnrichment> dbFuture = async(() ->
+        CompletableFuture<DbpediaEnrichment> dbpediaFuture = executeAsync(() ->
                 dbpediaUri == null
                         ? new DbpediaEnrichment(null, List.of(), List.of(), List.of())
                         : dbpedia.enrichFromResourceUri(dbpediaUri)
         );
 
-        CompletableFuture<String> snippetFuture = async(() -> wikidoc.loadSnippet(conditionId));
+        CompletableFuture<String> snippetFuture = executeAsync(() -> wikidoc.loadSnippet(conditionId));
 
-        CompletableFuture.allOf(wdFuture, dbFuture, snippetFuture).join();
+        CompletableFuture.allOf(wikidataFuture, dbpediaFuture, snippetFuture).join();
 
-        WikidataEnrichment wd = wdFuture.join();
-        DbpediaEnrichment db = dbFuture.join();
+        WikidataEnrichment wikidataEnrichment = wikidataFuture.join();
+        DbpediaEnrichment dbpediaEnrichment = dbpediaFuture.join();
 
-        String description = preferText(db.description(), wd.description());
-        List<String> symptoms = preferList(wd.symptoms(), db.symptoms());
-        List<String> riskFactors = preferList(wd.riskFactors(), db.riskFactors());
-        List<String> images = mergeImages(wd.images(), db.images());
-        String image = images.isEmpty() ? null : images.get(0);
+        String description = pickFirstNotBlank(dbpediaEnrichment.description(), wikidataEnrichment.description());
+        List<String> symptoms = pickFirstNotEmpty(wikidataEnrichment.symptoms(), dbpediaEnrichment.symptoms());
+        List<String> riskFactors = pickFirstNotEmpty(wikidataEnrichment.riskFactors(), dbpediaEnrichment.riskFactors());
+        List<String> images = combineAndNormalizeImages(wikidataEnrichment.images(), dbpediaEnrichment.images());
 
         return new ConditionDetail(
                 SCHEMA_ORG_CONTEXT,
@@ -87,7 +84,6 @@ public class ConditionService {
                 condition.identifier(),
                 condition.name(),
                 description,
-                image,
                 images,
                 symptoms,
                 riskFactors,
@@ -96,40 +92,32 @@ public class ConditionService {
         );
     }
 
-    private static <T> CompletableFuture<T> async(Supplier<T> supplier) {
+    private static <T> CompletableFuture<T> executeAsync(Supplier<T> supplier) {
         return CompletableFuture.supplyAsync(supplier);
     }
 
-    private static String pickSameAs(List<String> sameAsList, String marker) {
+    private static String findUriByMarker(List<String> sameAsList, String marker) {
         return sameAsList.stream()
                 .filter(uri -> uri != null && uri.contains(marker))
                 .findFirst()
                 .orElse(null);
     }
 
-    private static String preferText(String first, String second) {
+    private static String pickFirstNotBlank(String first, String second) {
         if (first != null && !first.isBlank()) return first;
         return second;
     }
 
-    private static List<String> preferList(List<String> first, List<String> second) {
+    private static List<String> pickFirstNotEmpty(List<String> first, List<String> second) {
         if (first != null && !first.isEmpty()) return first;
         if (second != null && !second.isEmpty()) return second;
         return List.of();
     }
 
-    private static List<String> mergeImages(List<String> first, List<String> second) {
-        Map<String, String> map = new LinkedHashMap<>();
-        addImages(map, first);
-        addImages(map, second);
-        return List.copyOf(map.values());
-    }
-
-    private static void addImages(Map<String, String> map, List<String> images) {
-        if (images == null) return;
-        for (String image : images) {
-            if (image == null || image.isBlank()) continue;
-            map.putIfAbsent(image.toLowerCase(), image);
-        }
+    private static List<String> combineAndNormalizeImages(List<String> firstList, List<String> secondList) {
+        List<String> combined = new java.util.ArrayList<>();
+        if (firstList != null) combined.addAll(firstList);
+        if (secondList != null) combined.addAll(secondList);
+        return com.mead.conditions.enrich.ImageNormalizer.normalize(combined);
     }
 }
