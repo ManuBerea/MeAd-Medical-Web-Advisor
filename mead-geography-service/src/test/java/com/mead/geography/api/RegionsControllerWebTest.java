@@ -29,7 +29,7 @@ class RegionsControllerWebTest {
         var detail = new GeographyDto.RegionDetail(
                 "https://schema.org/",
                 "https://mead.example/region/romania",
-                "Place",
+                "Country",
                 "romania",
                 "Romania",
                 "Some description",
@@ -67,6 +67,7 @@ class RegionsControllerWebTest {
                 new GeographyDto.RegionSummary(
                         "romania",
                         "Romania",
+                        "Country",
                         List.of("http://dbpedia.org/resource/Romania", "https://www.wikidata.org/entity/Q218")
                 )
         ));

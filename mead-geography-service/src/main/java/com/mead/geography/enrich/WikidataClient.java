@@ -29,6 +29,7 @@ public class WikidataClient {
     private static final int LIMIT_ONE = 1;
     private static final int LIMIT_LIST = 30;
     private static final int LIMIT_IMAGES = 10;
+    private static final int LIMIT_TYPES = 15;
 
     @Value("${mead.external.wikidata.endpoint}")
     private String endpoint;
@@ -57,6 +58,14 @@ public class WikidataClient {
             List<String> culturalFactors,
             List<String> images
     ) {}
+
+    @Cacheable("wikidataRegionType")
+    public String fetchRegionType(String wikidataEntityUri) {
+        if (wikidataEntityUri == null || wikidataEntityUri.isBlank()) return null;
+        String entityId = wikidataEntityUri.substring(wikidataEntityUri.lastIndexOf('/') + 1);
+        List<String> typeLabels = fetchInstanceOfLabels(entityId);
+        return mapInstanceOfLabels(typeLabels);
+    }
 
     @Cacheable("wikidataEnrichment")
     public WikidataEnrichment enrichFromEntityUri(String wikidataEntityUri) {
@@ -217,6 +226,22 @@ public class WikidataClient {
         return sparql.selectStrings(createRequest(sparqlQuery, "img"));
     }
 
+    private List<String> fetchInstanceOfLabels(String entityId) {
+        String sparqlQuery = """
+                PREFIX wd: <%s>
+                PREFIX wdt: <%s>
+                PREFIX wikibase: <%s>
+                PREFIX bd: <%s>
+
+                SELECT DISTINCT ?typeLabel WHERE {
+                  wd:%s wdt:P31 ?type .
+                  SERVICE wikibase:label { bd:serviceParam wikibase:language "%s". }
+                } LIMIT %d
+                """.formatted(WD, WDT, WIKIBASE, BD, entityId, LANG_EN, LIMIT_TYPES);
+
+        return sparql.selectStrings(createRequest(sparqlQuery, "typeLabel"));
+    }
+
     private SparqlHttpClient.SelectRequest createRequest(String sparqlQuery, String varName) {
         return new SparqlHttpClient.SelectRequest(
                 endpoint,
@@ -247,5 +272,44 @@ public class WikidataClient {
         Map<String, String> map = new LinkedHashMap<>();
         inputList.forEach(s -> map.putIfAbsent(s.toLowerCase(), s));
         return new ArrayList<>(map.values());
+    }
+
+    private static String mapInstanceOfLabels(List<String> labels) {
+        if (labels == null || labels.isEmpty()) return null;
+        if (containsLabel(labels, "continent")) return "Continent";
+        if (containsAnyLabel(labels, List.of(
+                "city",
+                "big city",
+                "capital",
+                "municipality",
+                "town",
+                "metropolis",
+                "urban area",
+                "metropolitan area"
+        ))) {
+            return "City";
+        }
+        if (containsAnyLabel(labels, List.of(
+                "country",
+                "sovereign state",
+                "nation state",
+                "island country",
+                "landlocked country"
+        ))) {
+            return "Country";
+        }
+        return null;
+    }
+
+    private static boolean containsLabel(List<String> labels, String keyword) {
+        return labels.stream()
+                .map(String::toLowerCase)
+                .anyMatch(label -> label.contains(keyword));
+    }
+
+    private static boolean containsAnyLabel(List<String> labels, List<String> keywords) {
+        return labels.stream()
+                .map(String::toLowerCase)
+                .anyMatch(label -> keywords.stream().anyMatch(label::contains));
     }
 }

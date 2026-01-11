@@ -7,6 +7,7 @@ public final class GeographyDto {
     public record RegionSummary(
             String id,
             String name,
+            String type,
             List<String> sameAs
     ) {}
 

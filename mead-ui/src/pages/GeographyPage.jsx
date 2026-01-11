@@ -10,6 +10,25 @@ const isRegionMatch = (region, searchTerm) => {
     return name.includes(searchTerm) || id.includes(searchTerm);
 };
 
+const REGION_TYPE_KEYS = {
+    all: "all",
+    city: "city",
+    country: "country",
+    continent: "continent",
+};
+
+const REGION_TYPES = [
+    { key: REGION_TYPE_KEYS.all, label: "All regions" },
+    { key: REGION_TYPE_KEYS.city, label: "Cities" },
+    { key: REGION_TYPE_KEYS.country, label: "Countries" },
+    { key: REGION_TYPE_KEYS.continent, label: "Continents" },
+];
+
+const normalizeRegionType = (typeValue) => {
+    if (!typeValue) return "";
+    return String(typeValue).trim().toLowerCase();
+};
+
 const formatNumber = (value, maxFractionDigits) => {
     if (value === null || value === undefined) return null;
     const raw = String(value).trim();
@@ -25,6 +44,7 @@ export default function GeographyPage() {
     const [isListLoading, setIsListLoading] = useState(true);
     const [listError, setListError] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedType, setSelectedType] = useState(REGION_TYPE_KEYS.all);
     const [pageNumber, setPageNumber] = useState(1);
     const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
@@ -61,9 +81,13 @@ export default function GeographyPage() {
     }, []);
 
     const searchTerm = searchQuery.trim().toLowerCase();
+    const typeFilteredRegions = selectedType === REGION_TYPE_KEYS.all
+        ? regions
+        : regions.filter((region) => normalizeRegionType(region.type) === selectedType);
+
     const filteredRegions = searchTerm
-        ? regions.filter((region) => isRegionMatch(region, searchTerm))
-        : regions;
+        ? typeFilteredRegions.filter((region) => isRegionMatch(region, searchTerm))
+        : typeFilteredRegions;
 
     const totalPagesCount = Math.ceil(filteredRegions.length / pageSize);
     const activePage = totalPagesCount === 0 ? 1 : Math.min(pageNumber, totalPagesCount);
@@ -173,6 +197,11 @@ export default function GeographyPage() {
         setPageNumber(1);
     };
 
+    const handleTypeChange = (nextType) => {
+        setSelectedType(nextType);
+        setPageNumber(1);
+    };
+
     const handlePreviousPage = () => {
         setPageNumber((prev) => Math.max(1, prev - 1));
     };
@@ -209,6 +238,22 @@ export default function GeographyPage() {
                         value={searchQuery}
                         onChange={handleSearchChange}
                     />
+                </div>
+                <div className="filter-row">
+                    <span className="filter-label">Filter by type:</span>
+                    <div className="filter-chips" role="group" aria-label="Filter regions by type">
+                        {REGION_TYPES.map((type) => (
+                            <button
+                                key={type.key}
+                                type="button"
+                                className={`filter-chip${selectedType === type.key ? " active" : ""}`}
+                                aria-pressed={selectedType === type.key}
+                                onClick={() => handleTypeChange(type.key)}
+                            >
+                                {type.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 

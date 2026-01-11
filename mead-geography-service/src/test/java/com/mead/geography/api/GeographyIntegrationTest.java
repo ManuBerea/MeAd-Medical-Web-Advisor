@@ -25,6 +25,7 @@ class GeographyIntegrationTest {
         mvc.perform(get("/api/v1/regions/romania"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.description", not(isEmptyString())))
+                .andExpect(jsonPath("$.type", not(isEmptyString())))
                 .andExpect(jsonPath("$.populationTotal", not(isEmptyString())))
                 .andExpect(jsonPath("$.culturalFactors", hasSize(greaterThan(0))))
                 .andExpect(jsonPath("$.wikidocSnippet", not(isEmptyString())));

@@ -144,3 +144,203 @@ region:south-america
     schema:sameAs
         <https://www.wikidata.org/entity/Q18> ,
         <http://dbpedia.org/resource/South_America> .
+
+region:antarctica
+    a schema:Place ;
+    schema:identifier "antarctica" ;
+    schema:name "Antarctica"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q51> ,
+        <http://dbpedia.org/resource/Antarctica> .
+
+region:china
+    a schema:Place ;
+    schema:identifier "china" ;
+    schema:name "China"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q148> ,
+        <http://dbpedia.org/resource/China> .
+
+region:india
+    a schema:Place ;
+    schema:identifier "india" ;
+    schema:name "India"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q668> ,
+        <http://dbpedia.org/resource/India> .
+
+region:brazil
+    a schema:Place ;
+    schema:identifier "brazil" ;
+    schema:name "Brazil"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q155> ,
+        <http://dbpedia.org/resource/Brazil> .
+
+region:mexico
+    a schema:Place ;
+    schema:identifier "mexico" ;
+    schema:name "Mexico"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q96> ,
+        <http://dbpedia.org/resource/Mexico> .
+
+region:egypt
+    a schema:Place ;
+    schema:identifier "egypt" ;
+    schema:name "Egypt"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q79> ,
+        <http://dbpedia.org/resource/Egypt> .
+
+region:south-korea
+    a schema:Place ;
+    schema:identifier "south-korea" ;
+    schema:name "South Korea"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q884> ,
+        <http://dbpedia.org/resource/South_Korea> .
+
+region:paris
+    a schema:Place ;
+    schema:identifier "paris" ;
+    schema:name "Paris"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q90> ,
+        <http://dbpedia.org/resource/Paris> .
+
+region:madrid
+    a schema:Place ;
+    schema:identifier "madrid" ;
+    schema:name "Madrid"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q2807> ,
+        <http://dbpedia.org/resource/Madrid> .
+
+region:rome
+    a schema:Place ;
+    schema:identifier "rome" ;
+    schema:name "Rome"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q220> ,
+        <http://dbpedia.org/resource/Rome> .
+
+region:washington-dc
+    a schema:Place ;
+    schema:identifier "washington-dc" ;
+    schema:name "Washington, D.C."@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q61> ,
+        <http://dbpedia.org/resource/Washington,_D.C.> .
+
+region:london
+    a schema:Place ;
+    schema:identifier "london" ;
+    schema:name "London"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q84> ,
+        <http://dbpedia.org/resource/London> .
+
+region:tokyo
+    a schema:Place ;
+    schema:identifier "tokyo" ;
+    schema:name "Tokyo"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q1490> ,
+        <http://dbpedia.org/resource/Tokyo> .
+
+region:ottawa
+    a schema:Place ;
+    schema:identifier "ottawa" ;
+    schema:name "Ottawa"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q1930> ,
+        <http://dbpedia.org/resource/Ottawa> .
+
+region:canberra
+    a schema:Place ;
+    schema:identifier "canberra" ;
+    schema:name "Canberra"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q3114> ,
+        <http://dbpedia.org/resource/Canberra> .
+
+region:beijing
+    a schema:Place ;
+    schema:identifier "beijing" ;
+    schema:name "Beijing"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q956> ,
+        <http://dbpedia.org/resource/Beijing> .
+
+region:new-delhi
+    a schema:Place ;
+    schema:identifier "new-delhi" ;
+    schema:name "New Delhi"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q987> ,
+        <http://dbpedia.org/resource/New_Delhi> .
+
+region:brasilia
+    a schema:Place ;
+    schema:identifier "brasilia" ;
+    schema:name "Brasilia"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q2844> ,
+        <http://dbpedia.org/resource/Bras%C3%ADlia> .
+
+region:mexico-city
+    a schema:Place ;
+    schema:identifier "mexico-city" ;
+    schema:name "Mexico City"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q1489> ,
+        <http://dbpedia.org/resource/Mexico_City> .
+
+region:cairo
+    a schema:Place ;
+    schema:identifier "cairo" ;
+    schema:name "Cairo"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q85> ,
+        <http://dbpedia.org/resource/Cairo> .
+
+region:seoul
+    a schema:Place ;
+    schema:identifier "seoul" ;
+    schema:name "Seoul"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q8684> ,
+        <http://dbpedia.org/resource/Seoul> .
+
+region:iasi
+    a schema:Place ;
+    schema:identifier "iasi" ;
+    schema:name "Iasi"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q46852> ,
+        <http://dbpedia.org/resource/Ia%C8%99i> .
+
+region:cluj-napoca
+    a schema:Place ;
+    schema:identifier "cluj-napoca" ;
+    schema:name "Cluj-Napoca"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q100188> ,
+        <http://dbpedia.org/resource/Cluj-Napoca> .
+
+region:timisoara
+    a schema:Place ;
+    schema:identifier "timisoara" ;
+    schema:name "Timisoara"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q83404> ,
+        <http://dbpedia.org/resource/Timi%C8%99oara> .
+
+region:brasov
+    a schema:Place ;
+    schema:identifier "brasov" ;
+    schema:name "Brasov"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q82174> ,
+        <http://dbpedia.org/resource/Bra%C8%99ov> .

@@ -181,6 +181,53 @@ img {
   align-items: center;
 }
 
+.filter-row {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--wash, #f1f5f9);
+}
+
+.filter-label {
+  color: var(--muted, #64748b);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filter-chip {
+  border: 1px solid var(--outline, rgba(0, 0, 0, 0.08));
+  background: var(--panel, #ffffff);
+  color: var(--muted, #64748b);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+}
+
+.filter-chip:hover {
+  border-color: var(--accent, #0d9488);
+  color: var(--accent, #0d9488);
+}
+
+.filter-chip.active {
+  background: var(--accent, #0d9488);
+  border-color: var(--accent, #0d9488);
+  color: #ffffff;
+  box-shadow: 0 8px 16px -6px rgba(13, 148, 136, 0.4);
+}
+
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

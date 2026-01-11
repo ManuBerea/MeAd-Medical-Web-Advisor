@@ -46,7 +46,12 @@ public class GeographyService {
 
     public List<RegionSummary> listRegions() {
         return repo.findAll().stream()
-                .map(r -> new RegionSummary(r.identifier(), r.name(), r.sameAs()))
+                .map(r -> new RegionSummary(
+                        r.identifier(),
+                        r.name(),
+                        resolveRegionType(r.sameAs()),
+                        r.sameAs()
+                ))
                 .toList();
     }
 
@@ -87,7 +92,7 @@ public class GeographyService {
         return new RegionDetail(
                 SCHEMA_ORG_CONTEXT,
                 MEAD_REGION_BASE_URL + region.identifier(),
-                PLACE_TYPE,
+                resolveRegionType(region.sameAs()),
                 region.identifier(),
                 region.name(),
                 description,
@@ -111,6 +116,12 @@ public class GeographyService {
                 .filter(uri -> uri != null && uri.contains(marker))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private String resolveRegionType(List<String> sameAsList) {
+        String wikidataUri = findUriByMarker(sameAsList, WIKIDATA_ENTITY_MARKER);
+        String type = wikidataUri == null ? null : wikidata.fetchRegionType(wikidataUri);
+        return type == null ? PLACE_TYPE : type;
     }
 
     private static String pickFirstNotBlank(String first, String second) {

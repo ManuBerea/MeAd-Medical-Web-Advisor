@@ -129,11 +129,14 @@ class GeographyServiceTest {
                         List.of("http://dbpedia.org/resource/Europe", "https://www.wikidata.org/entity/Q46")
                 )
         ));
+        when(wikidata.fetchRegionType("https://www.wikidata.org/entity/Q46"))
+                .thenReturn("Continent");
 
         List<RegionSummary> regionsList = service.listRegions();
 
         assertThat(regionsList).hasSize(1);
         assertThat(regionsList.get(0).id()).isEqualTo("europe");
+        assertThat(regionsList.get(0).type()).isEqualTo("Continent");
         assertThat(regionsList.get(0).sameAs()).hasSize(2);
     }
 
