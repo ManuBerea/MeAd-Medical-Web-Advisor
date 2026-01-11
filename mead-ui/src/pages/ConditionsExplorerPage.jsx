@@ -418,12 +418,108 @@ export default function ConditionsExplorerPage() {
                                     </section>
                                 </div>
 
-                                <section className="detail-section">
-                                    <h2>Clinical summary</h2>
-                                    <div className="snippet-container">
-                                        <pre className="snippet">{conditionDetail.wikidocSnippet || "No clinical snippet available."}</pre>
-                                    </div>
-                                </section>
+                                {/* WikiDoc Medical Encyclopedia Sections */}
+                                {(() => {
+                                    // Support both new structure (wikidoc object) and legacy (flat fields)
+                                    const wikidoc = conditionDetail.wikidoc || (conditionDetail.wikidocSnippet ? {
+                                        overview: conditionDetail.wikidocSnippet,
+                                        sourceUrl: conditionDetail.wikidocUrl,
+                                        sourceType: conditionDetail.wikidocSourceType
+                                    } : null);
+                                    
+                                    if (!wikidoc) return (
+                                        <section className="detail-section">
+                                            <h2>📚 Medical Encyclopedia</h2>
+                                            <p className="muted">No WikiDoc information available.</p>
+                                        </section>
+                                    );
+                                    
+                                    return (
+                                        <div className="wikidoc-sections">
+                                            <div className="wikidoc-header">
+                                                <h2>📚 Medical Encyclopedia (WikiDoc)</h2>
+                                                {wikidoc.sourceUrl && (
+                                                    <div className="wikidoc-meta">
+                                                        <a 
+                                                            href={wikidoc.sourceUrl} 
+                                                            target="_blank" 
+                                                            rel="noreferrer"
+                                                            className="wikidoc-link"
+                                                        >
+                                                            📖 Read full article
+                                                        </a>
+                                                        {wikidoc.sourceType && (
+                                                            <span className={`source-badge ${wikidoc.sourceType}`}>
+                                                                {wikidoc.sourceType === 'api' ? '🌐 Live' : 
+                                                                 wikidoc.sourceType === 'local' ? '💾 Cached' : ''}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {wikidoc.overview && (
+                                                <div className="wikidoc-section">
+                                                    <h3>🔍 Overview</h3>
+                                                    <p>{wikidoc.overview}</p>
+                                                </div>
+                                            )}
+
+                                            {wikidoc.causes && (
+                                                <div className="wikidoc-section">
+                                                    <h3>🧬 Causes & Etiology</h3>
+                                                    <p>{wikidoc.causes}</p>
+                                                </div>
+                                            )}
+
+                                            {wikidoc.pathophysiology && (
+                                                <div className="wikidoc-section">
+                                                    <h3>🔬 Pathophysiology</h3>
+                                                    <p>{wikidoc.pathophysiology}</p>
+                                                </div>
+                                            )}
+
+                                            {wikidoc.diagnosis && (
+                                                <div className="wikidoc-section">
+                                                    <h3>🩺 Diagnosis</h3>
+                                                    <p>{wikidoc.diagnosis}</p>
+                                                </div>
+                                            )}
+
+                                            {wikidoc.treatment && (
+                                                <div className="wikidoc-section">
+                                                    <h3>💊 Treatment</h3>
+                                                    <p>{wikidoc.treatment}</p>
+                                                </div>
+                                            )}
+
+                                            {wikidoc.prevention && (
+                                                <div className="wikidoc-section">
+                                                    <h3>🛡️ Prevention</h3>
+                                                    <p>{wikidoc.prevention}</p>
+                                                </div>
+                                            )}
+
+                                            {wikidoc.prognosis && (
+                                                <div className="wikidoc-section">
+                                                    <h3>📈 Prognosis</h3>
+                                                    <p>{wikidoc.prognosis}</p>
+                                                </div>
+                                            )}
+
+                                            {wikidoc.epidemiology && (
+                                                <div className="wikidoc-section">
+                                                    <h3>🌍 Epidemiology</h3>
+                                                    <p>{wikidoc.epidemiology}</p>
+                                                </div>
+                                            )}
+
+                                            {!wikidoc.overview && !wikidoc.causes && !wikidoc.treatment && (
+                                                <p className="muted">No detailed WikiDoc information available.</p>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
 
                                 <footer className="detail-section">
                                     <h2>References & Sources</h2>
