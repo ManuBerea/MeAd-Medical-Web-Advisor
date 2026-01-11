@@ -337,14 +337,18 @@ public class WikidocClient {
     }
     
     /**
-     * Converts HTML to plain text by removing tags and cleaning up whitespace.
+     * Converts HTML to plain text by removing tags, wiki markup, and cleaning up.
      */
     private static String htmlToPlainText(String html) {
         if (html == null) return null;
         
-        // Remove script and style elements completely
-        String text = html.replaceAll("<script[^>]*>.*?</script>", "");
-        text = text.replaceAll("<style[^>]*>.*?</style>", "");
+        // Remove script, style, and reference elements completely
+        String text = html.replaceAll("(?is)<script[^>]*>.*?</script>", "");
+        text = text.replaceAll("(?is)<style[^>]*>.*?</style>", "");
+        text = text.replaceAll("(?is)<sup[^>]*class=\"[^\"]*reference[^\"]*\"[^>]*>.*?</sup>", ""); // Remove reference superscripts
+        
+        // Remove edit links [edit], [edit source], [edit | edit source]
+        text = text.replaceAll("(?is)<span[^>]*class=\"[^\"]*mw-editsection[^\"]*\"[^>]*>.*?</span>", "");
         
         // Remove HTML comments
         text = text.replaceAll("<!--.*?-->", "");
@@ -352,24 +356,88 @@ public class WikidocClient {
         // Replace <br> and </p> with newlines
         text = text.replaceAll("<br\\s*/?>", "\n");
         text = text.replaceAll("</p>", "\n\n");
+        text = text.replaceAll("</li>", "\n");
         
         // Remove all remaining HTML tags
         text = text.replaceAll("<[^>]+>", "");
         
-        // Decode common HTML entities
+        // Decode numeric HTML entities (&#91; = [, &#93; = ], etc.)
+        text = decodeHtmlEntities(text);
+        
+        // Remove Wikipedia/WikiDoc specific markup that leaked through
+        text = text.replaceAll("\\[edit\\]", "");
+        text = text.replaceAll("\\[edit \\| edit source\\]", "");
+        text = text.replaceAll("\\[edit source\\]", "");
+        text = text.replaceAll("\\[citation needed\\]", "");
+        text = text.replaceAll("\\[clarification needed\\]", "");
+        text = text.replaceAll("\\[dubious[^\\]]*\\]", "");
+        text = text.replaceAll("\\[note \\d+\\]", "");
+        text = text.replaceAll("\\[\\d+\\]", ""); // Remove reference numbers like [1], [18], etc.
+        text = text.replaceAll("Further information:[^\\n]*", ""); // Remove "Further information:" lines
+        
+        // Clean up whitespace
+        text = text.replaceAll("[ \\t]+", " ");           // Multiple spaces to single
+        text = text.replaceAll(" ?\n ?", "\n");           // Trim spaces around newlines
+        text = text.replaceAll("\\n{3,}", "\n\n");        // Max 2 consecutive newlines
+        text = text.trim();
+        
+        return text;
+    }
+    
+    /**
+     * Decodes HTML entities including numeric ones (&#91; -> [)
+     */
+    private static String decodeHtmlEntities(String text) {
+        if (text == null) return null;
+        
+        // Named entities
         text = text.replace("&nbsp;", " ");
         text = text.replace("&amp;", "&");
         text = text.replace("&lt;", "<");
         text = text.replace("&gt;", ">");
         text = text.replace("&quot;", "\"");
-        text = text.replace("&#39;", "'");
+        text = text.replace("&apos;", "'");
+        text = text.replace("&ndash;", "–");
+        text = text.replace("&mdash;", "—");
+        text = text.replace("&lsquo;", "'");
+        text = text.replace("&rsquo;", "'");
+        text = text.replace("&ldquo;", "\"");
+        text = text.replace("&rdquo;", "\"");
+        text = text.replace("&hellip;", "...");
+        text = text.replace("&bull;", "•");
+        text = text.replace("&copy;", "©");
+        text = text.replace("&reg;", "®");
+        text = text.replace("&trade;", "™");
+        text = text.replace("&deg;", "°");
+        text = text.replace("&plusmn;", "±");
+        text = text.replace("&times;", "×");
+        text = text.replace("&divide;", "÷");
+        text = text.replace("&frac12;", "½");
+        text = text.replace("&frac14;", "¼");
+        text = text.replace("&frac34;", "¾");
         
-        // Clean up whitespace
-        text = text.replaceAll("[ \\t]+", " ");           // Multiple spaces to single
-        text = text.replaceAll("\\n\\s*\\n+", "\n\n");    // Multiple newlines to double
-        text = text.trim();
+        // Decode numeric entities (&#91; -> [, &#93; -> ], etc.)
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("&#(\\d+);");
+        java.util.regex.Matcher matcher = pattern.matcher(text);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            int charCode = Integer.parseInt(matcher.group(1));
+            matcher.appendReplacement(sb, String.valueOf((char) charCode));
+        }
+        matcher.appendTail(sb);
+        text = sb.toString();
         
-        return text;
+        // Decode hex entities (&#x5B; -> [)
+        pattern = java.util.regex.Pattern.compile("&#x([0-9A-Fa-f]+);");
+        matcher = pattern.matcher(text);
+        sb = new StringBuffer();
+        while (matcher.find()) {
+            int charCode = Integer.parseInt(matcher.group(1), 16);
+            matcher.appendReplacement(sb, String.valueOf((char) charCode));
+        }
+        matcher.appendTail(sb);
+        
+        return sb.toString();
     }
 
     /**
