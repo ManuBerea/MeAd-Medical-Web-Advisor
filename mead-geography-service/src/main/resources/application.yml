@@ -8,3 +8,11 @@ spring:
 mead:
   rdf:
     data-file: classpath:rdf/geography-data.ttl
+  external:
+    wikidata:
+      endpoint: https://query.wikidata.org/sparql
+      user-agent: "MeAd/0.0.1 (https://github.com/ManuBerea/MeAd-Medical-Web-Advisor; mailto:manuela.berea@student.uaic.ro)"
+      timeout-ms: 8000
+    dbpedia:
+      endpoint: https://dbpedia.org/sparql
+      timeout-ms: 8000

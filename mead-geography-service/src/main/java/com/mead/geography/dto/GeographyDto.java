@@ -6,7 +6,8 @@ public final class GeographyDto {
 
     public record RegionSummary(
             String id,
-            String name
+            String name,
+            List<String> sameAs
     ) {}
 
     public record RegionDetail(
@@ -15,34 +16,15 @@ public final class GeographyDto {
             String type,
             String identifier,
             String name,
+            String description,
+            String populationTotal,
+            String populationDensity,
+            List<String> climates,
+            List<String> industrialDevelopment,
+            List<String> culturalFactors,
+            List<String> images,
             List<String> sameAs,
-            List<String> containedInPlace
-    ) {}
-
-    public record IndicatorSummary(
-            String id,
-            String name
-    ) {}
-
-    public record IndicatorDetail(
-            String context,
-            String id,
-            String type,
-            String identifier,
-            String name,
-            String variableMeasured,
-            String measurementTechnique
-    ) {}
-
-    public record ObservationDetail(
-            String context,
-            String id,
-            String type,
-            String observationAbout,
-            String measuredProperty,
-            String observationDate,
-            Double value,
-            String unitText
+            String wikidocSnippet
     ) {}
 
     private GeographyDto() {}

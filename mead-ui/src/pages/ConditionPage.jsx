@@ -102,7 +102,7 @@ export default function ConditionPage() {
 
     return (
         <section className="page">
-            <Link to="/" className="back-link">{"←"} Back to conditions</Link>
+            <Link to="/conditions" className="back-link">{"<-"} Back to conditions</Link>
 
             <article
                 vocab={condition.context || "https://schema.org/"}
@@ -110,7 +110,7 @@ export default function ConditionPage() {
                 resource={condition.id}
                 className="card detail-card"
             >
-                <header className="detail-header">
+                <header className={`detail-header${currentImageUrl ? "" : " single"}`}>
                     <div className="title-group">
                         <p className="eyebrow">Medical Condition</p>
                         <h1 property="name">{condition.name}</h1>
@@ -135,16 +135,14 @@ export default function ConditionPage() {
                                             onClick={navigateToPreviousImage}
                                             aria-label="Previous image"
                                         >
-                                            {"‹"}
-                                        </button>
+                                            {"<"}</button>
                                         <button
                                             type="button"
                                             className="carousel-arrow right"
                                             onClick={navigateToNextImage}
                                             aria-label="Next image"
                                         >
-                                            {"›"}
-                                        </button>
+                                            {">"}</button>
                                     </>
                                 )}
                             </div>
@@ -208,16 +206,6 @@ export default function ConditionPage() {
                     </div>
                 </section>
 
-                <section className="detail-section">
-                    <h2>Geography Insights</h2>
-                    <div className="placeholder-box">
-                        <p className="muted">
-                            Coming soon. This section will connect the condition to climate, industrial development,
-                            population density, and cultural factors for a selected region.
-                        </p>
-                    </div>
-                </section>
-
                 <footer className="detail-section">
                     <h2>References & Sources</h2>
                     <ul className="source-list">
@@ -232,3 +220,4 @@ export default function ConditionPage() {
         </section>
     );
 }
+

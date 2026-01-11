@@ -1,9 +1,5 @@
-@prefix schema:    <https://schema.org/> .
-@prefix region:    <https://mead.example/region/> .
-@prefix indicator: <https://mead.example/indicator/> .
-@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
-
-# Regions / Places
+@prefix schema: <https://schema.org/> .
+@prefix region: <https://mead.example/region/> .
 
 region:romania
     a schema:Place ;
@@ -13,350 +9,138 @@ region:romania
         <https://www.wikidata.org/entity/Q218> ,
         <http://dbpedia.org/resource/Romania> .
 
-region:bucuresti-ilfov
+region:bucharest
     a schema:Place ;
-    schema:identifier "bucuresti-ilfov" ;
-    schema:name "București-Ilfov"@ro ;
-    schema:containedInPlace region:romania .
+    schema:identifier "bucharest" ;
+    schema:name "Bucharest"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q19660> ,
+        <http://dbpedia.org/resource/Bucharest> .
 
-region:nord-est
+region:europe
     a schema:Place ;
-    schema:identifier "nord-est" ;
-    schema:name "Nord-Est"@ro ;
-    schema:containedInPlace region:romania .
+    schema:identifier "europe" ;
+    schema:name "Europe"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q46> ,
+        <http://dbpedia.org/resource/Europe> .
 
-# Indicators (definitions of what is being measured)
+region:asia
+    a schema:Place ;
+    schema:identifier "asia" ;
+    schema:name "Asia"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q48> ,
+        <http://dbpedia.org/resource/Asia> .
 
-indicator:obesity-prevalence
-    a schema:Dataset ;
-    schema:identifier "obesity-prevalence" ;
-    schema:name "Obesity prevalence"@en ;
-    schema:variableMeasured "Percent of adults with obesity"@en ;
-    schema:measurementTechnique "Official statistics / surveys"@en .
+region:africa
+    a schema:Place ;
+    schema:identifier "africa" ;
+    schema:name "Africa"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q15> ,
+        <http://dbpedia.org/resource/Africa> .
 
-indicator:population-density
-    a schema:Dataset ;
-    schema:identifier "population-density" ;
-    schema:name "Population density"@en ;
-    schema:variableMeasured "People per square kilometer"@en ;
-    schema:measurementTechnique "Official statistics"@en .
+region:germany
+    a schema:Place ;
+    schema:identifier "germany" ;
+    schema:name "Germany"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q183> ,
+        <http://dbpedia.org/resource/Germany> .
 
-indicator:pm25
-    a schema:Dataset ;
-    schema:identifier "pm25" ;
-    schema:name "PM2.5 air pollution"@en ;
-    schema:variableMeasured "PM2.5 concentration"@en ;
-    schema:measurementTechnique "Air quality monitoring"@en .
+region:berlin
+    a schema:Place ;
+    schema:identifier "berlin" ;
+    schema:name "Berlin"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q64> ,
+        <http://dbpedia.org/resource/Berlin> .
 
-indicator:urbanization
-    a schema:Dataset ;
-    schema:identifier "urbanization" ;
-    schema:name "Urbanization rate"@en ;
-    schema:variableMeasured "Percent of population living in urban areas"@en ;
-    schema:measurementTechnique "Official statistics"@en .
+region:france
+    a schema:Place ;
+    schema:identifier "france" ;
+    schema:name "France"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q142> ,
+        <http://dbpedia.org/resource/France> .
 
-indicator:industrial-employment-share
-    a schema:Dataset ;
-    schema:identifier "industrial-employment-share" ;
-    schema:name "Industrial employment share"@en ;
-    schema:variableMeasured "Percent of employed population working in industry"@en ;
-    schema:measurementTechnique "Labor force surveys"@en .
+region:spain
+    a schema:Place ;
+    schema:identifier "spain" ;
+    schema:name "Spain"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q29> ,
+        <http://dbpedia.org/resource/Spain> .
 
-# Observations (indicator values over time)
+region:italy
+    a schema:Place ;
+    schema:identifier "italy" ;
+    schema:name "Italy"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q38> ,
+        <http://dbpedia.org/resource/Italy> .
 
-<https://mead.example/observation/obesity-prevalence/romania/2018>
-    a schema:Observation ;
-    schema:observationAbout region:romania ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2018"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 18.7 ;
-        schema:unitText "percent"
-    ] .
+region:united-states
+    a schema:Place ;
+    schema:identifier "united-states" ;
+    schema:name "United States"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q30> ,
+        <http://dbpedia.org/resource/United_States> .
 
-<https://mead.example/observation/obesity-prevalence/romania/2019>
-    a schema:Observation ;
-    schema:observationAbout region:romania ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2019"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 19.1 ;
-        schema:unitText "percent"
-    ] .
+region:new-york-city
+    a schema:Place ;
+    schema:identifier "new-york-city" ;
+    schema:name "New York City"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q60> ,
+        <http://dbpedia.org/resource/New_York_City> .
 
-<https://mead.example/observation/obesity-prevalence/romania/2020>
-    a schema:Observation ;
-    schema:observationAbout region:romania ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2020"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 19.7 ;
-        schema:unitText "percent"
-    ] .
+region:united-kingdom
+    a schema:Place ;
+    schema:identifier "united-kingdom" ;
+    schema:name "United Kingdom"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q145> ,
+        <http://dbpedia.org/resource/United_Kingdom> .
 
-<https://mead.example/observation/obesity-prevalence/romania/2021>
-    a schema:Observation ;
-    schema:observationAbout region:romania ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2021"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 20.4 ;
-        schema:unitText "percent"
-    ] .
+region:japan
+    a schema:Place ;
+    schema:identifier "japan" ;
+    schema:name "Japan"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q17> ,
+        <http://dbpedia.org/resource/Japan> .
 
-<https://mead.example/observation/obesity-prevalence/romania/2022>
-    a schema:Observation ;
-    schema:observationAbout region:romania ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 21.2 ;
-        schema:unitText "percent"
-    ] .
+region:canada
+    a schema:Place ;
+    schema:identifier "canada" ;
+    schema:name "Canada"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q16> ,
+        <http://dbpedia.org/resource/Canada> .
 
-<https://mead.example/observation/obesity-prevalence/bucuresti-ilfov/2018>
-    a schema:Observation ;
-    schema:observationAbout region:bucuresti-ilfov ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2018"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 17.1 ;
-        schema:unitText "percent"
-    ] .
+region:australia
+    a schema:Place ;
+    schema:identifier "australia" ;
+    schema:name "Australia"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q408> ,
+        <http://dbpedia.org/resource/Australia> .
 
-<https://mead.example/observation/obesity-prevalence/bucuresti-ilfov/2019>
-    a schema:Observation ;
-    schema:observationAbout region:bucuresti-ilfov ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2019"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 17.6 ;
-        schema:unitText "percent"
-    ] .
+region:north-america
+    a schema:Place ;
+    schema:identifier "north-america" ;
+    schema:name "North America"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q49> ,
+        <http://dbpedia.org/resource/North_America> .
 
-<https://mead.example/observation/obesity-prevalence/bucuresti-ilfov/2020>
-    a schema:Observation ;
-    schema:observationAbout region:bucuresti-ilfov ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2020"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 18.2 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/obesity-prevalence/bucuresti-ilfov/2021>
-    a schema:Observation ;
-    schema:observationAbout region:bucuresti-ilfov ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2021"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 18.9 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/obesity-prevalence/bucuresti-ilfov/2022>
-    a schema:Observation ;
-    schema:observationAbout region:bucuresti-ilfov ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 19.6 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/obesity-prevalence/nord-est/2018>
-    a schema:Observation ;
-    schema:observationAbout region:nord-est ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2018"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 18.9 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/obesity-prevalence/nord-est/2019>
-    a schema:Observation ;
-    schema:observationAbout region:nord-est ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2019"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 19.3 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/obesity-prevalence/nord-est/2020>
-    a schema:Observation ;
-    schema:observationAbout region:nord-est ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2020"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 20.0 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/obesity-prevalence/nord-est/2021>
-    a schema:Observation ;
-    schema:observationAbout region:nord-est ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2021"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 20.6 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/obesity-prevalence/nord-est/2022>
-    a schema:Observation ;
-    schema:observationAbout region:nord-est ;
-    schema:measuredProperty indicator:obesity-prevalence ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 21.1 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/population-density/romania/2022>
-    a schema:Observation ;
-    schema:observationAbout region:romania ;
-    schema:measuredProperty indicator:population-density ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 83.0 ;
-        schema:unitText "people/km2"
-    ] .
-
-<https://mead.example/observation/population-density/bucuresti-ilfov/2022>
-    a schema:Observation ;
-    schema:observationAbout region:bucuresti-ilfov ;
-    schema:measuredProperty indicator:population-density ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 1300.0 ;
-        schema:unitText "people/km2"
-    ] .
-
-<https://mead.example/observation/population-density/nord-est/2022>
-    a schema:Observation ;
-    schema:observationAbout region:nord-est ;
-    schema:measuredProperty indicator:population-density ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 70.0 ;
-        schema:unitText "people/km2"
-    ] .
-
-<https://mead.example/observation/pm25/romania/2022>
-    a schema:Observation ;
-    schema:observationAbout region:romania ;
-    schema:measuredProperty indicator:pm25 ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 15.3 ;
-        schema:unitText "ug/m3"
-    ] .
-
-<https://mead.example/observation/pm25/bucuresti-ilfov/2022>
-    a schema:Observation ;
-    schema:observationAbout region:bucuresti-ilfov ;
-    schema:measuredProperty indicator:pm25 ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 18.9 ;
-        schema:unitText "ug/m3"
-    ] .
-
-<https://mead.example/observation/pm25/nord-est/2022>
-    a schema:Observation ;
-    schema:observationAbout region:nord-est ;
-    schema:measuredProperty indicator:pm25 ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 12.6 ;
-        schema:unitText "ug/m3"
-    ] .
-
-<https://mead.example/observation/urbanization/romania/2022>
-    a schema:Observation ;
-    schema:observationAbout region:romania ;
-    schema:measuredProperty indicator:urbanization ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 55.0 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/urbanization/bucuresti-ilfov/2022>
-    a schema:Observation ;
-    schema:observationAbout region:bucuresti-ilfov ;
-    schema:measuredProperty indicator:urbanization ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 87.0 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/urbanization/nord-est/2022>
-    a schema:Observation ;
-    schema:observationAbout region:nord-est ;
-    schema:measuredProperty indicator:urbanization ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 43.0 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/industrial-employment-share/romania/2022>
-    a schema:Observation ;
-    schema:observationAbout region:romania ;
-    schema:measuredProperty indicator:industrial-employment-share ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 24.0 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/industrial-employment-share/bucuresti-ilfov/2022>
-    a schema:Observation ;
-    schema:observationAbout region:bucuresti-ilfov ;
-    schema:measuredProperty indicator:industrial-employment-share ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 19.0 ;
-        schema:unitText "percent"
-    ] .
-
-<https://mead.example/observation/industrial-employment-share/nord-est/2022>
-    a schema:Observation ;
-    schema:observationAbout region:nord-est ;
-    schema:measuredProperty indicator:industrial-employment-share ;
-    schema:observationDate "2022"^^xsd:gYear ;
-    schema:value [
-        a schema:QuantitativeValue ;
-        schema:value 27.0 ;
-        schema:unitText "percent"
-    ] .
+region:south-america
+    a schema:Place ;
+    schema:identifier "south-america" ;
+    schema:name "South America"@en ;
+    schema:sameAs
+        <https://www.wikidata.org/entity/Q18> ,
+        <http://dbpedia.org/resource/South_America> .

@@ -9,11 +9,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -44,8 +42,7 @@ public class RegionsRepository {
     public record Region(
             String identifier,
             String name,
-            List<String> sameAs,
-            List<String> containedInPlace
+            List<String> sameAs
     ) {}
 
     public List<Region> findAll() {
@@ -59,12 +56,11 @@ public class RegionsRepository {
     private List<Region> fetchAllFromRdf() {
         String sparqlQuery = """
                 PREFIX schema: <https://schema.org/>
-                SELECT ?identifier ?name ?sameAs ?containedInPlace WHERE {
+                SELECT ?identifier ?name ?sameAs WHERE {
                   ?region a schema:Place ;
                           schema:identifier ?identifier ;
-                          schema:name ?name .
-                  OPTIONAL { ?region schema:sameAs ?sameAs . }
-                  OPTIONAL { ?region schema:containedInPlace ?containedInPlace . }
+                          schema:name ?name ;
+                          schema:sameAs ?sameAs .
                 }
                 ORDER BY ?identifier
                 """;
@@ -79,11 +75,9 @@ public class RegionsRepository {
                     String id = row.getLiteral("identifier").getString();
                     String name = row.getLiteral("name").getString();
                     String sameAs = readNodeValue(row.get("sameAs"));
-                    String containedInPlace = readNodeValue(row.get("containedInPlace"));
 
                     builders.computeIfAbsent(id, key -> new RegionBuilder(id, name))
-                            .addSameAs(sameAs)
-                            .addContainedInPlace(containedInPlace);
+                            .addSameAs(sameAs);
                 }
             }
 
@@ -103,8 +97,7 @@ public class RegionsRepository {
     private static class RegionBuilder {
         private final String id;
         private final String name;
-        private final Set<String> sameAs = new LinkedHashSet<>();
-        private final Set<String> containedInPlace = new LinkedHashSet<>();
+        private final List<String> sameAs = new ArrayList<>();
 
         private RegionBuilder(String id, String name) {
             this.id = id;
@@ -116,17 +109,11 @@ public class RegionsRepository {
             return this;
         }
 
-        RegionBuilder addContainedInPlace(String containedValue) {
-            if (containedValue != null) containedInPlace.add(containedValue);
-            return this;
-        }
-
         Region build() {
             return new Region(
                     id,
                     name,
-                    new ArrayList<>(sameAs),
-                    new ArrayList<>(containedInPlace)
+                    List.copyOf(sameAs)
             );
         }
     }

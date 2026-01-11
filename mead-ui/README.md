@@ -1,5 +1,12 @@
 # React + Vite
 
+## Local configuration
+
+Create a `.env` file in `mead-ui` (or copy `.env.example`) and set:
+
+- `VITE_CONDITIONS_API_BASE_URL=http://localhost:8081/mead-conditions-service`
+- `VITE_GEOGRAPHY_API_BASE_URL=http://localhost:8082/mead-geography-service`
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

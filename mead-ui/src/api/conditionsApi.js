@@ -4,6 +4,9 @@ const CONDITIONS_API_BASE_URL = import.meta.env.VITE_CONDITIONS_API_BASE_URL;
  * Utility to perform API requests to the conditions service.
  */
 async function fetchFromApi(endpoint) {
+    if (!CONDITIONS_API_BASE_URL) {
+        throw new Error("Missing VITE_CONDITIONS_API_BASE_URL.");
+    }
     const response = await fetch(`${CONDITIONS_API_BASE_URL}${endpoint}`, {
         headers: { Accept: "application/json" },
     });

@@ -1,0 +1,52 @@
+{
+  "info": {
+    "name": "Mead Geography Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8082/mead-geography-service"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/health"
+      }
+    },
+    {
+      "name": "List Regions",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/regions"
+      }
+    },
+    {
+      "name": "Get Region",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/regions/romania"
+      }
+    },
+    {
+      "name": "SPARQL Select",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/sparql-query"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "PREFIX schema: <https://schema.org/>\nSELECT ?s ?name WHERE {\n  ?s schema:name ?name .\n} LIMIT 5"
+        },
+        "url": "{{baseUrl}}/api/v1/sparql"
+      }
+    }
+  ]
+}

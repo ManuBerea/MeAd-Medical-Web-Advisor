@@ -1,52 +1,88 @@
 package com.mead.geography.service;
 
-import com.mead.geography.dto.GeographyDto.IndicatorDetail;
-import com.mead.geography.dto.GeographyDto.IndicatorSummary;
-import com.mead.geography.dto.GeographyDto.ObservationDetail;
 import com.mead.geography.dto.GeographyDto.RegionDetail;
 import com.mead.geography.dto.GeographyDto.RegionSummary;
-import com.mead.geography.repository.IndicatorsRepository;
-import com.mead.geography.repository.ObservationsRepository;
+import com.mead.geography.enrich.DbpediaClient;
+import com.mead.geography.enrich.DbpediaClient.DbpediaEnrichment;
+import com.mead.geography.enrich.ImageNormalizer;
+import com.mead.geography.enrich.WikidataClient;
+import com.mead.geography.enrich.WikidataClient.WikidataEnrichment;
+import com.mead.geography.enrich.WikidocSnippetLoader;
 import com.mead.geography.repository.RegionsRepository;
-import com.mead.geography.repository.IndicatorsRepository.Indicator;
-import com.mead.geography.repository.ObservationsRepository.Observation;
 import com.mead.geography.repository.RegionsRepository.Region;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 @Service
 public class GeographyService {
 
     private static final String SCHEMA_ORG_CONTEXT = "https://schema.org/";
     private static final String PLACE_TYPE = "Place";
-    private static final String DATASET_TYPE = "Dataset";
-    private static final String OBSERVATION_TYPE = "Observation";
-
     private static final String MEAD_REGION_BASE_URL = "https://mead.example/region/";
-    private static final String MEAD_INDICATOR_BASE_URL = "https://mead.example/indicator/";
 
-    private final RegionsRepository regionsRepository;
-    private final IndicatorsRepository indicatorsRepository;
-    private final ObservationsRepository observationsRepository;
+    private static final String WIKIDATA_ENTITY_MARKER = "wikidata.org/entity/";
+    private static final String DBPEDIA_RESOURCE_MARKER = "dbpedia.org/resource/";
 
-    public GeographyService(RegionsRepository regionsRepository,
-                            IndicatorsRepository indicatorsRepository,
-                            ObservationsRepository observationsRepository) {
-        this.regionsRepository = regionsRepository;
-        this.indicatorsRepository = indicatorsRepository;
-        this.observationsRepository = observationsRepository;
+    private final RegionsRepository repo;
+    private final WikidataClient wikidata;
+    private final DbpediaClient dbpedia;
+    private final WikidocSnippetLoader wikidoc;
+
+    public GeographyService(RegionsRepository repo,
+                            WikidataClient wikidata,
+                            DbpediaClient dbpedia,
+                            WikidocSnippetLoader wikidoc) {
+        this.repo = repo;
+        this.wikidata = wikidata;
+        this.dbpedia = dbpedia;
+        this.wikidoc = wikidoc;
     }
 
     public List<RegionSummary> listRegions() {
-        return regionsRepository.findAll().stream()
-                .map(region -> new RegionSummary(region.identifier(), region.name()))
+        return repo.findAll().stream()
+                .map(r -> new RegionSummary(r.identifier(), r.name(), r.sameAs()))
                 .toList();
     }
 
     public RegionDetail getRegion(String regionId) {
-        Region region = regionsRepository.findById(regionId)
+        Region region = repo.findById(regionId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown region: " + regionId));
+
+        String wikidataUri = findUriByMarker(region.sameAs(), WIKIDATA_ENTITY_MARKER);
+        String dbpediaUri = findUriByMarker(region.sameAs(), DBPEDIA_RESOURCE_MARKER);
+
+        CompletableFuture<WikidataEnrichment> wikidataFuture = executeAsync(() ->
+                wikidataUri == null
+                        ? new WikidataEnrichment(null, null, null, List.of(), List.of(), List.of(), List.of())
+                        : wikidata.enrichFromEntityUri(wikidataUri)
+        );
+
+        CompletableFuture<DbpediaEnrichment> dbpediaFuture = executeAsync(() ->
+                dbpediaUri == null
+                        ? new DbpediaEnrichment(null, null, null, List.of(), List.of(), List.of(), List.of())
+                        : dbpedia.enrichFromResourceUri(dbpediaUri)
+        );
+
+        CompletableFuture<String> snippetFuture = executeAsync(() -> wikidoc.loadSnippet(regionId));
+
+        CompletableFuture.allOf(wikidataFuture, dbpediaFuture, snippetFuture).join();
+
+        WikidataEnrichment wikidataEnrichment = wikidataFuture.join();
+        DbpediaEnrichment dbpediaEnrichment = dbpediaFuture.join();
+
+        String description = pickFirstNotBlank(dbpediaEnrichment.description(), wikidataEnrichment.description());
+        String populationTotal = pickFirstNotBlank(wikidataEnrichment.populationTotal(), dbpediaEnrichment.populationTotal());
+        String populationDensity = pickFirstNotBlank(dbpediaEnrichment.populationDensity(), wikidataEnrichment.populationDensity());
+        List<String> climates = mergeUnique(dbpediaEnrichment.climates(), wikidataEnrichment.climates());
+        List<String> industrial = mergeUnique(dbpediaEnrichment.industries(), wikidataEnrichment.industries());
+        List<String> cultural = mergeUnique(dbpediaEnrichment.culturalFactors(), wikidataEnrichment.culturalFactors());
+        List<String> images = combineAndNormalizeImages(wikidataEnrichment.images(), dbpediaEnrichment.images());
 
         return new RegionDetail(
                 SCHEMA_ORG_CONTEXT,
@@ -54,86 +90,54 @@ public class GeographyService {
                 PLACE_TYPE,
                 region.identifier(),
                 region.name(),
+                description,
+                populationTotal,
+                populationDensity,
+                climates,
+                industrial,
+                cultural,
+                images,
                 region.sameAs(),
-                region.containedInPlace()
+                snippetFuture.join()
         );
     }
 
-    public List<IndicatorSummary> listIndicators() {
-        return indicatorsRepository.findAll().stream()
-                .map(indicator -> new IndicatorSummary(indicator.identifier(), indicator.name()))
-                .toList();
+    private static <T> CompletableFuture<T> executeAsync(Supplier<T> supplier) {
+        return CompletableFuture.supplyAsync(supplier);
     }
 
-    public IndicatorDetail getIndicator(String indicatorId) {
-        Indicator indicator = indicatorsRepository.findById(indicatorId)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown indicator: " + indicatorId));
-
-        return new IndicatorDetail(
-                SCHEMA_ORG_CONTEXT,
-                MEAD_INDICATOR_BASE_URL + indicator.identifier(),
-                DATASET_TYPE,
-                indicator.identifier(),
-                indicator.name(),
-                indicator.variableMeasured(),
-                indicator.measurementTechnique()
-        );
+    private static String findUriByMarker(List<String> sameAsList, String marker) {
+        return sameAsList.stream()
+                .filter(uri -> uri != null && uri.contains(marker))
+                .findFirst()
+                .orElse(null);
     }
 
-    public List<ObservationDetail> getObservations(String regionId,
-                                                   String indicatorId,
-                                                   Integer fromYear,
-                                                   Integer toYear) {
-        Region region = regionsRepository.findById(regionId)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown region: " + regionId));
-        Indicator indicator = indicatorsRepository.findById(indicatorId)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown indicator: " + indicatorId));
-
-        String regionUri = MEAD_REGION_BASE_URL + region.identifier();
-        String indicatorUri = MEAD_INDICATOR_BASE_URL + indicator.identifier();
-
-        List<Observation> observations = observationsRepository.findByRegionAndIndicator(regionUri, indicatorUri);
-
-        return observations.stream()
-                .filter(obs -> withinYearRange(obs.observationDate(), fromYear, toYear))
-                .map(obs -> new ObservationDetail(
-                        SCHEMA_ORG_CONTEXT,
-                        obs.id(),
-                        OBSERVATION_TYPE,
-                        regionUri,
-                        indicatorUri,
-                        obs.observationDate(),
-                        obs.value(),
-                        obs.unitText()
-                ))
-                .toList();
+    private static String pickFirstNotBlank(String first, String second) {
+        if (first != null && !first.isBlank()) return first;
+        return second;
     }
 
-    private static boolean withinYearRange(String dateValue, Integer fromYear, Integer toYear) {
-        if (fromYear == null && toYear == null) return true;
-        Integer year = extractYear(dateValue);
-        if (year == null) return false;
-        if (fromYear != null && year < fromYear) return false;
-        return toYear == null || year <= toYear;
+    private static List<String> mergeUnique(List<String> first, List<String> second) {
+        Map<String, String> map = new LinkedHashMap<>();
+        addAllNormalized(map, first);
+        addAllNormalized(map, second);
+        return new ArrayList<>(map.values());
     }
 
-    private static Integer extractYear(String dateValue) {
-        if (dateValue == null) return null;
-        String trimmed = dateValue.trim();
-        StringBuilder digits = new StringBuilder();
-        for (int i = 0; i < trimmed.length(); i++) {
-            char c = trimmed.charAt(i);
-            if (Character.isDigit(c)) {
-                digits.append(c);
-            } else {
-                break;
+    private static void addAllNormalized(Map<String, String> map, List<String> values) {
+        if (values == null) return;
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                map.putIfAbsent(value.toLowerCase(), value);
             }
         }
-        if (digits.length() == 0) return null;
-        try {
-            return Integer.parseInt(digits.toString());
-        } catch (NumberFormatException e) {
-            return null;
-        }
+    }
+
+    private static List<String> combineAndNormalizeImages(List<String> firstList, List<String> secondList) {
+        List<String> combined = new ArrayList<>();
+        if (firstList != null) combined.addAll(firstList);
+        if (secondList != null) combined.addAll(secondList);
+        return ImageNormalizer.normalize(combined);
     }
 }
