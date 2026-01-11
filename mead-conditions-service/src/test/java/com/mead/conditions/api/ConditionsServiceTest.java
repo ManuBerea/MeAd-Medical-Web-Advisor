@@ -3,10 +3,11 @@ package com.mead.conditions.api;
 import com.mead.conditions.dto.ConditionDto.ConditionDetail;
 import com.mead.conditions.dto.ConditionDto.ConditionSummary;
 import com.mead.conditions.enrich.DbpediaClient.DbpediaEnrichment;
+import com.mead.conditions.enrich.WikidocClient.WikidocEnrichment;
 import com.mead.conditions.repository.ConditionsRepository;
 import com.mead.conditions.enrich.DbpediaClient;
 import com.mead.conditions.enrich.WikidataClient;
-import com.mead.conditions.enrich.WikidocSnippetLoader;
+import com.mead.conditions.enrich.WikidocClient;
 import com.mead.conditions.repository.ConditionsRepository.Condition;
 import com.mead.conditions.service.ConditionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +24,7 @@ class ConditionServiceTest {
     private ConditionsRepository repo;
     private WikidataClient wikidata;
     private DbpediaClient dbpedia;
-    private WikidocSnippetLoader wikidoc;
+    private WikidocClient wikidoc;
     private ConditionService service;
 
     @BeforeEach
@@ -31,7 +32,7 @@ class ConditionServiceTest {
         repo = mock(ConditionsRepository.class);
         wikidata = mock(WikidataClient.class);
         dbpedia = mock(DbpediaClient.class);
-        wikidoc = mock(WikidocSnippetLoader.class);
+        wikidoc = mock(WikidocClient.class);
         service = new ConditionService(repo, wikidata, dbpedia, wikidoc);
     }
 
@@ -54,11 +55,14 @@ class ConditionServiceTest {
                         "dbpedia desc", List.of(), List.of(), List.of()
                 ));
 
-        when(wikidoc.loadSnippet("asthma")).thenReturn("snippet");
+        when(wikidoc.getEnrichment("asthma", "Asthma"))
+                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/Asthma", "local"));
 
         ConditionDetail detail = service.get("asthma");
 
         assertThat(detail.description()).isEqualTo("dbpedia desc");
+        assertThat(detail.wikidocSnippet()).isEqualTo("snippet");
+        assertThat(detail.wikidocUrl()).isEqualTo("https://www.wikidoc.org/index.php/Asthma");
     }
 
     @Test
@@ -79,7 +83,8 @@ class ConditionServiceTest {
                         "  ", List.of(), List.of(), List.of()
                 ));
 
-        when(wikidoc.loadSnippet("asthma")).thenReturn("snippet");
+        when(wikidoc.getEnrichment("asthma", "Asthma"))
+                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/Asthma", "local"));
 
         ConditionDetail detail = service.get("asthma");
 
@@ -105,7 +110,8 @@ class ConditionServiceTest {
                         List.of("https://commons.wikimedia.org/wiki/Special:FilePath/Obesity.svg")
                 ));
 
-        when(wikidoc.loadSnippet("obesity")).thenReturn("snippet");
+        when(wikidoc.getEnrichment("obesity", "Obesity"))
+                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/Obesity", "local"));
 
         ConditionDetail detail = service.get("obesity");
 
@@ -132,7 +138,8 @@ class ConditionServiceTest {
                         List.of("https://commons.wikimedia.org/wiki/Special:FilePath/Obesity.svg")
                 ));
 
-        when(wikidoc.loadSnippet("obesity")).thenReturn("snippet");
+        when(wikidoc.getEnrichment("obesity", "Obesity"))
+                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/Obesity", "local"));
 
         ConditionDetail detail = service.get("obesity");
 
@@ -151,7 +158,8 @@ class ConditionServiceTest {
                 .thenReturn(new DbpediaEnrichment(
                         "db desc", List.of("s1"), List.of("r1"), List.of("img")
                 ));
-        when(wikidoc.loadSnippet("x")).thenReturn("snippet");
+        when(wikidoc.getEnrichment("x", "X"))
+                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/X", "local"));
 
         ConditionDetail detail = service.get("x");
 
@@ -174,7 +182,8 @@ class ConditionServiceTest {
                 .thenReturn(new WikidataClient.WikidataEnrichment(
                         "wd desc", List.of("s1"), List.of("r1"), List.of("img")
                 ));
-        when(wikidoc.loadSnippet("x")).thenReturn("snippet");
+        when(wikidoc.getEnrichment("x", "X"))
+                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/X", "local"));
 
         ConditionDetail detail = service.get("x");
 

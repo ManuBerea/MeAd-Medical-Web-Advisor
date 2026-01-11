@@ -4,10 +4,11 @@ import com.mead.conditions.dto.ConditionDto.ConditionDetail;
 import com.mead.conditions.dto.ConditionDto.ConditionSummary;
 import com.mead.conditions.enrich.DbpediaClient.DbpediaEnrichment;
 import com.mead.conditions.enrich.WikidataClient.WikidataEnrichment;
+import com.mead.conditions.enrich.WikidocClient.WikidocEnrichment;
 import com.mead.conditions.repository.ConditionsRepository;
 import com.mead.conditions.enrich.DbpediaClient;
 import com.mead.conditions.enrich.WikidataClient;
-import com.mead.conditions.enrich.WikidocSnippetLoader;
+import com.mead.conditions.enrich.WikidocClient;
 import com.mead.conditions.repository.ConditionsRepository.Condition;
 import org.springframework.stereotype.Service;
 
@@ -31,12 +32,12 @@ public class ConditionService {
     private final ConditionsRepository repo;
     private final WikidataClient wikidata;
     private final DbpediaClient dbpedia;
-    private final WikidocSnippetLoader wikidoc;
+    private final WikidocClient wikidoc;
 
     public ConditionService(ConditionsRepository repo,
                             WikidataClient wikidata,
                             DbpediaClient dbpedia,
-                            WikidocSnippetLoader wikidoc) {
+                            WikidocClient wikidoc) {
         this.repo = repo;
         this.wikidata = wikidata;
         this.dbpedia = dbpedia;
@@ -68,12 +69,15 @@ public class ConditionService {
                         : dbpedia.enrichFromResourceUri(dbpediaUri)
         );
 
-        CompletableFuture<String> snippetFuture = executeAsync(() -> wikidoc.loadSnippet(conditionId));
+        // WikiDoc enrichment (API with local fallback)
+        CompletableFuture<WikidocEnrichment> wikidocFuture = executeAsync(() -> 
+                wikidoc.getEnrichment(conditionId, condition.name()));
 
-        CompletableFuture.allOf(wikidataFuture, dbpediaFuture, snippetFuture).join();
+        CompletableFuture.allOf(wikidataFuture, dbpediaFuture, wikidocFuture).join();
 
         WikidataEnrichment wikidataEnrichment = wikidataFuture.join();
         DbpediaEnrichment dbpediaEnrichment = dbpediaFuture.join();
+        WikidocEnrichment wikidocEnrichment = wikidocFuture.join();
 
         String description = pickFirstNotBlank(dbpediaEnrichment.description(), wikidataEnrichment.description());
         List<String> symptoms = pickFirstNotEmpty(wikidataEnrichment.symptoms(), dbpediaEnrichment.symptoms());
@@ -91,7 +95,9 @@ public class ConditionService {
                 symptoms,
                 riskFactors,
                 condition.sameAs(),
-                snippetFuture.join()
+                wikidocEnrichment.content(),
+                wikidocEnrichment.sourceUrl(),
+                wikidocEnrichment.sourceType()
         );
     }
 

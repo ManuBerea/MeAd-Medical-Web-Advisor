@@ -37,7 +37,9 @@ class ConditionsControllerWebTest {
                 List.of("wheeze"),
                 List.of("smoking"),
                 List.of("http://dbpedia.org/resource/Asthma", "https://www.wikidata.org/entity/Q35869"),
-                "snippet"
+                "snippet",
+                "https://www.wikidoc.org/index.php/Asthma",
+                "api"
         );
 
         when(conditionService.get("asthma")).thenReturn(detail);

@@ -25,7 +25,9 @@ public final class ConditionDto {
             List<String> riskFactors,
 
             List<String> sameAs,
-            String wikidocSnippet
+            String wikidocSnippet,
+            String wikidocUrl,
+            String wikidocSourceType  // "api" (live from WikiDoc), "local" (fallback), or "none"
     ) {}
 
     private ConditionDto() {}
