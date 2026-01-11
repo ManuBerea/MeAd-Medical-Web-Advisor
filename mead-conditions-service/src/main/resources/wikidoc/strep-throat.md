@@ -1,1 +1,0 @@
-﻿Strep throat is a bacterial infection of the throat caused by group A streptococcus. It causes sudden sore throat, fever, swollen lymph nodes, and sometimes white patches on the tonsils. It is treated with antibiotics to prevent complications.

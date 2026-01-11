@@ -1,1 +1,0 @@
-﻿Allergic conjunctivitis is eye inflammation triggered by allergens such as pollen, dust, or pet dander. It causes itchy, red, watery eyes and often occurs with other allergy symptoms. Management includes avoiding triggers and using antihistamine or mast cell stabilizer eye drops.

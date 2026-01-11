@@ -1,1 +1,0 @@
-﻿Albinism is a group of genetic conditions characterized by reduced or absent melanin pigment. It affects skin, hair, and eye color and can cause vision problems and sun sensitivity. Management focuses on eye care and sun protection.

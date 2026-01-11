@@ -57,7 +57,7 @@ class GeographyServiceTest {
                         List.of(), List.of(), List.of(), List.of()
                 ));
 
-        when(wikidoc.loadSnippet("germany")).thenReturn("snippet");
+        when(wikidoc.loadSnippet("germany", "Germany")).thenReturn("snippet");
 
         RegionDetail detail = service.getRegion("germany");
 
@@ -87,7 +87,7 @@ class GeographyServiceTest {
                         List.of("French"), List.of("img2")
                 ));
 
-        when(wikidoc.loadSnippet("france")).thenReturn("snippet");
+        when(wikidoc.loadSnippet("france", "France")).thenReturn("snippet");
 
         RegionDetail detail = service.getRegion("france");
 
@@ -110,7 +110,7 @@ class GeographyServiceTest {
                         List.of("temperate"), List.of("services"),
                         List.of("German"), List.of("img")
                 ));
-        when(wikidoc.loadSnippet("berlin")).thenReturn("snippet");
+        when(wikidoc.loadSnippet("berlin", "Berlin")).thenReturn("snippet");
 
         RegionDetail detail = service.getRegion("berlin");
 

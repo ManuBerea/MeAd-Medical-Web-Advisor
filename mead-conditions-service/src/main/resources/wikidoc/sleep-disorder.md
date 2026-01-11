@@ -1,1 +1,0 @@
-﻿Sleep disorders are conditions that affect the quality, timing, or amount of sleep. They can cause daytime fatigue, mood changes, and impaired concentration. Treatment depends on the specific disorder and often includes sleep hygiene and targeted therapy.

@@ -74,7 +74,7 @@ public class GeographyService {
                         : dbpedia.enrichFromResourceUri(dbpediaUri)
         );
 
-        CompletableFuture<String> snippetFuture = executeAsync(() -> wikidoc.loadSnippet(regionId));
+        CompletableFuture<String> snippetFuture = executeAsync(() -> wikidoc.loadSnippet(regionId, region.name()));
 
         CompletableFuture.allOf(wikidataFuture, dbpediaFuture, snippetFuture).join();
 
@@ -88,6 +88,8 @@ public class GeographyService {
         List<String> industrial = mergeUnique(dbpediaEnrichment.industries(), wikidataEnrichment.industries());
         List<String> cultural = mergeUnique(dbpediaEnrichment.culturalFactors(), wikidataEnrichment.culturalFactors());
         List<String> images = combineAndNormalizeImages(wikidataEnrichment.images(), dbpediaEnrichment.images());
+
+        String wikidocSnippet = fallbackSnippet(snippetFuture.join());
 
         return new RegionDetail(
                 SCHEMA_ORG_CONTEXT,
@@ -103,7 +105,7 @@ public class GeographyService {
                 cultural,
                 images,
                 region.sameAs(),
-                snippetFuture.join()
+                wikidocSnippet
         );
     }
 
@@ -150,5 +152,10 @@ public class GeographyService {
         if (firstList != null) combined.addAll(firstList);
         if (secondList != null) combined.addAll(secondList);
         return ImageNormalizer.normalize(combined);
+    }
+
+    private static String fallbackSnippet(String snippet) {
+        if (snippet != null && !snippet.isBlank()) return snippet;
+        return "WikiDoc summary unavailable.";
     }
 }

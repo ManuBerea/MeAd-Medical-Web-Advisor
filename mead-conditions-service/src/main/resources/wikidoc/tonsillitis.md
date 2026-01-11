@@ -1,1 +1,0 @@
-﻿Tonsillitis is inflammation of the tonsils, commonly caused by viral or bacterial infection. Symptoms include sore throat, fever, swollen tonsils, and trouble swallowing. Care includes rest, fluids, pain relief, and antibiotics when bacterial.

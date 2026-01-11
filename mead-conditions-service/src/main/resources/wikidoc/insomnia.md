@@ -1,1 +1,0 @@
-﻿Insomnia is difficulty falling asleep, staying asleep, or getting restful sleep. It can be short term or chronic and is often linked to stress, medical conditions, or sleep habits. Treatment includes sleep hygiene, behavioral therapy, and sometimes medication.

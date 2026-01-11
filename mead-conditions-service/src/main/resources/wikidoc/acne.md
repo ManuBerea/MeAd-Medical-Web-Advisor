@@ -1,1 +1,0 @@
-﻿Acne is a common skin condition where hair follicles become clogged with oil and dead skin. It causes pimples, blackheads, and sometimes cysts, often on the face, chest, and back. Treatment includes gentle skin care, topical products, and medications when needed.

@@ -1,1 +1,0 @@
-﻿Iron deficiency anemia is the most common type of anemia, caused by low iron stores. It can result from poor dietary intake, blood loss, or increased needs during pregnancy. Symptoms include tiredness, dizziness, and pale skin, and treatment includes iron supplementation and addressing the underlying cause.
