@@ -16,7 +16,8 @@ mead:
     dbpedia:
       endpoint: https://dbpedia.org/sparql
       timeout-ms: 8000
-    wikidoc:
-      api-url: https://www.wikidoc.org/api.php
+    wikipedia:
+      query-url: https://en.wikipedia.org/w/api.php
+      summary-url: https://en.wikipedia.org/api/rest_v1/page/summary/
       user-agent: "MeAd/0.0.1 (https://github.com/ManuBerea/MeAd-Medical-Web-Advisor; mailto:manuela.berea@student.uaic.ro)"
       timeout-ms: 8000

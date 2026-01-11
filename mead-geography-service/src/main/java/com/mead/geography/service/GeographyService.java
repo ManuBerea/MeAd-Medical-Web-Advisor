@@ -7,7 +7,7 @@ import com.mead.geography.enrich.DbpediaClient.DbpediaEnrichment;
 import com.mead.geography.enrich.ImageNormalizer;
 import com.mead.geography.enrich.WikidataClient;
 import com.mead.geography.enrich.WikidataClient.WikidataEnrichment;
-import com.mead.geography.enrich.WikidocSnippetLoader;
+import com.mead.geography.enrich.WikipediaSummaryLoader;
 import com.mead.geography.repository.RegionsRepository;
 import com.mead.geography.repository.RegionsRepository.Region;
 import org.springframework.stereotype.Service;
@@ -32,20 +32,21 @@ public class GeographyService {
     private final RegionsRepository repo;
     private final WikidataClient wikidata;
     private final DbpediaClient dbpedia;
-    private final WikidocSnippetLoader wikidoc;
+    private final WikipediaSummaryLoader wikipedia;
 
     public GeographyService(RegionsRepository repo,
                             WikidataClient wikidata,
                             DbpediaClient dbpedia,
-                            WikidocSnippetLoader wikidoc) {
+                            WikipediaSummaryLoader wikipedia) {
         this.repo = repo;
         this.wikidata = wikidata;
         this.dbpedia = dbpedia;
-        this.wikidoc = wikidoc;
+        this.wikipedia = wikipedia;
     }
 
     public List<RegionSummary> listRegions() {
         return repo.findAll().stream()
+                .filter(this::hasPopulationMetrics)
                 .map(r -> new RegionSummary(
                         r.identifier(),
                         r.name(),
@@ -64,32 +65,34 @@ public class GeographyService {
 
         CompletableFuture<WikidataEnrichment> wikidataFuture = executeAsync(() ->
                 wikidataUri == null
-                        ? new WikidataEnrichment(null, null, null, List.of(), List.of(), List.of(), List.of())
+                        ? new WikidataEnrichment(null, null, null, List.of(), List.of())
                         : wikidata.enrichFromEntityUri(wikidataUri)
         );
 
         CompletableFuture<DbpediaEnrichment> dbpediaFuture = executeAsync(() ->
                 dbpediaUri == null
-                        ? new DbpediaEnrichment(null, null, null, List.of(), List.of(), List.of(), List.of())
+                        ? new DbpediaEnrichment(null, null, null, List.of(), List.of())
                         : dbpedia.enrichFromResourceUri(dbpediaUri)
         );
 
-        CompletableFuture<String> snippetFuture = executeAsync(() -> wikidoc.loadSnippet(regionId, region.name()));
+        CompletableFuture<String> summaryFuture = executeAsync(() -> wikipedia.loadSummary(regionId, region.name()));
 
-        CompletableFuture.allOf(wikidataFuture, dbpediaFuture, snippetFuture).join();
+        CompletableFuture.allOf(wikidataFuture, dbpediaFuture, summaryFuture).join();
 
         WikidataEnrichment wikidataEnrichment = wikidataFuture.join();
         DbpediaEnrichment dbpediaEnrichment = dbpediaFuture.join();
 
         String description = pickFirstNotBlank(dbpediaEnrichment.description(), wikidataEnrichment.description());
-        String populationTotal = pickFirstNotBlank(wikidataEnrichment.populationTotal(), dbpediaEnrichment.populationTotal());
-        String populationDensity = pickFirstNotBlank(dbpediaEnrichment.populationDensity(), wikidataEnrichment.populationDensity());
-        List<String> climates = mergeUnique(dbpediaEnrichment.climates(), wikidataEnrichment.climates());
-        List<String> industrial = mergeUnique(dbpediaEnrichment.industries(), wikidataEnrichment.industries());
+        String populationTotal = pickFirstNumeric(wikidataEnrichment.populationTotal(), dbpediaEnrichment.populationTotal());
+        String populationDensity = pickFirstNumeric(dbpediaEnrichment.populationDensity(), wikidataEnrichment.populationDensity());
         List<String> cultural = mergeUnique(dbpediaEnrichment.culturalFactors(), wikidataEnrichment.culturalFactors());
         List<String> images = combineAndNormalizeImages(wikidataEnrichment.images(), dbpediaEnrichment.images());
 
-        String wikidocSnippet = fallbackSnippet(snippetFuture.join());
+        if (!hasPopulationValues(populationTotal, populationDensity)) {
+            throw new IllegalArgumentException("Missing population data for region: " + regionId);
+        }
+
+        String wikipediaSnippet = fallbackSnippet(summaryFuture.join());
 
         return new RegionDetail(
                 SCHEMA_ORG_CONTEXT,
@@ -100,12 +103,10 @@ public class GeographyService {
                 description,
                 populationTotal,
                 populationDensity,
-                climates,
-                industrial,
                 cultural,
                 images,
                 region.sameAs(),
-                wikidocSnippet
+                wikipediaSnippet
         );
     }
 
@@ -156,6 +157,57 @@ public class GeographyService {
 
     private static String fallbackSnippet(String snippet) {
         if (snippet != null && !snippet.isBlank()) return snippet;
-        return "WikiDoc summary unavailable.";
+        return "Wikipedia summary unavailable.";
+    }
+
+    private boolean hasPopulationMetrics(Region region) {
+        String wikidataUri = findUriByMarker(region.sameAs(), WIKIDATA_ENTITY_MARKER);
+        String dbpediaUri = findUriByMarker(region.sameAs(), DBPEDIA_RESOURCE_MARKER);
+
+        try {
+            CompletableFuture<WikidataEnrichment> wikidataFuture = executeAsync(() ->
+                    wikidataUri == null
+                            ? new WikidataEnrichment(null, null, null, List.of(), List.of())
+                            : wikidata.enrichFromEntityUri(wikidataUri)
+            );
+
+            CompletableFuture<DbpediaEnrichment> dbpediaFuture = executeAsync(() ->
+                    dbpediaUri == null
+                            ? new DbpediaEnrichment(null, null, null, List.of(), List.of())
+                            : dbpedia.enrichFromResourceUri(dbpediaUri)
+            );
+
+            CompletableFuture.allOf(wikidataFuture, dbpediaFuture).join();
+
+            WikidataEnrichment wikidataEnrichment = wikidataFuture.join();
+            DbpediaEnrichment dbpediaEnrichment = dbpediaFuture.join();
+            String populationTotal = pickFirstNumeric(wikidataEnrichment.populationTotal(), dbpediaEnrichment.populationTotal());
+            String populationDensity = pickFirstNumeric(dbpediaEnrichment.populationDensity(), wikidataEnrichment.populationDensity());
+            return hasPopulationValues(populationTotal, populationDensity);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean hasPopulationValues(String populationTotal, String populationDensity) {
+        return isNumeric(populationTotal) && isNumeric(populationDensity);
+    }
+
+    private boolean isNumeric(String value) {
+        if (value == null) return false;
+        String normalized = value.replace(",", "").trim();
+        if (normalized.isBlank()) return false;
+        try {
+            Double.parseDouble(normalized);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private String pickFirstNumeric(String first, String second) {
+        if (isNumeric(first)) return first;
+        if (isNumeric(second)) return second;
+        return pickFirstNotBlank(first, second);
     }
 }

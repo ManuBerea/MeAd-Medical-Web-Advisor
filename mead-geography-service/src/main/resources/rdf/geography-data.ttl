@@ -41,14 +41,6 @@ region:africa
         <https://www.wikidata.org/entity/Q15> ,
         <http://dbpedia.org/resource/Africa> .
 
-region:germany
-    a schema:Place ;
-    schema:identifier "germany" ;
-    schema:name "Germany"@en ;
-    schema:sameAs
-        <https://www.wikidata.org/entity/Q183> ,
-        <http://dbpedia.org/resource/Germany> .
-
 region:berlin
     a schema:Place ;
     schema:identifier "berlin" ;
@@ -56,14 +48,6 @@ region:berlin
     schema:sameAs
         <https://www.wikidata.org/entity/Q64> ,
         <http://dbpedia.org/resource/Berlin> .
-
-region:france
-    a schema:Place ;
-    schema:identifier "france" ;
-    schema:name "France"@en ;
-    schema:sameAs
-        <https://www.wikidata.org/entity/Q142> ,
-        <http://dbpedia.org/resource/France> .
 
 region:spain
     a schema:Place ;
@@ -121,14 +105,6 @@ region:canada
         <https://www.wikidata.org/entity/Q16> ,
         <http://dbpedia.org/resource/Canada> .
 
-region:australia
-    a schema:Place ;
-    schema:identifier "australia" ;
-    schema:name "Australia"@en ;
-    schema:sameAs
-        <https://www.wikidata.org/entity/Q408> ,
-        <http://dbpedia.org/resource/Australia> .
-
 region:north-america
     a schema:Place ;
     schema:identifier "north-america" ;
@@ -152,14 +128,6 @@ region:antarctica
     schema:sameAs
         <https://www.wikidata.org/entity/Q51> ,
         <http://dbpedia.org/resource/Antarctica> .
-
-region:china
-    a schema:Place ;
-    schema:identifier "china" ;
-    schema:name "China"@en ;
-    schema:sameAs
-        <https://www.wikidata.org/entity/Q148> ,
-        <http://dbpedia.org/resource/China> .
 
 region:india
     a schema:Place ;

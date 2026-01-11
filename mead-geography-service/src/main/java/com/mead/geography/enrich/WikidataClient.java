@@ -53,8 +53,6 @@ public class WikidataClient {
             String description,
             String populationTotal,
             String populationDensity,
-            List<String> climates,
-            List<String> industries,
             List<String> culturalFactors,
             List<String> images
     ) {}
@@ -75,8 +73,6 @@ public class WikidataClient {
         CompletableFuture<String> populationFuture = executeAsync(() -> fetchPopulationTotal(entityId));
         CompletableFuture<String> areaFuture = executeAsync(() -> fetchArea(entityId));
         CompletableFuture<String> densityFuture = populationFuture.thenCombine(areaFuture, WikidataClient::calculateDensity);
-        CompletableFuture<List<String>> climatesFuture = executeAsync(() -> fetchClimates(entityId));
-        CompletableFuture<List<String>> industriesFuture = executeAsync(() -> fetchIndustries(entityId));
         CompletableFuture<List<String>> culturalFuture = executeAsync(() -> fetchCulturalFactors(entityId));
         CompletableFuture<List<String>> imagesFuture = executeAsync(() -> fetchImageUrls(entityId));
 
@@ -84,8 +80,6 @@ public class WikidataClient {
                 descriptionFuture,
                 populationFuture,
                 densityFuture,
-                climatesFuture,
-                industriesFuture,
                 culturalFuture,
                 imagesFuture
         ).join();
@@ -94,8 +88,6 @@ public class WikidataClient {
                 descriptionFuture.join(),
                 populationFuture.join(),
                 densityFuture.join(),
-                climatesFuture.join(),
-                industriesFuture.join(),
                 culturalFuture.join(),
                 imagesFuture.join()
         );
@@ -144,38 +136,6 @@ public class WikidataClient {
         if (population == null || area == null || area == 0.0) return null;
         double density = population / area;
         return String.format(Locale.US, "%.2f", density);
-    }
-
-    private List<String> fetchClimates(String entityId) {
-        String sparqlQuery = """
-                PREFIX wd: <%s>
-                PREFIX wdt: <%s>
-                PREFIX wikibase: <%s>
-                PREFIX bd: <%s>
-
-                SELECT DISTINCT ?climateLabel WHERE {
-                  wd:%s wdt:P2564 ?climate .
-                  SERVICE wikibase:label { bd:serviceParam wikibase:language "%s". }
-                } LIMIT %d
-                """.formatted(WD, WDT, WIKIBASE, BD, entityId, LANG_EN, LIMIT_LIST);
-
-        return sparql.selectStrings(createRequest(sparqlQuery, "climateLabel"));
-    }
-
-    private List<String> fetchIndustries(String entityId) {
-        String sparqlQuery = """
-                PREFIX wd: <%s>
-                PREFIX wdt: <%s>
-                PREFIX wikibase: <%s>
-                PREFIX bd: <%s>
-
-                SELECT DISTINCT ?industryLabel WHERE {
-                  wd:%s wdt:P452 ?industry .
-                  SERVICE wikibase:label { bd:serviceParam wikibase:language "%s". }
-                } LIMIT %d
-                """.formatted(WD, WDT, WIKIBASE, BD, entityId, LANG_EN, LIMIT_LIST);
-
-        return sparql.selectStrings(createRequest(sparqlQuery, "industryLabel"));
     }
 
     private List<String> fetchCulturalFactors(String entityId) {

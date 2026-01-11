@@ -20,12 +20,10 @@ public final class GeographyDto {
             String description,
             String populationTotal,
             String populationDensity,
-            List<String> climates,
-            List<String> industrialDevelopment,
             List<String> culturalFactors,
             List<String> images,
             List<String> sameAs,
-            String wikidocSnippet
+            String wikipediaSnippet
     ) {}
 
     private GeographyDto() {}

@@ -50,8 +50,6 @@ public class DbpediaClient {
             String description,
             String populationTotal,
             String populationDensity,
-            List<String> climates,
-            List<String> industries,
             List<String> culturalFactors,
             List<String> images
     ) {}
@@ -61,8 +59,6 @@ public class DbpediaClient {
         CompletableFuture<String> descriptionFuture = executeAsync(() -> fetchEnglishDescription(dbpediaResourceUri));
         CompletableFuture<String> populationTotalFuture = executeAsync(() -> fetchPopulationTotal(dbpediaResourceUri));
         CompletableFuture<String> populationDensityFuture = executeAsync(() -> fetchPopulationDensity(dbpediaResourceUri));
-        CompletableFuture<List<String>> climatesFuture = executeAsync(() -> fetchClimates(dbpediaResourceUri));
-        CompletableFuture<List<String>> industriesFuture = executeAsync(() -> fetchIndustries(dbpediaResourceUri));
         CompletableFuture<List<String>> culturalFuture = executeAsync(() -> fetchCulturalFactors(dbpediaResourceUri));
         CompletableFuture<List<String>> imagesFuture = executeAsync(() -> fetchImageUrls(dbpediaResourceUri));
 
@@ -70,8 +66,6 @@ public class DbpediaClient {
                 descriptionFuture,
                 populationTotalFuture,
                 populationDensityFuture,
-                climatesFuture,
-                industriesFuture,
                 culturalFuture,
                 imagesFuture
         ).join();
@@ -80,8 +74,6 @@ public class DbpediaClient {
                 descriptionFuture.join(),
                 populationTotalFuture.join(),
                 populationDensityFuture.join(),
-                climatesFuture.join(),
-                industriesFuture.join(),
                 culturalFuture.join(),
                 imagesFuture.join()
         );
@@ -111,22 +103,6 @@ public class DbpediaClient {
         String value = queryLiteral(resourceUri, DBO + "populationDensity");
         if (value != null) return value;
         return queryLiteral(resourceUri, DBP + "populationDensity");
-    }
-
-    private List<String> fetchClimates(String resourceUri) {
-        List<String> climates = queryEnglishLabels(resourceUri, DBO + "climate");
-        if (!climates.isEmpty()) return removeDuplicates(climates);
-
-        List<String> raw = queryLiterals(resourceUri, DBP + "climate");
-        return removeDuplicates(splitList(raw));
-    }
-
-    private List<String> fetchIndustries(String resourceUri) {
-        List<String> industries = new ArrayList<>();
-        industries.addAll(queryEnglishLabels(resourceUri, DBO + "industry"));
-        industries.addAll(splitList(queryLiterals(resourceUri, DBP + "industries")));
-        industries.addAll(splitList(queryLiterals(resourceUri, DBP + "industry")));
-        return removeDuplicates(industries);
     }
 
     private List<String> fetchCulturalFactors(String resourceUri) {

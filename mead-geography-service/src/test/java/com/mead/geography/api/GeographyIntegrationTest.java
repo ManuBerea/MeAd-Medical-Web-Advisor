@@ -28,6 +28,6 @@ class GeographyIntegrationTest {
                 .andExpect(jsonPath("$.type", not(isEmptyString())))
                 .andExpect(jsonPath("$.populationTotal", not(isEmptyString())))
                 .andExpect(jsonPath("$.culturalFactors", hasSize(greaterThan(0))))
-                .andExpect(jsonPath("$.wikidocSnippet", not(isEmptyString())));
+                .andExpect(jsonPath("$.wikipediaSnippet", not(isEmptyString())));
     }
 }

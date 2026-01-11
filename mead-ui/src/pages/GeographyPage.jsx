@@ -39,6 +39,18 @@ const formatNumber = (value, maxFractionDigits) => {
     return new Intl.NumberFormat("en-US", { maximumFractionDigits: maxFractionDigits }).format(numeric);
 };
 
+const buildWikipediaUrl = (detail) => {
+    const base = detail?.name || detail?.identifier || detail?.id;
+    if (!base) return null;
+    const normalized = base
+        .trim()
+        .replace(/[_-]+/g, " ")
+        .split(/\s+/)
+        .map((word) => word ? word[0].toUpperCase() + word.slice(1) : "")
+        .join("_");
+    return `https://en.wikipedia.org/wiki/${normalized}`;
+};
+
 export default function GeographyPage() {
     const [regions, setRegions] = useState([]);
     const [isListLoading, setIsListLoading] = useState(true);
@@ -219,7 +231,7 @@ export default function GeographyPage() {
                     <p className="eyebrow">Geography explorer</p>
                     <h1 className="hero-title">Population insights by region</h1>
                     <p className="hero-subtitle">
-                        Explore climate, industrial development, population density, and cultural factors using linked open data.
+                        Explore population density and cultural factors using linked open data.
                     </p>
                 </div>
             </div>
@@ -371,32 +383,6 @@ export default function GeographyPage() {
 
                                 <div className="detail-grid">
                                     <section className="detail-section">
-                                        <h2>Climate</h2>
-                                        {regionDetail.climates?.length ? (
-                                            <ul className="info-list">
-                                                {regionDetail.climates.map((climate) => (
-                                                    <li key={climate}>{climate}</li>
-                                                ))}
-                                            </ul>
-                                        ) : (
-                                            <p className="muted">No climate data available.</p>
-                                        )}
-                                    </section>
-
-                                    <section className="detail-section">
-                                        <h2>Industrial development</h2>
-                                        {regionDetail.industrialDevelopment?.length ? (
-                                            <ul className="info-list">
-                                                {regionDetail.industrialDevelopment.map((industry) => (
-                                                    <li key={industry}>{industry}</li>
-                                                ))}
-                                            </ul>
-                                        ) : (
-                                            <p className="muted">No industry data available.</p>
-                                        )}
-                                    </section>
-
-                                    <section className="detail-section">
                                         <h2>Cultural factors</h2>
                                         {regionDetail.culturalFactors?.length ? (
                                             <ul className="info-list">
@@ -429,10 +415,10 @@ export default function GeographyPage() {
                                 </section>
 
                                 <section className="detail-section">
-                                    <h2>Summary</h2>
+                                    <h2>Wikipedia summary</h2>
                                     <div className="snippet-container">
                                         <pre className="snippet">
-                                            {regionDetail.wikidocSnippet || "No local summary available."}
+                                            {regionDetail.wikipediaSnippet || "No Wikipedia summary available."}
                                         </pre>
                                     </div>
                                 </section>
@@ -440,6 +426,17 @@ export default function GeographyPage() {
                                 <footer className="detail-section">
                                     <h2>References & Sources</h2>
                                     <ul className="source-list">
+                                        {buildWikipediaUrl(regionDetail) && (
+                                            <li>
+                                                <a
+                                                    href={buildWikipediaUrl(regionDetail)}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    {buildWikipediaUrl(regionDetail)}
+                                                </a>
+                                            </li>
+                                        )}
                                         {regionDetail.sameAs?.map((url) => (
                                             <li key={url}>
                                                 <a href={url} target="_blank" rel="noreferrer">{url}</a>

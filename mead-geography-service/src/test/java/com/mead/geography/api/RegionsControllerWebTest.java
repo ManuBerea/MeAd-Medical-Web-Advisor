@@ -35,8 +35,6 @@ class RegionsControllerWebTest {
                 "Some description",
                 "19000000",
                 "84.0",
-                List.of("temperate"),
-                List.of("manufacturing"),
                 List.of("Romanian"),
                 List.of("https://commons.wikimedia.org/wiki/Special:FilePath/Romania.jpg"),
                 List.of("http://dbpedia.org/resource/Romania", "https://www.wikidata.org/entity/Q218"),

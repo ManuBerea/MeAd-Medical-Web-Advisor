@@ -5,7 +5,7 @@ import com.mead.geography.dto.GeographyDto.RegionSummary;
 import com.mead.geography.enrich.DbpediaClient;
 import com.mead.geography.enrich.DbpediaClient.DbpediaEnrichment;
 import com.mead.geography.enrich.WikidataClient;
-import com.mead.geography.enrich.WikidocSnippetLoader;
+import com.mead.geography.enrich.WikipediaSummaryLoader;
 import com.mead.geography.repository.RegionsRepository;
 import com.mead.geography.repository.RegionsRepository.Region;
 import com.mead.geography.service.GeographyService;
@@ -24,7 +24,7 @@ class GeographyServiceTest {
     private RegionsRepository repo;
     private WikidataClient wikidata;
     private DbpediaClient dbpedia;
-    private WikidocSnippetLoader wikidoc;
+    private WikipediaSummaryLoader wikipedia;
     private GeographyService service;
 
     @BeforeEach
@@ -32,8 +32,8 @@ class GeographyServiceTest {
         repo = mock(RegionsRepository.class);
         wikidata = mock(WikidataClient.class);
         dbpedia = mock(DbpediaClient.class);
-        wikidoc = mock(WikidocSnippetLoader.class);
-        service = new GeographyService(repo, wikidata, dbpedia, wikidoc);
+        wikipedia = mock(WikipediaSummaryLoader.class);
+        service = new GeographyService(repo, wikidata, dbpedia, wikipedia);
     }
 
     @Test
@@ -48,16 +48,16 @@ class GeographyServiceTest {
         when(wikidata.enrichFromEntityUri("https://www.wikidata.org/entity/Q183"))
                 .thenReturn(new WikidataClient.WikidataEnrichment(
                         "wd desc", "100", "5.0",
-                        List.of(), List.of(), List.of(), List.of()
+                        List.of(), List.of()
                 ));
 
         when(dbpedia.enrichFromResourceUri("http://dbpedia.org/resource/Germany"))
                 .thenReturn(new DbpediaEnrichment(
                         "db desc", "90", "6.0",
-                        List.of(), List.of(), List.of(), List.of()
+                        List.of(), List.of()
                 ));
 
-        when(wikidoc.loadSnippet("germany", "Germany")).thenReturn("snippet");
+        when(wikipedia.loadSummary("germany", "Germany")).thenReturn("snippet");
 
         RegionDetail detail = service.getRegion("germany");
 
@@ -76,18 +76,16 @@ class GeographyServiceTest {
         when(wikidata.enrichFromEntityUri("https://www.wikidata.org/entity/Q142"))
                 .thenReturn(new WikidataClient.WikidataEnrichment(
                         "wd desc", "1000", "7.5",
-                        List.of("temperate"), List.of("manufacturing"),
                         List.of("French"), List.of("img1")
                 ));
 
         when(dbpedia.enrichFromResourceUri("http://dbpedia.org/resource/France"))
                 .thenReturn(new DbpediaEnrichment(
                         "db desc", "900", "9.9",
-                        List.of("oceanic"), List.of("tourism"),
                         List.of("French"), List.of("img2")
                 ));
 
-        when(wikidoc.loadSnippet("france", "France")).thenReturn("snippet");
+        when(wikipedia.loadSummary("france", "France")).thenReturn("snippet");
 
         RegionDetail detail = service.getRegion("france");
 
@@ -106,17 +104,16 @@ class GeographyServiceTest {
         when(repo.findById("berlin")).thenReturn(Optional.of(region));
         when(dbpedia.enrichFromResourceUri("http://dbpedia.org/resource/Berlin"))
                 .thenReturn(new DbpediaEnrichment(
-                        "db desc", "3.5M", "4000",
-                        List.of("temperate"), List.of("services"),
+                        "db desc", "3500000", "4000",
                         List.of("German"), List.of("img")
                 ));
-        when(wikidoc.loadSnippet("berlin", "Berlin")).thenReturn("snippet");
+        when(wikipedia.loadSummary("berlin", "Berlin")).thenReturn("snippet");
 
         RegionDetail detail = service.getRegion("berlin");
 
         verifyNoInteractions(wikidata);
         assertThat(detail.description()).isEqualTo("db desc");
-        assertThat(detail.populationTotal()).isEqualTo("3.5M");
+        assertThat(detail.populationTotal()).isEqualTo("3500000");
         assertThat(detail.populationDensity()).isEqualTo("4000");
     }
 
@@ -131,6 +128,14 @@ class GeographyServiceTest {
         ));
         when(wikidata.fetchRegionType("https://www.wikidata.org/entity/Q46"))
                 .thenReturn("Continent");
+        when(wikidata.enrichFromEntityUri("https://www.wikidata.org/entity/Q46"))
+                .thenReturn(new WikidataClient.WikidataEnrichment(
+                        "desc", "100", "5.0", List.of(), List.of()
+                ));
+        when(dbpedia.enrichFromResourceUri("http://dbpedia.org/resource/Europe"))
+                .thenReturn(new DbpediaEnrichment(
+                        "desc", "100", "5.0", List.of(), List.of()
+                ));
 
         List<RegionSummary> regionsList = service.listRegions();
 
