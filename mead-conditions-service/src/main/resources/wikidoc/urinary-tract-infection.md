@@ -1,1 +1,0 @@
-﻿A urinary tract infection is a bacterial infection of the bladder or other parts of the urinary system. Symptoms include burning with urination, frequent urge to urinate, and lower abdominal pain. Treatment is usually antibiotics and hydration.

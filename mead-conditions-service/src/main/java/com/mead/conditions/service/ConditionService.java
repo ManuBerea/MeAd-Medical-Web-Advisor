@@ -27,6 +27,7 @@ public class ConditionService {
 
     private static final String WIKIDATA_ENTITY_MARKER = "wikidata.org/entity/";
     private static final String DBPEDIA_RESOURCE_MARKER = "dbpedia.org/resource/";
+    private static final int MAX_RISK_FACTORS = 12;
 
     private final ConditionsRepository repo;
     private final WikidataClient wikidata;
@@ -68,17 +69,45 @@ public class ConditionService {
                         : dbpedia.enrichFromResourceUri(dbpediaUri)
         );
 
-        CompletableFuture<String> snippetFuture = executeAsync(() -> wikidoc.loadSnippet(conditionId));
+        CompletableFuture<String> overviewFuture = executeAsync(() ->
+                wikidoc.fetchOverview(conditionId, condition.name())
+        );
+        CompletableFuture<List<String>> causesFuture = executeAsync(() ->
+                wikidoc.fetchCauses(conditionId, condition.name())
+        );
+        CompletableFuture<List<String>> riskFactorsFuture = executeAsync(() ->
+                wikidoc.fetchRiskFactors(conditionId, condition.name())
+        );
+        CompletableFuture<List<String>> symptomsFuture = executeAsync(() ->
+                wikidoc.fetchSymptoms(conditionId, condition.name())
+        );
 
-        CompletableFuture.allOf(wikidataFuture, dbpediaFuture, snippetFuture).join();
+        CompletableFuture.allOf(
+                wikidataFuture,
+                dbpediaFuture,
+                overviewFuture,
+                causesFuture,
+                riskFactorsFuture,
+                symptomsFuture
+        ).join();
 
         WikidataEnrichment wikidataEnrichment = wikidataFuture.join();
         DbpediaEnrichment dbpediaEnrichment = dbpediaFuture.join();
 
         String description = pickFirstNotBlank(dbpediaEnrichment.description(), wikidataEnrichment.description());
-        List<String> symptoms = pickFirstNotEmpty(wikidataEnrichment.symptoms(), dbpediaEnrichment.symptoms());
-        List<String> riskFactors = pickFirstNotEmpty(wikidataEnrichment.riskFactors(), dbpediaEnrichment.riskFactors());
+        List<String> symptoms = normalizeLabels(pickFirstNotEmpty(wikidataEnrichment.symptoms(), dbpediaEnrichment.symptoms()));
+        if (symptoms.isEmpty()) {
+            symptoms = normalizeLabels(symptomsFuture.join());
+        }
+        List<String> baseRiskFactors = normalizeLabels(pickFirstNotEmpty(wikidataEnrichment.riskFactors(), dbpediaEnrichment.riskFactors()));
+        List<String> causes = causesFuture.join();
+        List<String> wikidocRiskFactors = riskFactorsFuture.join();
+        List<String> riskFactors = normalizeLabels(mergeUnique(baseRiskFactors, causes, wikidocRiskFactors));
+        riskFactors = filterUiRiskFactors(riskFactors);
+        riskFactors = limitList(riskFactors, MAX_RISK_FACTORS);
         List<String> images = combineAndNormalizeImages(wikidataEnrichment.images(), dbpediaEnrichment.images());
+
+        String wikidocSnippet = fallbackSnippet(overviewFuture.join());
 
         return new ConditionDetail(
                 SCHEMA_ORG_CONTEXT,
@@ -91,7 +120,7 @@ public class ConditionService {
                 symptoms,
                 riskFactors,
                 condition.sameAs(),
-                snippetFuture.join()
+                wikidocSnippet
         );
     }
 
@@ -122,5 +151,70 @@ public class ConditionService {
         if (firstList != null) combined.addAll(firstList);
         if (secondList != null) combined.addAll(secondList);
         return normalize(combined);
+    }
+
+    private static String fallbackSnippet(String snippet) {
+        if (snippet != null && !snippet.isBlank()) return snippet;
+        return "WikiDoc summary unavailable.";
+    }
+
+    private static List<String> mergeUnique(List<String>... lists) {
+        if (lists == null) return List.of();
+        var map = new java.util.LinkedHashMap<String, String>();
+        for (List<String> list : lists) {
+            if (list == null) continue;
+            for (String value : list) {
+                if (value == null || value.isBlank()) continue;
+                map.putIfAbsent(value.trim().toLowerCase(), value.trim());
+            }
+        }
+        return new ArrayList<>(map.values());
+    }
+
+    private static List<String> normalizeLabels(List<String> values) {
+        if (values == null || values.isEmpty()) return List.of();
+        List<String> normalized = new ArrayList<>();
+        for (String value : values) {
+            String cleaned = cleanLabel(value);
+            if (cleaned != null) normalized.add(cleaned);
+        }
+        return normalized;
+    }
+
+    private static String cleanLabel(String value) {
+        if (value == null) return null;
+        String trimmed = value.replaceAll("\\s+", " ").trim();
+        trimmed = trimmed.replaceAll("\\[[^\\]]*\\]", "").trim();
+        trimmed = trimmed.replaceAll("^[^\\p{L}\\p{N}]+", "").trim();
+        if (trimmed.isBlank()) return null;
+        if (trimmed.length() > 140) {
+            trimmed = trimmed.split("\\.\\s+", 2)[0];
+        }
+        if (trimmed.length() > 140) return null;
+        return trimmed;
+    }
+
+    private static List<String> limitList(List<String> values, int max) {
+        if (values == null || values.isEmpty()) return List.of();
+        if (values.size() <= max) return values;
+        return new ArrayList<>(values.subList(0, max));
+    }
+
+    private static List<String> filterUiRiskFactors(List<String> values) {
+        if (values == null || values.isEmpty()) return List.of();
+        List<String> filtered = new ArrayList<>();
+        for (String value : values) {
+            if (value == null || value.isBlank()) continue;
+            if (isUiFriendlyRiskFactor(value)) {
+                filtered.add(value);
+            }
+        }
+        return filtered;
+    }
+
+    private static boolean isUiFriendlyRiskFactor(String value) {
+        String lower = value.toLowerCase();
+        if (lower.contains(" and ") || lower.contains(" or ")) return false;
+        return !value.matches(".*[\\.,;:()\\[\\]].*");
     }
 }

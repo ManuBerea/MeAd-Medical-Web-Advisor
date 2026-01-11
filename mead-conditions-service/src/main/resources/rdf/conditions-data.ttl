@@ -387,14 +387,6 @@ condition:dental-caries
         <https://www.wikidata.org/entity/Q133772>,
         <http://dbpedia.org/resource/Tooth_decay> .
 
-condition:albinism
-    a schema:MedicalCondition ;
-    schema:identifier "albinism" ;
-    schema:name "Albinism"@en ;
-    schema:sameAs
-        <https://www.wikidata.org/entity/Q81867>,
-        <http://dbpedia.org/resource/Albinism> .
-
 condition:acne
     a schema:MedicalCondition ;
     schema:identifier "acne" ;

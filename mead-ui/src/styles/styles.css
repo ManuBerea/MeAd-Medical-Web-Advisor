@@ -432,12 +432,13 @@ img {
 
 .detail-header {
   display: grid;
-  grid-template-columns: 1fr 400px;
-  gap: 40px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+  gap: 32px;
+  align-items: start;
   margin-bottom: 40px;
   padding-bottom: 32px;
   border-bottom: 1px solid var(--wash);
+  max-width: 100%;
 }
 
 .detail-header.single {
@@ -450,16 +451,21 @@ img {
   border: 1px solid var(--outline);
   box-shadow: var(--shadow-lg);
   aspect-ratio: 4/3;
+  width: 100%;
+  max-width: 100%;
 }
 
 .carousel {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .carousel-frame {
   position: relative;
+  width: 100%;
 }
 
 .carousel-image {

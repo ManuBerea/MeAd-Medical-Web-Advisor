@@ -4,6 +4,18 @@ import { getConditionDetails } from "../api/conditionsApi.js";
 
 const SWIPE_DISTANCE_THRESHOLD = 40;
 
+const buildWikidocUrl = (detail) => {
+    const base = detail?.name || detail?.identifier || detail?.id;
+    if (!base) return null;
+    const normalized = base
+        .trim()
+        .replace(/[_-]+/g, " ")
+        .split(/\s+/)
+        .map((word) => word ? word[0].toUpperCase() + word.slice(1) : "")
+        .join("_");
+    return `https://www.wikidoc.org/index.php/${normalized}`;
+};
+
 export default function ConditionPage() {
     const { id: conditionId } = useParams();
     const [condition, setCondition] = useState(null);
@@ -200,15 +212,22 @@ export default function ConditionPage() {
                 </div>
 
                 <section className="detail-section">
-                    <h2>Clinical Summary</h2>
+                    <h2>WikiDoc summary</h2>
                     <div className="snippet-container">
-                        <pre className="snippet">{condition.wikidocSnippet || "No clinical snippet available."}</pre>
+                        <pre className="snippet">{condition.wikidocSnippet || "No WikiDoc summary available."}</pre>
                     </div>
                 </section>
 
                 <footer className="detail-section">
                     <h2>References & Sources</h2>
                     <ul className="source-list">
+                        {buildWikidocUrl(condition) && (
+                            <li>
+                                <a href={buildWikidocUrl(condition)} target="_blank" rel="noreferrer">
+                                    {buildWikidocUrl(condition)}
+                                </a>
+                            </li>
+                        )}
                         {condition.sameAs?.map((url) => (
                             <li key={url}>
                                 <a href={url} target="_blank" rel="noreferrer">{url}</a>

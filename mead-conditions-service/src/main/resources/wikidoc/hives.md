@@ -1,1 +1,0 @@
-﻿Hives are raised, itchy welts on the skin that can appear suddenly. They are often triggered by allergies, infections, medications, or stress and can come and go. Most episodes are short lived and improve with antihistamines and avoiding triggers when possible.

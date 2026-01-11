@@ -1,1 +1,0 @@
-﻿Epilepsy is a neurological disorder characterized by recurrent seizures. Seizures can vary from brief lapses of awareness to convulsions. Treatment typically includes anti seizure medications and sometimes surgery or devices.

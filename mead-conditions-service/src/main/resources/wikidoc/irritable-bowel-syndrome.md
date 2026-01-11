@@ -1,1 +1,0 @@
-﻿Irritable bowel syndrome is a functional digestive disorder that causes abdominal pain and changes in bowel habits. Symptoms can include bloating, gas, diarrhea, or constipation. Management focuses on diet changes, stress reduction, and symptom targeted medications.

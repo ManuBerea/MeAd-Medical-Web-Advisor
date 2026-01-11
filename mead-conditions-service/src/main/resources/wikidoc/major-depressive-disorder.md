@@ -1,1 +1,0 @@
-﻿Major depressive disorder is a mood disorder characterized by persistent sadness, loss of interest, and changes in sleep, appetite, or energy. It can affect daily functioning for weeks or longer. Treatment may include psychotherapy, medication, and lifestyle support.

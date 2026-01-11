@@ -1,1 +1,0 @@
-﻿Scabies is a skin infestation caused by tiny mites that burrow into the skin. It causes intense itching and a pimple like rash, often worse at night. Treatment involves prescription creams and washing bedding and clothing.

@@ -1,1 +1,0 @@
-﻿Peanut allergy is an immune reaction to peanuts and can cause hives, swelling, stomach symptoms, or breathing difficulty. Reactions can be severe and rapid. Management includes strict avoidance and carrying emergency medication if prescribed.

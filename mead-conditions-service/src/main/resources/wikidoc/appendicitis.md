@@ -1,1 +1,0 @@
-﻿Appendicitis is inflammation of the appendix and is a medical emergency. Symptoms include right lower abdominal pain, nausea, and fever. Treatment typically involves surgical removal of the appendix.

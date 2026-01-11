@@ -1,1 +1,0 @@
-﻿Pneumonia is an infection of the lungs that can be caused by bacteria, viruses, or fungi. Symptoms include cough, fever, chest pain, and difficulty breathing. Treatment depends on the cause and severity and may include antibiotics or supportive care.

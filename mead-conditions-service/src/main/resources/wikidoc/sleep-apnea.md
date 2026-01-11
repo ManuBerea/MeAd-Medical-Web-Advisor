@@ -1,1 +1,0 @@
-﻿Sleep apnea is a sleep disorder where breathing repeatedly stops and starts during sleep. It can cause loud snoring, daytime sleepiness, and health complications. Treatment may include CPAP therapy, oral devices, or lifestyle changes.

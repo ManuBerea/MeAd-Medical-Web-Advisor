@@ -1,1 +1,0 @@
-﻿Scoliosis is an abnormal sideways curvature of the spine. It can cause uneven shoulders or hips, back pain, and in some cases breathing problems if severe. Mild cases are monitored, while braces or surgery may be used for progressive curves.

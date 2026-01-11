@@ -1,1 +1,0 @@
-﻿Constipation is infrequent or difficult bowel movements, often with hard stools. It can be caused by low fiber intake, dehydration, inactivity, or medications. Treatment includes increasing fiber and fluids, regular activity, and laxatives if needed.

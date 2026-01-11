@@ -11,6 +11,18 @@ const isConditionMatch = (condition, searchTerm) => {
     return name.includes(searchTerm) || id.includes(searchTerm);
 };
 
+const buildWikidocUrl = (detail) => {
+    const base = detail?.name || detail?.identifier || detail?.id;
+    if (!base) return null;
+    const normalized = base
+        .trim()
+        .replace(/[_-]+/g, " ")
+        .split(/\s+/)
+        .map((word) => word ? word[0].toUpperCase() + word.slice(1) : "")
+        .join("_");
+    return `https://www.wikidoc.org/index.php/${normalized}`;
+};
+
 export default function ConditionsExplorerPage() {
     const [conditions, setConditions] = useState([]);
     const [isListLoading, setIsListLoading] = useState(true);
@@ -220,7 +232,7 @@ export default function ConditionsExplorerPage() {
             <div className="hero">
                 <div className="hero-copy">
                     <p className="eyebrow">Medical explorer</p>
-                    <h1 className="hero-title">Medical conditions directory</h1>
+                    <h1 className="hero-title">Medical conditions explorer</h1>
                     <p className="hero-subtitle">
                         Review symptoms, risk factors, and clinical summaries from linked open data sources.
                     </p>
@@ -419,15 +431,26 @@ export default function ConditionsExplorerPage() {
                                 </div>
 
                                 <section className="detail-section">
-                                    <h2>Clinical summary</h2>
+                                    <h2>WikiDoc summary</h2>
                                     <div className="snippet-container">
-                                        <pre className="snippet">{conditionDetail.wikidocSnippet || "No clinical snippet available."}</pre>
+                                        <pre className="snippet">{conditionDetail.wikidocSnippet || "No WikiDoc summary available."}</pre>
                                     </div>
                                 </section>
 
                                 <footer className="detail-section">
                                     <h2>References & Sources</h2>
                                     <ul className="source-list">
+                                        {buildWikidocUrl(conditionDetail) && (
+                                            <li>
+                                                <a
+                                                    href={buildWikidocUrl(conditionDetail)}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    {buildWikidocUrl(conditionDetail)}
+                                                </a>
+                                            </li>
+                                        )}
                                         {conditionDetail.sameAs?.map((url) => (
                                             <li key={url}>
                                                 <a href={url} target="_blank" rel="noreferrer">{url}</a>

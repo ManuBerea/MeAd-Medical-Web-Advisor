@@ -1,1 +1,0 @@
-﻿Gingivitis is inflammation of the gums caused by plaque buildup. It leads to red, swollen gums that may bleed with brushing. Good oral hygiene and professional dental cleaning can reverse it.

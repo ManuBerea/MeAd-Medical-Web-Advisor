@@ -1,1 +1,0 @@
-﻿Dermatitis is a general term for skin inflammation, often presenting as red, itchy, and irritated skin. Common types include contact dermatitis and atopic dermatitis, also known as eczema. Management includes avoiding irritants, moisturizing, and using topical treatments as needed.

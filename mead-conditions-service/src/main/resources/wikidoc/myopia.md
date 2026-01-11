@@ -1,1 +1,0 @@
-﻿Myopia is a common vision condition where distant objects look blurry because the eye focuses images in front of the retina. It often begins in childhood and can worsen as the eye grows. Glasses, contact lenses, or refractive surgery can correct vision.
