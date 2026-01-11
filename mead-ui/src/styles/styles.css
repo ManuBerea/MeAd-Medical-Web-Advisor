@@ -800,3 +800,143 @@ img {
   }
 
 }
+
+/* WikiDoc Source Styles */
+.wikidoc-source {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-soft);
+  flex-wrap: wrap;
+}
+
+.wikidoc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-strong);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.wikidoc-link:hover {
+  color: var(--accent);
+  transform: translateX(4px);
+}
+
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.source-badge.api {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.source-badge.local {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.source-badge.none {
+  background: var(--wash);
+  color: var(--muted);
+  border: 1px solid var(--outline);
+}
+
+/* WikiDoc Multi-Section Styles */
+.wikidoc-sections {
+  margin-top: 32px;
+  padding: 28px;
+  background: linear-gradient(135deg, #fafafa, #f5f5f5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--outline);
+}
+
+.wikidoc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--accent-soft);
+}
+
+.wikidoc-header h2 {
+  margin: 0;
+  color: var(--accent-strong);
+  font-size: 1.5rem;
+}
+
+.wikidoc-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.wikidoc-section {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--outline);
+  box-shadow: var(--elevation-xs);
+  transition: all 0.2s ease;
+}
+
+.wikidoc-section:hover {
+  border-color: var(--accent-soft);
+  box-shadow: var(--elevation-sm);
+}
+
+.wikidoc-section:last-child {
+  margin-bottom: 0;
+}
+
+.wikidoc-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  color: var(--strong);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wikidoc-section p {
+  margin: 0;
+  color: var(--body);
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+/* Grid layout for sections on large screens */
+@media (min-width: 1024px) {
+  .wikidoc-sections-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  .wikidoc-section.full-width {
+    grid-column: span 2;
+  }
+}

@@ -56,13 +56,29 @@ class ConditionServiceTest {
                 ));
 
         when(wikidoc.getEnrichment("asthma", "Asthma"))
-                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/Asthma", "local"));
+                .thenReturn(createMockWikidoc("overview text", "https://www.wikidoc.org/index.php/Asthma", "local"));
 
         ConditionDetail detail = service.get("asthma");
 
         assertThat(detail.description()).isEqualTo("dbpedia desc");
-        assertThat(detail.wikidocSnippet()).isEqualTo("snippet");
-        assertThat(detail.wikidocUrl()).isEqualTo("https://www.wikidoc.org/index.php/Asthma");
+        assertThat(detail.wikidoc().overview()).isEqualTo("overview text");
+        assertThat(detail.wikidoc().sourceUrl()).isEqualTo("https://www.wikidoc.org/index.php/Asthma");
+    }
+    
+    // Helper to create WikidocEnrichment with default values
+    private WikidocEnrichment createMockWikidoc(String overview, String sourceUrl, String sourceType) {
+        return new WikidocEnrichment(
+                overview,           // overview
+                "Test causes",      // causes
+                null,               // pathophysiology
+                "Test diagnosis",   // diagnosis
+                "Test treatment",   // treatment
+                null,               // prevention
+                null,               // prognosis
+                null,               // epidemiology
+                sourceUrl,
+                sourceType
+        );
     }
 
     @Test
@@ -84,7 +100,7 @@ class ConditionServiceTest {
                 ));
 
         when(wikidoc.getEnrichment("asthma", "Asthma"))
-                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/Asthma", "local"));
+                .thenReturn(createMockWikidoc("overview", "https://www.wikidoc.org/index.php/Asthma", "local"));
 
         ConditionDetail detail = service.get("asthma");
 
@@ -111,7 +127,7 @@ class ConditionServiceTest {
                 ));
 
         when(wikidoc.getEnrichment("obesity", "Obesity"))
-                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/Obesity", "local"));
+                .thenReturn(createMockWikidoc("overview", "https://www.wikidoc.org/index.php/Obesity", "local"));
 
         ConditionDetail detail = service.get("obesity");
 
@@ -139,7 +155,7 @@ class ConditionServiceTest {
                 ));
 
         when(wikidoc.getEnrichment("obesity", "Obesity"))
-                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/Obesity", "local"));
+                .thenReturn(createMockWikidoc("overview", "https://www.wikidoc.org/index.php/Obesity", "local"));
 
         ConditionDetail detail = service.get("obesity");
 
@@ -159,7 +175,7 @@ class ConditionServiceTest {
                         "db desc", List.of("s1"), List.of("r1"), List.of("img")
                 ));
         when(wikidoc.getEnrichment("x", "X"))
-                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/X", "local"));
+                .thenReturn(createMockWikidoc("overview", "https://www.wikidoc.org/index.php/X", "local"));
 
         ConditionDetail detail = service.get("x");
 
@@ -183,7 +199,7 @@ class ConditionServiceTest {
                         "wd desc", List.of("s1"), List.of("r1"), List.of("img")
                 ));
         when(wikidoc.getEnrichment("x", "X"))
-                .thenReturn(new WikidocEnrichment("snippet", "https://www.wikidoc.org/index.php/X", "local"));
+                .thenReturn(createMockWikidoc("overview", "https://www.wikidoc.org/index.php/X", "local"));
 
         ConditionDetail detail = service.get("x");
 

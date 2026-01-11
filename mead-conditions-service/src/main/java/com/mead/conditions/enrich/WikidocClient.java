@@ -52,16 +52,29 @@ public class WikidocClient {
 
     /**
      * Result containing WikiDoc content and source information.
+     * Includes multiple sections from the WikiDoc article.
      */
     public record WikidocEnrichment(
-            String content,      // The article extract/summary
-            String sourceUrl,    // Direct URL to the WikiDoc article
-            String sourceType    // "api" if fetched live, "local" if from fallback
-    ) {}
+            String overview,           // Main overview/introduction
+            String causes,             // Causes / Etiology
+            String pathophysiology,    // How the disease affects the body
+            String diagnosis,          // Diagnostic methods
+            String treatment,          // Treatment options
+            String prevention,         // Prevention measures
+            String prognosis,          // Expected outcomes
+            String epidemiology,       // Population statistics
+            String sourceUrl,          // Direct URL to the WikiDoc article
+            String sourceType          // "api" if fetched live, "local" if from fallback
+    ) {
+        // Helper for backward compatibility - returns overview as main content
+        public String content() {
+            return overview;
+        }
+    }
 
     /**
      * Fetches WikiDoc enrichment for a medical condition.
-     * First tries the MediaWiki API, falls back to local .md files if API fails.
+     * First tries the MediaWiki API to fetch multiple sections, falls back to local .md files if API fails.
      * 
      * @param conditionId The condition identifier (slug), e.g., "asthma"
      * @param conditionName The display name, e.g., "Asthma"
@@ -72,23 +85,176 @@ public class WikidocClient {
         String pageTitle = normalizeTitle(conditionName);
         String sourceUrl = WIKIDOC_PAGE_BASE + pageTitle;
 
-        // Try to fetch from WikiDoc API
-        String apiContent = fetchExtractFromApi(pageTitle);
-        if (apiContent != null && !apiContent.isBlank()) {
+        // Try to fetch multiple sections from WikiDoc API
+        WikidocEnrichment apiResult = fetchMultipleSections(pageTitle, sourceUrl);
+        if (apiResult != null && apiResult.overview() != null) {
             log.debug("WikiDoc API success for: {}", conditionName);
-            return new WikidocEnrichment(apiContent, sourceUrl, "api");
+            return apiResult;
         }
 
-        // Fallback to local .md file
+        // Fallback to local .md file (only provides overview)
         String localContent = fallbackLoader.loadSnippet(conditionId);
         if (localContent != null && !localContent.isBlank()) {
             log.debug("WikiDoc fallback to local file for: {}", conditionId);
-            return new WikidocEnrichment(localContent, sourceUrl, "local");
+            return new WikidocEnrichment(
+                    localContent, null, null, null, null, null, null, null,
+                    sourceUrl, "local"
+            );
         }
 
         // No content available
         log.debug("No WikiDoc content found for: {}", conditionName);
-        return new WikidocEnrichment(null, sourceUrl, "none");
+        return new WikidocEnrichment(
+                null, null, null, null, null, null, null, null,
+                sourceUrl, "none"
+        );
+    }
+    
+    /**
+     * Fetches multiple sections from WikiDoc article.
+     * Uses section=0 for intro, then searches for common medical sections.
+     */
+    private WikidocEnrichment fetchMultipleSections(String pageTitle, String sourceUrl) {
+        try {
+            // Fetch the full article and extract sections
+            String fullContent = fetchFullArticle(pageTitle);
+            if (fullContent == null) {
+                return null;
+            }
+            
+            // Parse sections from the content
+            String overview = extractSection(fullContent, null); // Intro before first heading
+            String causes = extractSection(fullContent, "Causes", "Etiology", "Cause");
+            String pathophysiology = extractSection(fullContent, "Pathophysiology", "Pathogenesis");
+            String diagnosis = extractSection(fullContent, "Diagnosis", "Differential Diagnosis", "Diagnostic");
+            String treatment = extractSection(fullContent, "Treatment", "Therapy", "Management");
+            String prevention = extractSection(fullContent, "Prevention", "Prophylaxis");
+            String prognosis = extractSection(fullContent, "Prognosis", "Outcome");
+            String epidemiology = extractSection(fullContent, "Epidemiology", "Demographics");
+            
+            return new WikidocEnrichment(
+                    overview, causes, pathophysiology, diagnosis, treatment, 
+                    prevention, prognosis, epidemiology,
+                    sourceUrl, "api"
+            );
+            
+        } catch (Exception e) {
+            log.warn("Failed to fetch multiple sections for {}: {}", pageTitle, e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Fetches the full article HTML from WikiDoc.
+     */
+    private String fetchFullArticle(String pageTitle) {
+        try {
+            String encodedTitle = URLEncoder.encode(pageTitle, StandardCharsets.UTF_8);
+            
+            String url = WIKIDOC_API_BASE + "?" +
+                    "action=parse" +
+                    "&page=" + encodedTitle +
+                    "&prop=text" +
+                    "&format=json";
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofMillis(timeoutMs))
+                    .header("User-Agent", userAgent)
+                    .header("Accept", "application/json")
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                return null;
+            }
+
+            JsonNode root = objectMapper.readTree(response.body());
+            if (root.has("error")) {
+                return null;
+            }
+            
+            return root.path("parse").path("text").path("*").asText();
+            
+        } catch (Exception e) {
+            log.warn("Failed to fetch full article: {}", e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Extracts a section from HTML content by heading name.
+     * If headingNames is null/empty, extracts content before first heading (intro).
+     */
+    private String extractSection(String html, String... headingNames) {
+        if (html == null) return null;
+        
+        // For intro (no heading specified), get content before first <h2> or <h3>
+        if (headingNames == null || headingNames.length == 0 || headingNames[0] == null) {
+            int firstHeading = html.indexOf("<h2");
+            if (firstHeading == -1) firstHeading = html.indexOf("<h3");
+            if (firstHeading == -1) firstHeading = html.length();
+            
+            String intro = html.substring(0, firstHeading);
+            return truncateToReasonableLength(htmlToPlainText(intro));
+        }
+        
+        // Search for any of the heading names
+        for (String headingName : headingNames) {
+            if (headingName == null) continue;
+            
+            // Look for <h2>, <h3>, or <span class="mw-headline"> containing the heading
+            String[] patterns = {
+                    "<h2[^>]*>" + headingName,
+                    "<h3[^>]*>" + headingName,
+                    "id=\"" + headingName.replace(" ", "_") + "\"",
+                    ">" + headingName + "</span>",
+                    ">" + headingName + "</a>"
+            };
+            
+            int sectionStart = -1;
+            for (String pattern : patterns) {
+                int idx = html.toLowerCase().indexOf(pattern.toLowerCase());
+                if (idx != -1) {
+                    sectionStart = idx;
+                    break;
+                }
+            }
+            
+            if (sectionStart != -1) {
+                // Find the end of this section (next h2 or h3)
+                int contentStart = html.indexOf(">", sectionStart);
+                if (contentStart == -1) continue;
+                contentStart++; // Move past the >
+                
+                // Find next heading
+                String remaining = html.substring(contentStart);
+                int nextH2 = remaining.indexOf("<h2");
+                int nextH3 = remaining.indexOf("<h3");
+                
+                int sectionEnd;
+                if (nextH2 == -1 && nextH3 == -1) {
+                    sectionEnd = remaining.length();
+                } else if (nextH2 == -1) {
+                    sectionEnd = nextH3;
+                } else if (nextH3 == -1) {
+                    sectionEnd = nextH2;
+                } else {
+                    sectionEnd = Math.min(nextH2, nextH3);
+                }
+                
+                String sectionHtml = remaining.substring(0, sectionEnd);
+                String plainText = htmlToPlainText(sectionHtml);
+                
+                if (plainText != null && !plainText.isBlank() && plainText.length() > 20) {
+                    return truncateToReasonableLength(plainText);
+                }
+            }
+        }
+        
+        return null;
     }
 
     /**

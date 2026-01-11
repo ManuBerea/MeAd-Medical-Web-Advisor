@@ -25,9 +25,25 @@ public final class ConditionDto {
             List<String> riskFactors,
 
             List<String> sameAs,
-            String wikidocSnippet,
-            String wikidocUrl,
-            String wikidocSourceType  // "api" (live from WikiDoc), "local" (fallback), or "none"
+            
+            // WikiDoc enrichment - multiple sections from medical encyclopedia
+            WikidocInfo wikidoc
+    ) {}
+    
+    /**
+     * WikiDoc information containing multiple sections from the medical encyclopedia.
+     */
+    public record WikidocInfo(
+            String overview,           // Main overview/introduction
+            String causes,             // Causes / Etiology  
+            String pathophysiology,    // How the disease affects the body
+            String diagnosis,          // Diagnostic methods
+            String treatment,          // Treatment options
+            String prevention,         // Prevention measures
+            String prognosis,          // Expected outcomes
+            String epidemiology,       // Population statistics
+            String sourceUrl,          // Direct URL to the WikiDoc article
+            String sourceType          // "api" (live), "local" (cached), or "none"
     ) {}
 
     private ConditionDto() {}

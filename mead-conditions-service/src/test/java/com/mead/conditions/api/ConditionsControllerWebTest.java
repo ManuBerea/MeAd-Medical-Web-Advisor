@@ -26,6 +26,17 @@ class ConditionsControllerWebTest {
 
     @Test
     void getCondition_returns200_andJson() throws Exception {
+        var wikidocInfo = new ConditionDto.WikidocInfo(
+                "Overview text",
+                "Causes text",
+                "Pathophysiology text",
+                "Diagnosis text",
+                "Treatment text",
+                null, null, null,
+                "https://www.wikidoc.org/index.php/Asthma",
+                "api"
+        );
+        
         var detail = new ConditionDto.ConditionDetail(
                 "https://schema.org/",
                 "https://mead.example/condition/asthma",
@@ -37,9 +48,7 @@ class ConditionsControllerWebTest {
                 List.of("wheeze"),
                 List.of("smoking"),
                 List.of("http://dbpedia.org/resource/Asthma", "https://www.wikidata.org/entity/Q35869"),
-                "snippet",
-                "https://www.wikidoc.org/index.php/Asthma",
-                "api"
+                wikidocInfo
         );
 
         when(conditionService.get("asthma")).thenReturn(detail);
@@ -48,7 +57,9 @@ class ConditionsControllerWebTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(jsonPath("$.identifier").value("asthma"))
-                .andExpect(jsonPath("$.images[0]").exists());
+                .andExpect(jsonPath("$.images[0]").exists())
+                .andExpect(jsonPath("$.wikidoc.overview").value("Overview text"))
+                .andExpect(jsonPath("$.wikidoc.sourceUrl").value("https://www.wikidoc.org/index.php/Asthma"));
     }
 
     @Test

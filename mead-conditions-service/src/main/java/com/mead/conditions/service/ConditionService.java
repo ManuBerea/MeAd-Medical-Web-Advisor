@@ -2,6 +2,7 @@ package com.mead.conditions.service;
 
 import com.mead.conditions.dto.ConditionDto.ConditionDetail;
 import com.mead.conditions.dto.ConditionDto.ConditionSummary;
+import com.mead.conditions.dto.ConditionDto.WikidocInfo;
 import com.mead.conditions.enrich.DbpediaClient.DbpediaEnrichment;
 import com.mead.conditions.enrich.WikidataClient.WikidataEnrichment;
 import com.mead.conditions.enrich.WikidocClient.WikidocEnrichment;
@@ -84,6 +85,20 @@ public class ConditionService {
         List<String> riskFactors = pickFirstNotEmpty(wikidataEnrichment.riskFactors(), dbpediaEnrichment.riskFactors());
         List<String> images = combineAndNormalizeImages(wikidataEnrichment.images(), dbpediaEnrichment.images());
 
+        // Build WikiDoc info object with all sections
+        WikidocInfo wikidocInfo = new WikidocInfo(
+                wikidocEnrichment.overview(),
+                wikidocEnrichment.causes(),
+                wikidocEnrichment.pathophysiology(),
+                wikidocEnrichment.diagnosis(),
+                wikidocEnrichment.treatment(),
+                wikidocEnrichment.prevention(),
+                wikidocEnrichment.prognosis(),
+                wikidocEnrichment.epidemiology(),
+                wikidocEnrichment.sourceUrl(),
+                wikidocEnrichment.sourceType()
+        );
+
         return new ConditionDetail(
                 SCHEMA_ORG_CONTEXT,
                 MEAD_CONDITION_BASE_URL + conditionId,
@@ -95,9 +110,7 @@ public class ConditionService {
                 symptoms,
                 riskFactors,
                 condition.sameAs(),
-                wikidocEnrichment.content(),
-                wikidocEnrichment.sourceUrl(),
-                wikidocEnrichment.sourceType()
+                wikidocInfo
         );
     }
 
