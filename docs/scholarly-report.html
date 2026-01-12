@@ -39,6 +39,7 @@
         <ol>
           <li><a href="#system-architecture">System Architecture Overview</a></li>
           <li><a href="#technology-stack">Technology Stack</a></li>
+          <li><a href="#c4-diagrams">C4 Architecture Diagrams</a></li>
         </ol>
       </li>
       <li><a href="#internal-data-structures">Internal Data Structures / Models</a>
@@ -128,7 +129,7 @@
     <section id="system-architecture">
       <h3>1.1 System Architecture Overview</h3>
       <ul>
-        <li><strong>mead-conditions-service</strong> - REST API and RDF repository for medical conditions. Features parallel enrichment from Wikidata and DBpedia, local WikiDoc snippets, and a SPARQL endpoint for direct RDF querying.</li>
+        <li><strong>mead-conditions-service</strong> - REST API and RDF repository for medical conditions. Features parallel enrichment from Wikidata, DBpedia, and WikiDoc API, plus a SPARQL endpoint for direct RDF querying.</li>
         <li><strong>mead-geography-service</strong> - REST API and RDF repository for 43 geographic locations including continents, countries, and cities. Each location is linked to Wikidata and DBpedia via schema:sameAs properties.</li>
         <li><strong>mead-ui</strong> - React single-page application with React Router for navigation, featuring condition search/filtering, paginated lists, and rich detail views with image carousels.</li>
       </ul>
@@ -175,22 +176,93 @@
       </table>
     </section>
 
+    <section id="c4-diagrams">
+      <h3>1.3 C4 Architecture Diagrams</h3>
+      <p>
+        The MeAd architecture is documented using the <strong>C4 model</strong> (Context, Container, Component, Code),
+        which provides different levels of abstraction for understanding the system.
+      </p>
+
+      <h4>C4 Context Diagram</h4>
+      <p>
+        The context diagram shows the MeAd Medical Web Advisor system in relation to its users and external systems.
+        The primary user (<em>High-school student</em>) accesses the platform via browser. The system interacts
+        with multiple external data sources: <strong>Wikidata SPARQL</strong> and <strong>DBpedia SPARQL</strong> for
+        data enrichment, <strong>WikiDoc API</strong> for medical summaries, and <strong>Wikipedia REST API</strong>
+        for geographic summaries.
+      </p>
+      <figure>
+        <img src="images/c4-context.png" alt="C4 Context Diagram" style="max-width: 100%; border: 1px solid #444;" />
+        <figcaption>Figure 1. C4 Context Diagram - MeAd system in the context of users and external systems.</figcaption>
+      </figure>
+
+      <h4>C4 Container Diagram</h4>
+      <p>
+        The container diagram details the main components of the MeAd system:
+      </p>
+      <ul>
+        <li><strong>mead-ui</strong> [React] - User interface, single-page application with views for
+          exploring medical conditions and geographic data.</li>
+        <li><strong>mead-conditions-service</strong> [Spring Boot] - REST microservice managing medical
+          conditions, providing API for CRUD, Wikidata/DBpedia enrichment, and a local SPARQL endpoint.</li>
+        <li><strong>mead-geography-service</strong> [Spring Boot] - REST microservice for geographic locations
+          (continents, countries, cities), with the same enrichment and SPARQL capabilities.</li>
+      </ul>
+      <p>
+        All containers communicate via HTTP/JSON, and the backend services query external SPARQL endpoints
+        for additional data.
+      </p>
+      <figure>
+        <img src="images/c4-container.png" alt="C4 Container Diagram" style="max-width: 100%; border: 1px solid #444;" />
+        <figcaption>Figure 2. C4 Container Diagram - MeAd containers and their relationships.</figcaption>
+      </figure>
+
+      <h4>C4 Component Diagram - Conditions Service</h4>
+      <p>
+        The component diagram for <code>mead-conditions-service</code> shows the internal architecture:
+      </p>
+      <ul>
+        <li><strong>ConditionsController</strong> [Spring MVC] - REST endpoints for listing and condition details.</li>
+        <li><strong>SparqlController</strong> [Spring MVC] - Local SPARQL endpoint for direct RDF queries.</li>
+        <li><strong>HealthController</strong> [Spring MVC] - Health check endpoint.</li>
+        <li><strong>ConditionService</strong> [Service] - Orchestrates enrichment and DTO mapping.</li>
+        <li><strong>ConditionsRepository</strong> [Repository] - Loads RDF data and caches conditions.</li>
+        <li><strong>RdfService</strong> [Jena] - Loads Turtle files into the in-memory Dataset.</li>
+        <li><strong>WikidataClient</strong> [SPARQL client] - Fetches symptoms, risk factors, images from Wikidata.</li>
+        <li><strong>DbpediaClient</strong> [SPARQL client] - Fetches descriptions, symptoms, images from DBpedia.</li>
+        <li><strong>WikidocSnippetLoader</strong> [HTTP client] - Fetches overviews, causes, risk factors, and symptoms from the WikiDoc API (wikidoc.org).</li>
+      </ul>
+      <figure>
+        <img src="images/c4-component-conditions.png" alt="C4 Component Diagram - Conditions Service" style="max-width: 100%; border: 1px solid #444;" />
+        <figcaption>Figure 3. C4 Component Diagram - Internal components of mead-conditions-service.</figcaption>
+      </figure>
+
+      <h4>C4 Component Diagram - Geography Service</h4>
+      <p>
+        The component diagram for <code>mead-geography-service</code> has a similar structure:
+      </p>
+      <ul>
+        <li><strong>RegionsController</strong> [Spring MVC] - REST endpoints for listing and region details.</li>
+        <li><strong>SparqlController</strong> [Spring MVC] - Local SPARQL endpoint.</li>
+        <li><strong>HealthController</strong> [Spring MVC] - Health check endpoint.</li>
+        <li><strong>GeographyService</strong> [Service] - Orchestrates enrichment and DTO mapping.</li>
+        <li><strong>RegionsRepository</strong> [Repository] - Loads geographic RDF data.</li>
+        <li><strong>RdfService</strong> [Jena] - Manages the Apache Jena Dataset.</li>
+        <li><strong>WikidataClient</strong> [SPARQL client] - Fetches population, density, type, images from Wikidata.</li>
+        <li><strong>DbpediaClient</strong> [SPARQL client] - Fetches descriptions, population, images from DBpedia.</li>
+        <li><strong>WikipediaSummaryLoader</strong> [HTTP client] - Loads summaries from Wikipedia REST API.</li>
+      </ul>
+      <figure>
+        <img src="images/c4-component-geography.png" alt="C4 Component Diagram - Geography Service" style="max-width: 100%; border: 1px solid #444;" />
+        <figcaption>Figure 4. C4 Component Diagram - Internal components of mead-geography-service.</figcaption>
+      </figure>
+    </section>
+
     <p>
       Each service loads its RDF dataset at startup into an in-memory Apache Jena transactional dataset. The datasets are
       loaded from Turtle files located under <code>src/main/resources/rdf</code>. For the conditions service, enrichment is performed by
       contacting Wikidata and DBpedia SPARQL endpoints in parallel, then merging, normalizing, and caching results.
     </p>
-
-    <h4>High-level Data Flow</h4>
-    <ol>
-      <li>User opens the MeAd UI and browses medical conditions</li>
-      <li>The UI fetches a paginated list of conditions from the conditions microservice via REST API</li>
-      <li>User can search/filter conditions by name or identifier in real-time</li>
-      <li>When a user selects a condition, the service retrieves base RDF data and triggers parallel enrichment</li>
-      <li>SPARQL queries fetch descriptions, symptoms, risk factors, and images from Wikidata and DBpedia (via dbo:symptom, dbo:medicalCause, dbo:abstract)</li>
-      <li>The service merges data, normalizes image URLs (especially Wikimedia Commons paths), deduplicates, and returns cached results</li>
-      <li>The UI renders a rich detail view including image carousel with swipe support, symptoms list, risk factors, WikiDoc clinical summary, and external reference links</li>
-    </ol>
 
   </section>
 
@@ -455,7 +527,7 @@ condition:asthma a schema:MedicalCondition ;
       <p>
         The Conditions Service provides RESTful access to medical condition data. It serves 
         both lightweight summaries for listing/search and enriched details that aggregate 
-        data from Wikidata, DBpedia, and local WikiDoc snippets.
+        data from Wikidata, DBpedia, and WikiDoc API.
       </p>
 
       <h4>Endpoints Overview</h4>
@@ -525,7 +597,7 @@ condition:asthma a schema:MedicalCondition ;
           <tr><td><code>riskFactors</code></td><td>string[]</td><td>Wikidata/DBpedia</td><td>Contributing risk factors or causes</td></tr>
           <tr><td><code>images</code></td><td>string[]</td><td>Wikidata/DBpedia</td><td>URLs to relevant images</td></tr>
           <tr><td><code>sameAs</code></td><td>string[]</td><td>local RDF</td><td>External entity URIs (Linked Data)</td></tr>
-          <tr><td><code>wikidocSnippet</code></td><td>string</td><td>local file</td><td>Student-friendly educational summary</td></tr>
+          <tr><td><code>wikidocSnippet</code></td><td>string</td><td>WikiDoc API</td><td>Student-friendly educational summary</td></tr>
         </tbody>
       </table>
       <p><strong>Example:</strong></p>
@@ -557,7 +629,7 @@ condition:asthma a schema:MedicalCondition ;
       <p>
         The Geography Service provides RESTful access to geographic location data. It serves 
         both lightweight summaries for listing and enriched details that aggregate 
-        data from Wikidata, DBpedia, and local WikiDoc snippets.
+        data from Wikidata, DBpedia, and WikiDoc API.
       </p>
 
       <h4>Endpoints Overview</h4>
@@ -632,7 +704,7 @@ condition:asthma a schema:MedicalCondition ;
           <tr><td><code>culturalFactors</code></td><td>string[]</td><td>Wikidata/DBpedia</td><td>Languages, demonyms, cultural info</td></tr>
           <tr><td><code>images</code></td><td>string[]</td><td>Wikidata/DBpedia</td><td>URLs to relevant images</td></tr>
           <tr><td><code>sameAs</code></td><td>string[]</td><td>local RDF</td><td>External entity URIs (Linked Data)</td></tr>
-          <tr><td><code>wikidocSnippet</code></td><td>string</td><td>local file</td><td>Student-friendly educational summary</td></tr>
+          <tr><td><code>wikidocSnippet</code></td><td>string</td><td>WikiDoc API</td><td>Student-friendly educational summary</td></tr>
         </tbody>
       </table>
       <p><strong>Example:</strong></p>
@@ -700,24 +772,6 @@ condition:asthma a schema:MedicalCondition ;
       </table>
     </section>
 
-    <!-- <section id="schema-expressiveness">
-      <h3>4.2 Schema Expressiveness and Vocabulary Usage</h3>
-      <p>The model stores minimal core data locally; rich details are fetched dynamically from external sources.</p>
-
-      <p><strong>Medical Conditions:</strong> Each condition has <code>identifier</code>, <code>name</code>, and <code>sameAs</code> links. 
-      Symptoms, risk factors, and images come from Wikidata/DBpedia at runtime.</p>
-      <pre><code>condition:asthma a schema:MedicalCondition ;
-    schema:identifier "asthma" ;
-    schema:name "Asthma"@en ;
-    schema:sameAs &lt;https://www.wikidata.org/entity/Q35869&gt;, &lt;http://dbpedia.org/resource/Asthma&gt; .</code></pre>
-
-      <p><strong>Geographic Locations:</strong> 43 places (continents, countries, cities) with the same structure:</p>
-      <pre><code>region:romania a schema:Place ;
-    schema:identifier "romania" ;
-    schema:name "Romania"@en ;
-    schema:sameAs &lt;https://www.wikidata.org/entity/Q218&gt;, &lt;http://dbpedia.org/resource/Romania&gt; .</code></pre>
-    </section> -->
-
     <section id="knowledge-graph">
       <h3>4.2 Knowledge Graph Structure</h3>
       <p>The system maintains two separate RDF knowledge graphs loaded into Apache Jena datasets:</p>
@@ -756,41 +810,6 @@ condition:asthma a schema:MedicalCondition ;
       </figure>
     </section>
 
-    <!-- <section id="internal-sparql-queries">
-      <h3>4.4 Internal SPARQL Queries</h3>
-      <p>The repositories use SPARQL to extract data from the RDF datasets. Here are the key internal queries:</p>
-
-      <h4>Conditions Repository: Fetch All Conditions</h4>
-      <pre><code>PREFIX schema: &lt;https://schema.org/&gt;
-SELECT ?identifier ?name ?sameAs WHERE {
-  ?condition a schema:MedicalCondition ;
-             schema:identifier ?identifier ;
-             schema:name ?name ;
-             schema:sameAs ?sameAs .
-}
-ORDER BY ?identifier</code></pre>
-
-      <h4>Regions Repository: Fetch All Regions with Hierarchy</h4>
-      <pre><code>PREFIX schema: &lt;https://schema.org/&gt;
-SELECT ?identifier ?name ?sameAs ?containedInPlace WHERE {
-  ?region a schema:Place ;
-          schema:identifier ?identifier ;
-          schema:name ?name .
-  OPTIONAL { ?region schema:sameAs ?sameAs . }
-  OPTIONAL { ?region schema:containedInPlace ?containedInPlace . }
-}
-ORDER BY ?identifier</code></pre>
-
-      <h4>Regions Repository: Fetch All Places with External Links</h4>
-      <pre><code>PREFIX schema: &lt;https://schema.org/&gt;
-SELECT ?place ?identifier ?name ?sameAs WHERE {
-  ?place a schema:Place ;
-         schema:identifier ?identifier ;
-         schema:name ?name .
-  OPTIONAL { ?place schema:sameAs ?sameAs . }
-}
-ORDER BY ?identifier</code></pre>
-    </section> -->
   </section>
 
   <!-- ============================================================ -->
@@ -801,8 +820,8 @@ ORDER BY ?identifier</code></pre>
     <p>
       MeAd integrates external data using SPARQL queries against public knowledge bases. The two primary
       sources are <strong>Wikidata</strong> (structured, multilingual facts) and <strong>DBpedia</strong>
-      (Wikipedia-derived knowledge), with local <strong>WikiDoc</strong> snippets providing curated
-      student-friendly summaries.
+      (Wikipedia-derived knowledge), with the <strong>WikiDoc API</strong> providing curated
+      student-friendly medical summaries.
     </p>
 
     <section id="wikidata-enrichment">
