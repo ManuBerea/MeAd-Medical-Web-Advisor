@@ -1,0 +1,42 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+schema:MedicalConditionShape
+    a sh:NodeShape ;
+    sh:targetClass schema:MedicalCondition ;
+    sh:property [
+        sh:path schema:identifier ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path schema:name ;
+        sh:minCount 1 ;
+        sh:datatype rdf:langString ;
+    ] ;
+    sh:property [
+        sh:path schema:sameAs ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "schema:sameAs must include at least one IRI." ;
+    ] ;
+    sh:property [
+        sh:path schema:sameAs ;
+        sh:qualifiedValueShape [
+            sh:nodeKind sh:IRI ;
+            sh:pattern "wikidata\\.org/entity/" ;
+        ] ;
+        sh:qualifiedMinCount 1 ;
+        sh:message "schema:sameAs must include at least one Wikidata entity IRI." ;
+    ] ;
+    sh:property [
+        sh:path schema:sameAs ;
+        sh:qualifiedValueShape [
+            sh:nodeKind sh:IRI ;
+            sh:pattern "dbpedia\\.org/resource/" ;
+        ] ;
+        sh:qualifiedMinCount 1 ;
+        sh:message "schema:sameAs must include at least one DBpedia resource IRI." ;
+    ] .
