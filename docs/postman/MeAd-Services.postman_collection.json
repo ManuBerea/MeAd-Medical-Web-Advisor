@@ -1,0 +1,136 @@
+{
+  "info": {
+    "name": "MeAd Services",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Conditions Service",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{conditionsBaseUrl}}/health",
+              "host": ["{{conditionsBaseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "List Conditions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{conditionsBaseUrl}}/conditions",
+              "host": ["{{conditionsBaseUrl}}"],
+              "path": ["conditions"]
+            }
+          }
+        },
+        {
+          "name": "Get Condition (obesity)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{conditionsBaseUrl}}/conditions/obesity",
+              "host": ["{{conditionsBaseUrl}}"],
+              "path": ["conditions", "obesity"]
+            }
+          }
+        },
+        {
+          "name": "SPARQL Select (conditions)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/sparql-query"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "PREFIX schema: <https://schema.org/>\nSELECT ?identifier ?name WHERE {\n  ?c a schema:MedicalCondition ;\n     schema:identifier ?identifier ;\n     schema:name ?name .\n} LIMIT 5"
+            },
+            "url": {
+              "raw": "{{conditionsBaseUrl}}/sparql",
+              "host": ["{{conditionsBaseUrl}}"],
+              "path": ["sparql"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geography Service",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{geographyBaseUrl}}/health",
+              "host": ["{{geographyBaseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "List Regions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{geographyBaseUrl}}/regions",
+              "host": ["{{geographyBaseUrl}}"],
+              "path": ["regions"]
+            }
+          }
+        },
+        {
+          "name": "Get Region (romania)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{geographyBaseUrl}}/regions/romania",
+              "host": ["{{geographyBaseUrl}}"],
+              "path": ["regions", "romania"]
+            }
+          }
+        },
+        {
+          "name": "SPARQL Select (regions)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/sparql-query"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "PREFIX schema: <https://schema.org/>\nSELECT ?identifier ?name WHERE {\n  ?r a schema:Place ;\n     schema:identifier ?identifier ;\n     schema:name ?name .\n} LIMIT 5"
+            },
+            "url": {
+              "raw": "{{geographyBaseUrl}}/sparql",
+              "host": ["{{geographyBaseUrl}}"],
+              "path": ["sparql"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "conditionsBaseUrl",
+      "value": "http://localhost:8081/mead-conditions-service/api/v1"
+    },
+    {
+      "key": "geographyBaseUrl",
+      "value": "http://localhost:8082/mead-geography-service/api/v1"
+    }
+  ]
+}

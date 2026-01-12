@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="keywords" content="MeAd, Medical Web Advisor, Scholarly HTML, RDF, Linked Data, SPARQL, Wikidata, DBpedia, WikiDoc, REST, schema.org, Apache Jena, Spring Boot, React">
+  <meta name="author" content="Team M&amp;G (MeAd project team)">
+  <meta name="description" content="MeAd Medical Web Advisor - A comprehensive Scholarly HTML technical report describing the architecture, data models, APIs, RDF knowledge models, and integration with external knowledge bases.">
+  <title>MeAd Medical Web Advisor - Scholarly Technical Report</title>
+  <link rel="stylesheet" href="https://w3c.github.io/scholarly-html/css/scholarly.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+</head>
+<body prefix="schema: http://schema.org sa: https://schema.org/">
+  <header>
+    <h1>MeAd – Medical Web Advisor</h1>
+    <p>A Scholarly Technical Report</p>
+  </header>
+
+  <div role="contentinfo">
+    <dl>
+      <dt>Authors</dt>
+      <dd>Team M&amp;G (MeAd project team)</dd>
+      <dt>Repository</dt>
+      <dd><a href="https://github.com/ManuBerea/MeAd-Medical-Web-Advisor">MeAd - Medical Web Advisor</a></dd>
+      <dt>Version</dt>
+      <dd>January 2026</dd>
+      <dt>License</dt>
+      <dd>MIT License</dd>
+    </dl>
+  </div>
+
+  <section aria-label="Table of contents">
+    <h2>Table of Contents</h2>
+    <ul style="list-style: none; padding-left: 0;">
+      <li><a href="#abstract">Abstract</a></li>
+    </ul>
+    <ol>
+      <li><a href="#introduction">Introduction</a>
+        <ol>
+          <li><a href="#system-architecture">System Architecture Overview</a></li>
+          <li><a href="#technology-stack">Technology Stack</a></li>
+        </ol>
+      </li>
+      <li><a href="#internal-data-structures">Internal Data Structures / Models</a>
+        <ol>
+          <li><a href="#overview-data-structures">Overview of Data Structures</a></li>
+          <li><a href="#conditions-service-models">Conditions Service Data Models</a></li>
+          <li><a href="#geography-service-models">Geography Service Data Models</a></li>
+          <li><a href="#rdf-model">RDF Model and Apache Jena Integration</a></li>
+          <li><a href="#vocabulary-taxonomy">Vocabulary and Taxonomy Choices</a></li>
+        </ol>
+      </li>
+      <li><a href="#api-endpoints">Technical API Documentation</a>
+        <ol>
+          <li><a href="#rest-architecture">RESTful API Architecture</a></li>
+          <li><a href="#conditions-api">Conditions Service API</a></li>
+          <li><a href="#geography-api">Geography Service API</a></li>
+        </ol>
+      </li>
+      <li><a href="#rdf-knowledge-model">RDF-Based Knowledge Model</a>
+        <ol>
+          <li><a href="#ontology-design">Ontology Design Decisions</a></li>
+          <li><a href="#knowledge-graph">Knowledge Graph Structure</a></li>
+        </ol>
+      </li>
+      <li><a href="#external-data">External Data Sources and SPARQL Integration</a>
+        <ol>
+          <li><a href="#wikidata-enrichment">Wikidata Knowledge Base Integration</a></li>
+          <li><a href="#dbpedia-enrichment">DBpedia Enrichment Strategies</a></li>
+          <li><a href="#sparql-query-patterns">Non-trivial SPARQL Query Patterns</a></li>
+          <li><a href="#linked-data-principles">Conformance to Linked Data Principles</a></li>
+        </ol>
+      </li>
+      <li><a href="#user-guide">User Guide</a>
+        <ol>
+          <li><a href="#case-study-1">Case Study 1: Exploring a Medical Condition</a></li>
+          <li><a href="#case-study-2">Case Study 2: Exploring Geographic Data</a></li>
+        </ol>
+      </li>
+      <li><a href="#demo-video">Video Demonstration</a></li>
+      <li><a href="#references">References</a></li>
+    </ol>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- ABSTRACT -->
+  <!-- ============================================================ -->
+  <section typeof="sa:Abstract" id="abstract" role="doc-abstract">
+    <h2>Abstract</h2>
+    <p>
+      MeAd (Medical Web Advisor) is a web-based platform designed to provide high-school students
+      with an educational experience exploring medical conditions and understanding how health topics connect
+      to population context in specific geographic regions. The solution combines a React-based single-page application frontend with
+      multiple Spring Boot microservices that provide structured data and enrichment from external knowledge bases.
+    </p>
+    <p>
+      The project implements a comprehensive RDF-based knowledge model using the schema.org vocabulary, with data
+      stored in Apache Jena datasets and exposed via RESTful APIs. The system enriches entities dynamically using
+      SPARQL queries against the Wikidata and DBpedia public endpoints, employing asynchronous parallel fetching
+      with Java's <code>CompletableFuture</code> for optimal performance.
+    </p>
+    <p>
+      The architecture consists of two primary microservices: <strong>mead-conditions-service</strong>
+      managing medical conditions with external knowledge enrichment, and <strong>mead-geography-service</strong>
+      handling geographic locations (continents, countries, cities) with Linked Data connections. Both services expose SPARQL endpoints
+      enabling direct RDF querying, ensuring full compatibility with Linked Data principles.
+    </p>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- INTRODUCTION -->
+  <!-- ============================================================ -->
+  <section id="introduction" role="doc-introduction">
+    <h2>1. Introduction</h2>
+    <p>
+      Medical education for high-school students often lacks interactive, structured exploration tools that
+      connect health conditions to real-world geographic and demographic context. MeAd addresses this gap by
+      providing a multimedia experience that allows students to explore:
+    </p>
+    <ul>
+      <li><strong>Medical conditions</strong> – 51 common diseases, allergies, food intolerances, obesity, and disorders, including detailed information about symptoms, risk factors, and how these conditions affect the human body</li>
+      <li><strong>Geographic context</strong> – 43 geographic locations including continents (Europe, Asia, Africa), countries (Romania, Germany, France, USA, UK, Japan, etc.), and major cities (Bucharest, Berlin, Paris, New York City, Tokyo, etc.) with Linked Data connections to Wikidata and DBpedia</li>
+    </ul>
+    <p>
+      The platform is built around a microservices architecture with the following components:
+    </p>
+
+    <section id="system-architecture">
+      <h3>1.1 System Architecture Overview</h3>
+      <ul>
+        <li><strong>mead-conditions-service</strong> - REST API and RDF repository for medical conditions. Features parallel enrichment from Wikidata and DBpedia, local WikiDoc snippets, and a SPARQL endpoint for direct RDF querying.</li>
+        <li><strong>mead-geography-service</strong> - REST API and RDF repository for 43 geographic locations including continents, countries, and cities. Each location is linked to Wikidata and DBpedia via schema:sameAs properties.</li>
+        <li><strong>mead-ui</strong> - React single-page application with React Router for navigation, featuring condition search/filtering, paginated lists, and rich detail views with image carousels.</li>
+      </ul>
+    </section>
+
+    <section id="technology-stack">
+      <h3>1.2 Technology Stack</h3>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Technology</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Frontend</strong></td>
+            <td>React 18, Vite, React Router</td>
+            <td>Single-page application with component-based UI</td>
+          </tr>
+          <tr>
+            <td><strong>Backend</strong></td>
+            <td>Spring Boot 3.x, Java 17+</td>
+            <td>RESTful microservices with dependency injection</td>
+          </tr>
+          <tr>
+            <td><strong>RDF Storage</strong></td>
+            <td>Apache Jena</td>
+            <td>In-memory RDF dataset with transaction support</td>
+          </tr>
+          <tr>
+            <td><strong>Data Format</strong></td>
+            <td>Turtle (.ttl), JSON-LD compatible</td>
+            <td>RDF serialization and API responses</td>
+          </tr>
+          <tr>
+            <td><strong>External APIs</strong></td>
+            <td>Wikidata SPARQL, DBpedia SPARQL</td>
+            <td>Knowledge enrichment via federated queries</td>
+          </tr>
+          
+        </tbody>
+      </table>
+    </section>
+
+    <p>
+      Each service loads its RDF dataset at startup into an in-memory Apache Jena transactional dataset. The datasets are
+      loaded from Turtle files located under <code>src/main/resources/rdf</code>. For the conditions service, enrichment is performed by
+      contacting Wikidata and DBpedia SPARQL endpoints in parallel, then merging, normalizing, and caching results.
+    </p>
+
+    <h4>High-level Data Flow</h4>
+    <ol>
+      <li>User opens the MeAd UI and browses medical conditions</li>
+      <li>The UI fetches a paginated list of conditions from the conditions microservice via REST API</li>
+      <li>User can search/filter conditions by name or identifier in real-time</li>
+      <li>When a user selects a condition, the service retrieves base RDF data and triggers parallel enrichment</li>
+      <li>SPARQL queries fetch descriptions, symptoms, risk factors, and images from Wikidata and DBpedia (via dbo:symptom, dbo:medicalCause, dbo:abstract)</li>
+      <li>The service merges data, normalizes image URLs (especially Wikimedia Commons paths), deduplicates, and returns cached results</li>
+      <li>The UI renders a rich detail view including image carousel with swipe support, symptoms list, risk factors, WikiDoc clinical summary, and external reference links</li>
+    </ol>
+
+    <!-- <figure>
+      <p><em>[System architecture diagram placeholder. Suggested file: docs/images/system-architecture.png]</em></p>
+      <figcaption>Figure 1. Overview of the MeAd architecture: React UI, conditions service, geography service, and external knowledge bases (Wikidata, DBpedia).</figcaption>
+    </figure> -->
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- INTERNAL DATA STRUCTURES -->
+  <!-- ============================================================ -->
+  <section id="internal-data-structures">
+    <h2>2. Internal Data Structures / Models</h2>
+    <p>
+      The internal data structures define how medical conditions and geographic locations
+      are represented within the application. The core data model is designed to capture essential properties,
+      relationships, and classifications in a structured format that aligns with schema.org vocabulary. Both
+      microservices use Java records for immutable data transfer objects (DTOs) and repository patterns for
+      data access. Each entity includes <code>schema:sameAs</code> links to external knowledge bases (Wikidata and DBpedia)
+      for Linked Data interoperability.
+    </p>
+
+    <section id="overview-data-structures">
+      <h3>2.1 Overview of Data Structures</h3>
+      <p>
+        The primary entities in the system are <strong>MedicalCondition</strong> and <strong>Place</strong>.
+        Each entity is associated with various attributes that describe its properties and external Linked Data links
+        to Wikidata and DBpedia knowledge bases.
+      </p>
+
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr>
+            <th>Entity</th>
+            <th>RDF Type</th>
+            <th>Count</th>
+            <th>Service</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>MedicalCondition</strong></td>
+            <td><code>schema:MedicalCondition</code></td>
+            <td>51 conditions</td>
+            <td>mead-conditions-service</td>
+          </tr>
+          <tr>
+            <td><strong>Place</strong></td>
+            <td><code>schema:Place</code></td>
+            <td>43 locations</td>
+            <td>mead-geography-service</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="conditions-service-models">
+      <h3>2.2 Conditions Service Data Models</h3>
+      <p>The conditions service uses Java records to represent data at different layers:</p>
+
+      <h4>Repository Layer: Condition Record</h4>
+      <pre><code>public record Condition(
+    String identifier,    // Stable slug: "asthma", "type-2-diabetes"
+    String name,          // Display label: "Asthma", "Type 2 diabetes"
+    List&lt;String&gt; sameAs   // External URIs: Wikidata, DBpedia links
+) {}</code></pre>
+
+      <h4>API Layer: ConditionSummary (List View)</h4>
+      <pre><code>public record ConditionSummary(
+    String id,            // Same as identifier
+    String name,          // Human-readable name
+    List&lt;String&gt; sameAs   // External knowledge base links
+) {}</code></pre>
+
+      <h4>API Layer: ConditionDetail (Enriched View)</h4>
+      <pre><code>public record ConditionDetail(
+    String context,       // "https://schema.org/"
+    String id,            // Full URI: "https://mead.example/condition/asthma"
+    String type,          // "MedicalCondition"
+    String identifier,    // Slug identifier
+    String name,          // Display name
+    String description,   // From DBpedia/Wikidata (dbo:abstract, schema:description)
+    List&lt;String&gt; images,  // Normalized image URLs from P18, dbo:thumbnail, foaf:depiction
+    List&lt;String&gt; symptoms,     // From P780 (Wikidata) or dbo:symptom (DBpedia)
+    List&lt;String&gt; riskFactors,  // From P5642 (Wikidata) or dbo:medicalCause (DBpedia)
+    List&lt;String&gt; sameAs,       // External URIs for linked data traversal
+    String wikidocSnippet      // Curated student-friendly summary (50 files)
+) {}</code></pre>
+
+      <h4>Enrichment Records</h4>
+      <pre><code>// From WikidataClient
+public record WikidataEnrichment(
+    String description,
+    List&lt;String&gt; symptoms,
+    List&lt;String&gt; riskFactors,
+    List&lt;String&gt; images
+) {}
+
+// From DbpediaClient
+public record DbpediaEnrichment(
+    String description,
+    List&lt;String&gt; symptoms,
+    List&lt;String&gt; riskFactors,
+    List&lt;String&gt; images
+) {}</code></pre>
+    </section>
+
+    <section id="geography-service-models">
+      <h3>2.3 Geography Service Data Models</h3>
+      <p>
+        The geography service manages 43 geographic locations including continents (Europe, Asia, Africa, 
+        North America, South America, Antarctica), countries (Romania, Germany, France, Spain, Italy, 
+        United States, United Kingdom, Japan, Canada, Australia, China, India, Brazil, Mexico, Egypt, 
+        South Korea), and cities (Bucharest, Berlin, Paris, Madrid, Rome, New York City, London, Tokyo, 
+        and many more).
+      </p>
+
+      <h4>Place Records</h4>
+      <pre><code>// Repository layer
+public record Region(
+    String identifier,           // "romania", "bucharest", "europe"
+    String name,                 // "Romania", "Bucharest", "Europe"
+    List&lt;String&gt; sameAs          // Wikidata/DBpedia URIs for Linked Data
+) {}
+
+// API layer
+public record RegionSummary(String id, String name) {}
+
+public record RegionDetail(
+    String context,              // "https://schema.org/"
+    String id,                   // Full URI: "https://mead.example/region/romania"
+    String type,                 // "Place"
+    String identifier,           // Slug identifier
+    String name,                 // Display name
+    List&lt;String&gt; sameAs          // External URIs for linked data traversal
+) {}</code></pre>
+
+      <h4>Example Places in the Dataset</h4>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Examples</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Continents</strong></td>
+            <td>Europe, Asia, Africa, North America, South America, Antarctica</td>
+            <td>6</td>
+          </tr>
+          <tr>
+            <td><strong>Countries</strong></td>
+            <td>Romania, Germany, France, Spain, Italy, USA, UK, Japan, Canada, Australia, China, India, Brazil, Mexico, Egypt, South Korea</td>
+            <td>16</td>
+          </tr>
+          <tr>
+            <td><strong>Cities</strong></td>
+            <td>Bucharest, Iași, Cluj-Napoca, Timișoara, Brașov, Berlin, Paris, Madrid, Rome, New York City, Washington D.C., London, Tokyo, Ottawa, Canberra, Beijing, New Delhi, Brasília, Mexico City, Cairo, Seoul</td>
+            <td>21</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="rdf-model">
+      <h3>2.4 RDF Model and Apache Jena Integration</h3>
+      <p>
+        Both microservices use <strong>Apache Jena</strong> with in-memory datasets loaded from 
+        <strong>Turtle (.ttl)</strong> files at startup. Data is stored as RDF triples (subject-predicate-object).
+      </p>
+
+      <p><strong>Example (Turtle format):</strong></p>
+      <pre><code>@prefix schema: &lt;https://schema.org/&gt; .
+@prefix condition: &lt;https://mead.example/condition/&gt; .
+
+condition:asthma a schema:MedicalCondition ;
+    schema:identifier "asthma" ;
+    schema:name "Asthma"@en ;
+    schema:sameAs &lt;https://www.wikidata.org/entity/Q35869&gt;, &lt;http://dbpedia.org/resource/Asthma&gt; .</code></pre>
+
+      <p>The conditions service has 51 medical conditions, the geography service has 43 locations - 
+      each with <code>schema:sameAs</code> links to Wikidata and DBpedia.</p>
+    </section>
+
+    <section id="vocabulary-taxonomy">
+      <h3>2.5 Vocabulary and Taxonomy Choices</h3>
+      <p>
+        The ontology is structured around core concepts using <strong>schema.org</strong> vocabulary.
+        This choice ensures interoperability with the broader Semantic Web and Linked Data ecosystem,
+        as schema.org is widely adopted by major search engines and linked data applications.
+      </p>
+
+      <p>
+        In RDF/OWL terminology, <strong>classes</strong> define the <em>type</em> of an entity 
+        (used with <code>rdf:type</code> or <code>a</code> in Turtle syntax), while <strong>properties</strong> 
+        (also called predicates) define <em>relationships</em> or <em>attributes</em> that connect 
+        a subject to a value. 
+      </p>
+
+      <h4>Classes Used</h4>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Class</th><th>URI</th><th>Usage</th><th>Service</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>MedicalCondition</strong></td><td><code>schema:MedicalCondition</code></td><td>Represents diseases, disorders, allergies (51 entities)</td><td>conditions</td></tr>
+          <tr><td><strong>Place</strong></td><td><code>schema:Place</code></td><td>Represents geographic locations - continents, countries, cities (43 entities)</td><td>geography</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Properties Used</h4>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Property</th><th>URI</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>identifier</strong></td><td><code>schema:identifier</code></td><td>Stable slug for API access (e.g., "asthma", "romania", "bucharest")</td></tr>
+          <tr><td><strong>name</strong></td><td><code>schema:name</code></td><td>Human-readable label with language tags (@en)</td></tr>
+          <tr><td><strong>sameAs</strong></td><td><code>schema:sameAs</code></td><td>Links to external knowledge bases (Wikidata, DBpedia URIs)</td></tr>
+        </tbody>
+      </table>
+
+      <h4>External Vocabulary Mappings</h4>
+      <p>When querying external knowledge bases, the system maps to their vocabularies:</p>
+      <table>
+        <thead>
+          <tr><th>Source</th><th>Namespace</th><th>Properties Used</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Wikidata</td><td><code>wdt:</code> (http://www.wikidata.org/prop/direct/)</td><td>P780 (symptoms), P5642 (risk factors), P18 (image)</td></tr>
+          <tr><td>DBpedia Ontology</td><td><code>dbo:</code> (http://dbpedia.org/ontology/)</td><td>symptom, medicalCause, abstract, thumbnail</td></tr>
+          <tr><td>DBpedia Property</td><td><code>dbp:</code> (http://dbpedia.org/property/)</td><td>symptoms, causes, complications, image</td></tr>
+          <tr><td>FOAF</td><td><code>foaf:</code> (http://xmlns.com/foaf/0.1/)</td><td>depiction (images)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- <section id="caching-strategy">
+      <h3>2.6 Caching and Data Loading Strategy</h3>
+      <p>
+        Both services implement a multi-level caching strategy to optimize performance and reduce
+        load on external SPARQL endpoints:
+      </p>
+
+      <h4>Repository Layer Caching</h4>
+      <p>Data is cached at startup in <code>ConcurrentHashMap</code> structures for O(1) lookups:</p>
+      <pre><code>@Component
+public class ConditionsRepository {
+    private final RdfService rdf;
+    private final Map&lt;String, Condition&gt; conditionsMap = new ConcurrentHashMap&lt;&gt;();
+    private volatile List&lt;Condition&gt; cachedConditions = List.of();
+
+    @PostConstruct
+    public void init() {
+        refresh();  // Load from RDF on startup
+    }
+
+    public void refresh() {
+        List&lt;Condition&gt; conditions = fetchAllFromRdf();
+        conditionsMap.clear();
+        for (Condition condition : conditions) {
+            conditionsMap.put(condition.identifier(), condition);
+        }
+        cachedConditions = List.copyOf(conditions);
+    }
+
+    public List&lt;Condition&gt; findAll() { return cachedConditions; }
+    public Optional&lt;Condition&gt; findById(String id) { 
+        return Optional.ofNullable(conditionsMap.get(id)); 
+    }
+}</code></pre>
+
+      <h4>External Enrichment Caching</h4>
+      <p>External SPARQL query results are cached using Spring's <code>@Cacheable</code>:</p>
+      <pre><code>@Configuration
+@EnableCaching
+public class CachingConfig {}
+
+@Component
+public class WikidataClient {
+    @Cacheable("wikidataEnrichment")
+    public WikidataEnrichment enrichFromEntityUri(String wikidataEntityUri) {
+        // Parallel SPARQL queries to Wikidata endpoint...
+    }
+}
+
+@Component  
+public class DbpediaClient {
+    @Cacheable("dbpediaEnrichment")
+    public DbpediaEnrichment enrichFromResourceUri(String dbpediaResourceUri) {
+        // Parallel SPARQL queries to DBpedia endpoint...
+    }
+}</code></pre>
+
+      <h4>Async Parallel Loading</h4>
+      <p>Enrichment queries execute in parallel using <code>CompletableFuture</code> with a custom executor:</p>
+      <pre><code>@Configuration
+public class AsyncConfig {
+    public static final String MEAD_EXECUTOR = "meadExecutor";
+
+    @Bean(MEAD_EXECUTOR)
+    public Executor meadExecutor() {
+        return Executors.newVirtualThreadPerTaskExecutor(); // Java 21+ virtual threads
+    }
+}
+
+// In ConditionService
+CompletableFuture&lt;WikidataEnrichment&gt; wikidataFuture = 
+    CompletableFuture.supplyAsync(() -&gt; wikidata.enrichFromEntityUri(uri));
+CompletableFuture&lt;DbpediaEnrichment&gt; dbpediaFuture = 
+    CompletableFuture.supplyAsync(() -&gt; dbpedia.enrichFromResourceUri(uri));
+CompletableFuture&lt;String&gt; snippetFuture = 
+    CompletableFuture.supplyAsync(() -&gt; wikidoc.loadSnippet(id));
+
+CompletableFuture.allOf(wikidataFuture, dbpediaFuture, snippetFuture).join();</code></pre>
+    </section> -->
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- API ENDPOINTS -->
+  <!-- ============================================================ -->
+  <section id="api-endpoints">
+    <h2>3. Technical API Documentation</h2>
+    <p>
+      The application exposes <strong>Spring Boot</strong>-based RESTful APIs that interact with the underlying
+      RDF datasets. Each microservice provides endpoints to retrieve lists, fetch detailed information, and
+      execute SPARQL queries against the internal knowledge graph.
+    </p>
+
+    <section id="rest-architecture">
+      <h3>3.1 RESTful API Architecture</h3>
+      <p>The APIs follow REST architectural principles:</p>
+      <ul>
+        <li><strong>Resource-oriented URLs</strong> – Collections and individual resources (e.g., <code>/conditions</code>, <code>/conditions/{id}</code>)</li>
+        <li><strong>HTTP Methods</strong> – GET for retrieval, POST for SPARQL queries</li>
+        <li><strong>JSON Responses</strong> – All endpoints return JSON with <code>application/json</code> content type</li>
+        <li><strong>JSON-LD Compatible</strong> – Response objects include <code>context</code>, <code>id</code>, and <code>type</code> fields for semantic web compatibility</li>
+        <li><strong>CORS Enabled</strong> – Cross-origin requests allowed for frontend integration</li>
+      </ul>
+
+    </section>
+
+    <section id="conditions-api">
+      <h3>3.2 Conditions Service API</h3>
+      <p>
+        The Conditions Service provides RESTful access to medical condition data. It serves 
+        both lightweight summaries for listing/search and enriched details that aggregate 
+        data from Wikidata, DBpedia, and local WikiDoc snippets.
+      </p>
+
+      <h4>Endpoints Overview</h4>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Response</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/api/v1/conditions</code></td>
+            <td>List all 50 medical conditions</td>
+            <td><code>ConditionSummary[]</code></td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/api/v1/conditions/{id}</code></td>
+            <td>Get enriched details for a specific condition</td>
+            <td><code>ConditionDetail</code></td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/api/v1/health</code></td>
+            <td>Health check for monitoring</td>
+            <td><code>{"status":"OK"}</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Response Models</h4>
+
+      <h5>ConditionSummary</h5>
+      <p>Lightweight representation used in list responses. Contains only essential identification data:</p>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>string</td><td>URL-safe identifier (slug) for API access</td></tr>
+          <tr><td><code>name</code></td><td>string</td><td>Human-readable condition name</td></tr>
+          <tr><td><code>sameAs</code></td><td>string[]</td><td>Links to Wikidata and DBpedia entities</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Example:</strong></p>
+      <pre><code>GET /mead-conditions-service/api/v1/conditions
+
+[
+  { "id": "asthma", "name": "Asthma", "sameAs": ["https://www.wikidata.org/entity/Q35869", "http://dbpedia.org/resource/Asthma"] },
+  { "id": "type-2-diabetes", "name": "Type 2 diabetes", "sameAs": ["https://www.wikidata.org/entity/Q3025883", "http://dbpedia.org/resource/Type_2_diabetes"] }
+  // ... 48 more conditions
+]</code></pre>
+
+      <h5>ConditionDetail</h5>
+      <p>Full representation with enriched data from external sources. Uses schema.org vocabulary for semantic interoperability:</p>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Field</th><th>Type</th><th>Source</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>context</code></td><td>string</td><td>static</td><td>Schema.org vocabulary reference (https://schema.org/)</td></tr>
+          <tr><td><code>id</code></td><td>string</td><td>local RDF</td><td>Canonical URI for this condition</td></tr>
+          <tr><td><code>type</code></td><td>string</td><td>local RDF</td><td>Always "MedicalCondition"</td></tr>
+          <tr><td><code>identifier</code></td><td>string</td><td>local RDF</td><td>URL-safe slug</td></tr>
+          <tr><td><code>name</code></td><td>string</td><td>local RDF</td><td>Human-readable name</td></tr>
+          <tr><td><code>description</code></td><td>string</td><td>Wikidata/DBpedia</td><td>Long-form description (dbo:abstract or schema:description)</td></tr>
+          <tr><td><code>symptoms</code></td><td>string[]</td><td>Wikidata/DBpedia</td><td>List of associated symptoms</td></tr>
+          <tr><td><code>riskFactors</code></td><td>string[]</td><td>Wikidata/DBpedia</td><td>Contributing risk factors or causes</td></tr>
+          <tr><td><code>images</code></td><td>string[]</td><td>Wikidata/DBpedia</td><td>URLs to relevant images</td></tr>
+          <tr><td><code>sameAs</code></td><td>string[]</td><td>local RDF</td><td>External entity URIs (Linked Data)</td></tr>
+          <tr><td><code>wikidocSnippet</code></td><td>string</td><td>local file</td><td>Student-friendly educational summary</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Example:</strong></p>
+      <pre><code>GET /mead-conditions-service/api/v1/conditions/asthma
+
+{
+  "context": "https://schema.org/",
+  "id": "https://mead.example/condition/asthma",
+  "type": "MedicalCondition",
+  "identifier": "asthma",
+  "name": "Asthma",
+  "description": "long-term disease involving inflamed airways",
+  "images": [
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Asthma.jpg",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Asthma_attack.png"
+  ],
+  "symptoms": ["wheeze", "cough", "inflammation", "chest pain"],
+  "riskFactors": ["air pollution", "smoking"],
+  "sameAs": [
+    "https://www.wikidata.org/entity/Q35869",
+    "http://dbpedia.org/resource/Asthma"
+  ],
+  "wikidocSnippet": "Asthma is a long-term condition that affects the airways..."
+}</code></pre>
+    </section>
+
+    <section id="geography-api">
+      <h3>3.3 Geography Service API</h3>
+      <p>
+        The Geography Service provides RESTful access to geographic location data. It serves 
+        both lightweight summaries for listing and enriched details that aggregate 
+        data from Wikidata, DBpedia, and local WikiDoc snippets.
+      </p>
+
+      <h4>Endpoints Overview</h4>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Response</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/api/v1/regions</code></td>
+            <td>List all 43 geographic locations</td>
+            <td><code>RegionSummary[]</code></td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/api/v1/regions/{id}</code></td>
+            <td>Get enriched details for a specific region</td>
+            <td><code>RegionDetail</code></td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/api/v1/health</code></td>
+            <td>Health check for monitoring</td>
+            <td><code>{"status":"OK"}</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Response Models</h4>
+
+      <h5>RegionSummary</h5>
+      <p>Lightweight representation used in list responses:</p>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>string</td><td>URL-safe identifier (slug) for API access</td></tr>
+          <tr><td><code>name</code></td><td>string</td><td>Human-readable location name</td></tr>
+          <tr><td><code>type</code></td><td>string</td><td>Resolved type from Wikidata (country, city, continent, or Place)</td></tr>
+          <tr><td><code>sameAs</code></td><td>string[]</td><td>Links to Wikidata and DBpedia entities</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Example:</strong></p>
+      <pre><code>GET /mead-geography-service/api/v1/regions
+
+[
+  { "id": "romania", "name": "Romania", "type": "country", "sameAs": ["https://www.wikidata.org/entity/Q218", "http://dbpedia.org/resource/Romania"] },
+  { "id": "bucharest", "name": "Bucharest", "type": "city", "sameAs": ["https://www.wikidata.org/entity/Q19660", "http://dbpedia.org/resource/Bucharest"] },
+  { "id": "europe", "name": "Europe", "type": "continent", "sameAs": ["https://www.wikidata.org/entity/Q46", "http://dbpedia.org/resource/Europe"] }
+  // ... 40 more regions
+]</code></pre>
+
+      <h5>RegionDetail</h5>
+      <p>Full representation with enriched data from external sources:</p>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Field</th><th>Type</th><th>Source</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>context</code></td><td>string</td><td>static</td><td>Schema.org vocabulary reference</td></tr>
+          <tr><td><code>id</code></td><td>string</td><td>local RDF</td><td>Canonical URI for this region</td></tr>
+          <tr><td><code>type</code></td><td>string</td><td>Wikidata</td><td>Resolved type (country, city, continent, or Place)</td></tr>
+          <tr><td><code>identifier</code></td><td>string</td><td>local RDF</td><td>URL-safe slug</td></tr>
+          <tr><td><code>name</code></td><td>string</td><td>local RDF</td><td>Human-readable name</td></tr>
+          <tr><td><code>description</code></td><td>string</td><td>Wikidata/DBpedia</td><td>Long-form description</td></tr>
+          <tr><td><code>populationTotal</code></td><td>string</td><td>Wikidata/DBpedia</td><td>Total population count</td></tr>
+          <tr><td><code>populationDensity</code></td><td>string</td><td>Wikidata/DBpedia</td><td>Population per km² (calculated)</td></tr>
+          <tr><td><code>climates</code></td><td>string[]</td><td>Wikidata/DBpedia</td><td>Climate types (Köppen classification)</td></tr>
+          <tr><td><code>industrialDevelopment</code></td><td>string[]</td><td>Wikidata/DBpedia</td><td>Major industries in the region</td></tr>
+          <tr><td><code>culturalFactors</code></td><td>string[]</td><td>Wikidata/DBpedia</td><td>Languages, demonyms, cultural info</td></tr>
+          <tr><td><code>images</code></td><td>string[]</td><td>Wikidata/DBpedia</td><td>URLs to relevant images</td></tr>
+          <tr><td><code>sameAs</code></td><td>string[]</td><td>local RDF</td><td>External entity URIs (Linked Data)</td></tr>
+          <tr><td><code>wikidocSnippet</code></td><td>string</td><td>local file</td><td>Student-friendly educational summary</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Example:</strong></p>
+      <pre><code>GET /mead-geography-service/api/v1/regions/romania
+
+{
+  "context": "https://schema.org/",
+  "id": "https://mead.example/region/romania",
+  "type": "country",
+  "identifier": "romania",
+  "name": "Romania",
+  "description": "Romania is a country in Southeastern Europe...",
+  "populationTotal": "19053815",
+  "populationDensity": "80.12",
+  "climates": ["humid continental climate", "oceanic climate"],
+  "industrialDevelopment": ["automotive industry", "information technology"],
+  "culturalFactors": ["Romanian", "Romanians"],
+  "images": ["https://commons.wikimedia.org/wiki/Special:FilePath/Romania_location_map.svg"],
+  "sameAs": [
+    "https://www.wikidata.org/entity/Q218",
+    "http://dbpedia.org/resource/Romania"
+  ],
+  "wikidocSnippet": "Romania is a country located in southeastern Europe..."
+}</code></pre>
+
+    </section>
+
+    <!-- <section id="sparql-api">
+      <h3>3.4 SPARQL Endpoint APIs</h3>
+      <p>
+        Both services expose a SPARQL endpoint for querying the internal RDF dataset directly. The endpoint
+        supports SELECT, ASK, CONSTRUCT, and DESCRIBE query types with appropriate response formats.
+      </p>
+
+      <div>
+        <h4><code>POST</code> /api/v1/sparql (Conditions Service)</h4>
+        <p>Executes a SPARQL query against the conditions RDF dataset.</p>
+        <pre><code>POST /mead-conditions-service/api/v1/sparql
+Content-Type: application/sparql-query
+Accept: application/sparql-results+json
+
+PREFIX schema: &lt;https://schema.org/&gt;
+SELECT ?id ?name ?sameAs WHERE {
+  ?c a schema:MedicalCondition ;
+     schema:identifier ?id ;
+     schema:name ?name ;
+     schema:sameAs ?sameAs .
+} LIMIT 10</code></pre>
+        <p>Response (SPARQL Results JSON):</p>
+        <pre><code>{
+  "head": { "vars": ["id", "name", "sameAs"] },
+  "results": {
+    "bindings": [
+      {
+        "id": { "type": "literal", "value": "acne" },
+        "name": { "type": "literal", "value": "Acne", "xml:lang": "en" },
+        "sameAs": { "type": "uri", "value": "https://www.wikidata.org/entity/Q79928" }
+      },
+      {
+        "id": { "type": "literal", "value": "acne" },
+        "name": { "type": "literal", "value": "Acne", "xml:lang": "en" },
+        "sameAs": { "type": "uri", "value": "http://dbpedia.org/resource/Acne" }
+      }
+    ]
+  }
+}</code></pre>
+      </div>
+
+      <div>
+        <h4><code>POST</code> /api/v1/sparql (Geography Service)</h4>
+        <p>Executes a SPARQL query against the geography RDF dataset (43 locations).</p>
+        <pre><code>POST /mead-geography-service/api/v1/sparql
+Content-Type: application/sparql-query
+
+PREFIX schema: &lt;https://schema.org/&gt;
+SELECT ?place ?name ?wikidata ?dbpedia WHERE {
+  ?place a schema:Place ;
+         schema:identifier ?id ;
+         schema:name ?name ;
+         schema:sameAs ?wikidata .
+  FILTER(CONTAINS(STR(?wikidata), "wikidata"))
+  OPTIONAL {
+    ?place schema:sameAs ?dbpedia .
+    FILTER(CONTAINS(STR(?dbpedia), "dbpedia"))
+  }
+} ORDER BY ?name LIMIT 20</code></pre>
+      </div>
+
+      <h4>Supported Query Types and Response Formats</h4>
+      <table>
+        <thead>
+          <tr><th>Query Type</th><th>Response Content-Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>SELECT</td><td><code>application/sparql-results+json</code></td><td>Tabular results in JSON format</td></tr>
+          <tr><td>ASK</td><td><code>application/sparql-results+json</code></td><td>Boolean result: <code>{"head":{},"boolean":true}</code></td></tr>
+          <tr><td>CONSTRUCT</td><td><code>text/turtle</code></td><td>RDF graph in Turtle serialization</td></tr>
+          <tr><td>DESCRIBE</td><td><code>text/turtle</code></td><td>RDF description of resource(s)</td></tr>
+        </tbody>
+      </table>
+    </section> -->
+
+    <!-- <section id="api-security">
+      <h3>3.5 API Security and Constraints</h3>
+      <p>The SPARQL endpoints implement security measures to prevent abuse:</p>
+
+      <blockquote>
+        <strong>SPARQL Security Constraints:</strong>
+        <ul>
+          <li><strong>Maximum query length:</strong> 2000 characters – prevents excessive payloads</li>
+          <li><strong>SELECT LIMIT requirement:</strong> All SELECT queries must include a LIMIT clause – prevents unbounded result sets</li>
+          <li><strong>Query timeout:</strong> 5000 ms – prevents long-running queries from blocking resources</li>
+          <li><strong>Read-only transactions:</strong> All queries execute in Jena read transactions – no modification allowed</li>
+          <li><strong>Error handling:</strong> Parse errors return 400 Bad Request with descriptive messages</li>
+        </ul>
+      </blockquote>
+
+      <h4>Implementation Details</h4>
+      <pre><code>@RestController
+@RequestMapping("/api/v1/sparql")
+public class SparqlController {
+    private static final int MAX_QUERY_LENGTH = 2000;
+    private static final long QUERY_TIMEOUT_MS = 5000;
+    private static final boolean REQUIRE_LIMIT = true;
+
+    @PostMapping(
+        consumes = {"application/sparql-query", "text/plain"},
+        produces = {"application/sparql-results+json", "text/turtle"}
+    )
+    public ResponseEntity&lt;String&gt; sparqlPost(@RequestBody String queryString) {
+        if (queryString != null && queryString.length() > MAX_QUERY_LENGTH) {
+            return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
+                .body("Query too long. Max allowed: " + MAX_QUERY_LENGTH);
+        }
+        return execute(queryString);
+    }
+
+    private ResponseEntity&lt;String&gt; execute(String queryString) {
+        // Parse query, validate LIMIT for SELECT, execute in read transaction
+        return Txn.calculateRead(rdfService.getDataset(), () -> {
+            try (QueryExecution qe = QueryExecution.create()
+                    .dataset(rdfService.getDataset())
+                    .query(query)
+                    .timeout(QUERY_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                    .build()) {
+                // Execute and format response based on query type...
+            }
+        });
+    }
+}</code></pre>
+
+      <h4>CORS Configuration</h4>
+      <p>Both services enable CORS for frontend integration:</p>
+      <pre><code>@Configuration
+public class CorsConfig {
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/api/**")
+                    .allowedOrigins("*")
+                    .allowedMethods("GET", "POST", "OPTIONS")
+                    .allowedHeaders("*");
+            }
+        };
+    }
+}</code></pre>
+    </section> -->
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- RDF-BASED KNOWLEDGE MODEL -->
+  <!-- ============================================================ -->
+  <section id="rdf-knowledge-model">
+    <h2>4. RDF-Based Knowledge Model</h2>
+    <p>
+      This section describes the design decisions, expressiveness, and real-world usage of the RDF-based
+      knowledge models employed by MeAd. The system uses a lightweight yet expressive ontology based on
+      schema.org vocabulary, extended through linked data connections to established knowledge bases.
+    </p>
+
+    <section id="ontology-design">
+      <h3>4.1 Ontology Design Decisions</h3>
+      <p>The knowledge model follows these design principles:</p>
+      <ul>
+        <li><strong>Schema.org as foundation:</strong> Using widely-adopted vocabulary ensures compatibility with search engines and semantic web tools</li>
+        <li><strong>Minimal local vocabulary:</strong> Only introducing custom URIs where schema.org doesn't provide suitable classes</li>
+        <li><strong>Linked Data extensions:</strong> Leveraging <code>schema:sameAs</code> to connect to richer external ontologies</li>
+        <li><strong>Separation of concerns:</strong> Distinct datasets for medical conditions and geographic data</li>
+      </ul>
+
+      <h4>Namespace Definitions</h4>
+      <pre><code>@prefix schema:    &lt;https://schema.org/&gt; .
+@prefix condition: &lt;https://mead.example/condition/&gt; .   # Medical conditions namespace (51 entities)
+@prefix region:    &lt;https://mead.example/region/&gt; .      # Geographic locations namespace (43 entities)
+@prefix xsd:       &lt;http://www.w3.org/2001/XMLSchema#&gt; . # XML Schema datatypes</code></pre>
+
+      <h4>Entity URI Patterns</h4>
+      <table>
+        <thead>
+          <tr><th>Entity Type</th><th>URI Pattern</th><th>Example</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Condition</td><td><code>https://mead.example/condition/{slug}</code></td><td><code>condition:asthma</code> (51 entities)</td></tr>
+          <tr><td>Region/Place</td><td><code>https://mead.example/region/{slug}</code></td><td><code>region:romania</code>, <code>region:bucharest</code> (43 entities)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- <section id="schema-expressiveness">
+      <h3>4.2 Schema Expressiveness and Vocabulary Usage</h3>
+      <p>The model stores minimal core data locally; rich details are fetched dynamically from external sources.</p>
+
+      <p><strong>Medical Conditions:</strong> Each condition has <code>identifier</code>, <code>name</code>, and <code>sameAs</code> links. 
+      Symptoms, risk factors, and images come from Wikidata/DBpedia at runtime.</p>
+      <pre><code>condition:asthma a schema:MedicalCondition ;
+    schema:identifier "asthma" ;
+    schema:name "Asthma"@en ;
+    schema:sameAs &lt;https://www.wikidata.org/entity/Q35869&gt;, &lt;http://dbpedia.org/resource/Asthma&gt; .</code></pre>
+
+      <p><strong>Geographic Locations:</strong> 43 places (continents, countries, cities) with the same structure:</p>
+      <pre><code>region:romania a schema:Place ;
+    schema:identifier "romania" ;
+    schema:name "Romania"@en ;
+    schema:sameAs &lt;https://www.wikidata.org/entity/Q218&gt;, &lt;http://dbpedia.org/resource/Romania&gt; .</code></pre>
+    </section> -->
+
+    <section id="knowledge-graph">
+      <h3>4.2 Knowledge Graph Structure</h3>
+      <p>The system maintains two separate RDF knowledge graphs loaded into Apache Jena datasets:</p>
+
+      <h4>Conditions Knowledge Graph Statistics</h4>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Metric</th><th>Count</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Medical Conditions</strong></td><td>51</td></tr>
+          <tr><td><strong>External Links (sameAs)</strong></td><td>102 (2 per condition: Wikidata + DBpedia)</td></tr>
+          <tr><td><strong>WikiDoc Snippets</strong></td><td>Available for select conditions</td></tr>
+          <tr><td><strong>Approximate Triple Count</strong></td><td>~260 triples</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Geography Knowledge Graph Statistics</h4>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Metric</th><th>Count</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Geographic Locations (Places)</strong></td><td>43</td></tr>
+          <tr><td><strong>Continents</strong></td><td>6</td></tr>
+          <tr><td><strong>Countries</strong></td><td>16</td></tr>
+          <tr><td><strong>Cities</strong></td><td>21</td></tr>
+          <tr><td><strong>External Links (sameAs)</strong></td><td>86 (2 per location: Wikidata + DBpedia)</td></tr>
+          <tr><td><strong>Approximate Triple Count</strong></td><td>~220 triples</td></tr>
+        </tbody>
+      </table>
+
+      <figure>
+        <p><em>[Knowledge graph visualization showing conditions linked to Wikidata/DBpedia. Suggested file: docs/images/knowledge-graph.png]</em></p>
+        <figcaption>Figure 2. Knowledge graph structure showing internal entities and external knowledge base connections.</figcaption>
+      </figure>
+    </section>
+
+    <!-- <section id="internal-sparql-queries">
+      <h3>4.4 Internal SPARQL Queries</h3>
+      <p>The repositories use SPARQL to extract data from the RDF datasets. Here are the key internal queries:</p>
+
+      <h4>Conditions Repository: Fetch All Conditions</h4>
+      <pre><code>PREFIX schema: &lt;https://schema.org/&gt;
+SELECT ?identifier ?name ?sameAs WHERE {
+  ?condition a schema:MedicalCondition ;
+             schema:identifier ?identifier ;
+             schema:name ?name ;
+             schema:sameAs ?sameAs .
+}
+ORDER BY ?identifier</code></pre>
+
+      <h4>Regions Repository: Fetch All Regions with Hierarchy</h4>
+      <pre><code>PREFIX schema: &lt;https://schema.org/&gt;
+SELECT ?identifier ?name ?sameAs ?containedInPlace WHERE {
+  ?region a schema:Place ;
+          schema:identifier ?identifier ;
+          schema:name ?name .
+  OPTIONAL { ?region schema:sameAs ?sameAs . }
+  OPTIONAL { ?region schema:containedInPlace ?containedInPlace . }
+}
+ORDER BY ?identifier</code></pre>
+
+      <h4>Regions Repository: Fetch All Places with External Links</h4>
+      <pre><code>PREFIX schema: &lt;https://schema.org/&gt;
+SELECT ?place ?identifier ?name ?sameAs WHERE {
+  ?place a schema:Place ;
+         schema:identifier ?identifier ;
+         schema:name ?name .
+  OPTIONAL { ?place schema:sameAs ?sameAs . }
+}
+ORDER BY ?identifier</code></pre>
+    </section> -->
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- EXTERNAL DATA SOURCES -->
+  <!-- ============================================================ -->
+  <section id="external-data">
+    <h2>5. External Data Sources and SPARQL Integration</h2>
+    <p>
+      MeAd integrates external data using SPARQL queries against public knowledge bases. The two primary
+      sources are <strong>Wikidata</strong> (structured, multilingual facts) and <strong>DBpedia</strong>
+      (Wikipedia-derived knowledge), with local <strong>WikiDoc</strong> snippets providing curated
+      student-friendly summaries.
+    </p>
+
+    <section id="wikidata-enrichment">
+      <h3>5.1 Wikidata Knowledge Base Integration</h3>
+      <p>
+        The <code>WikidataClient</code> fetches enriched data from Wikidata's SPARQL endpoint.
+        All queries run in parallel using <code>CompletableFuture</code> for optimal performance.
+      </p>
+
+      <h4>Data Retrieved</h4>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Data</th><th>Wikidata Property</th><th>Example (Asthma)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Description</td><td><code>schema:description</code></td><td>"chronic lung disease"</td></tr>
+          <tr><td>Symptoms</td><td><code>wdt:P780</code></td><td>wheezing, coughing, chest tightness</td></tr>
+          <tr><td>Risk Factors</td><td><code>wdt:P5642</code></td><td>allergies, air pollution, smoking</td></tr>
+          <tr><td>Images</td><td><code>wdt:P18</code></td><td>Wikimedia Commons URLs</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Example SPARQL Query (Symptoms)</h4>
+      <pre><code>SELECT DISTINCT ?symptomLabel WHERE {
+  wd:Q35869 wdt:P780 ?symptom .
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+} LIMIT 30</code></pre>
+    </section>
+
+    <section id="dbpedia-enrichment">
+      <h3>5.2 DBpedia Enrichment Strategies</h3>
+      <p>
+        The <code>DbpediaClient</code> fetches Wikipedia-derived data from DBpedia's SPARQL endpoint.
+        It uses fallback chains to maximize data coverage when primary properties are empty.
+      </p>
+
+      <h4>Data Retrieved with Fallback Strategy</h4>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Data</th><th>Primary Source</th><th>Fallback</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Description</td><td><code>dbo:abstract</code></td><td><code>dbo:description</code> → <code>rdfs:comment</code></td></tr>
+          <tr><td>Symptoms</td><td><code>dbo:symptom</code> + <code>rdfs:label</code></td><td><code>dbp:symptoms</code> (literals)</td></tr>
+          <tr><td>Risk Factors</td><td><code>dbo:medicalCause</code></td><td><code>dbp:causes</code> → <code>dbp:complications</code></td></tr>
+          <tr><td>Images</td><td colspan="2">UNION: <code>dbo:thumbnail</code>, <code>foaf:depiction</code>, <code>schema:image</code>, <code>dbp:image</code></td></tr>
+        </tbody>
+      </table>
+
+      <h4>Example SPARQL Query (Images with UNION)</h4>
+      <pre><code>SELECT DISTINCT ?img WHERE {
+  { &lt;http://dbpedia.org/resource/Asthma&gt; dbo:thumbnail ?img . }
+  UNION { &lt;http://dbpedia.org/resource/Asthma&gt; foaf:depiction ?img . }
+  UNION { &lt;http://dbpedia.org/resource/Asthma&gt; schema:image ?img . }
+} LIMIT 10</code></pre>
+    </section>
+
+    <section id="sparql-query-patterns">
+      <h3>5.3 Non-trivial SPARQL Query Patterns</h3>
+      <p>The system uses advanced SPARQL patterns to maximize data coverage from external knowledge bases.</p>
+
+      <h4>Query 1: Wikidata Label Service</h4>
+      <p>Fetches symptoms for a condition using Wikidata's built-in label resolution service:</p>
+      <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1em; border-radius: 6px; overflow-x: auto;"><code style="font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 0.9em;">PREFIX wd: &lt;http://www.wikidata.org/entity/&gt;
+PREFIX wdt: &lt;http://www.wikidata.org/prop/direct/&gt;
+PREFIX wikibase: &lt;http://wikiba.se/ontology#&gt;
+PREFIX bd: &lt;http://www.bigdata.com/rdf#&gt;
+
+SELECT DISTINCT ?symptomLabel WHERE {
+  wd:Q35869 wdt:P780 ?symptom .
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+} LIMIT 30</code></pre>
+      <p><strong>Pattern:</strong> The <code>SERVICE wikibase:label</code> automatically resolves entity URIs to human-readable labels (e.g., Q35869 → "Asthma").</p>
+
+      <h4>Query 2: UNION for Multiple Image Sources (DBpedia)</h4>
+      <p>Combines multiple image predicates to maximize coverage:</p>
+      <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1em; border-radius: 6px; overflow-x: auto;"><code style="font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 0.9em;">PREFIX dbo: &lt;http://dbpedia.org/ontology/&gt;
+PREFIX dbp: &lt;http://dbpedia.org/property/&gt;
+PREFIX foaf: &lt;http://xmlns.com/foaf/0.1/&gt;
+PREFIX schema: &lt;http://schema.org/&gt;
+
+SELECT DISTINCT ?img WHERE {
+  { &lt;http://dbpedia.org/resource/Romania&gt; dbo:thumbnail ?img . }
+  UNION { &lt;http://dbpedia.org/resource/Romania&gt; foaf:depiction ?img . }
+  UNION { &lt;http://dbpedia.org/resource/Romania&gt; schema:image ?img . }
+  UNION { &lt;http://dbpedia.org/resource/Romania&gt; dbp:image ?img . }
+} LIMIT 10</code></pre>
+      <p><strong>Pattern:</strong> <code>UNION</code> combines results from multiple predicates, ensuring images are found regardless of which property DBpedia uses.</p>
+
+      <h4>Query 3: Dereferencing with rdfs:label (DBpedia)</h4>
+      <p>Resolves resource URIs to human-readable labels:</p>
+      <pre style="background: #1e1e1e; color: #d4d4d4; padding: 1em; border-radius: 6px; overflow-x: auto;"><code style="font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 0.9em;">PREFIX dbo: &lt;http://dbpedia.org/ontology/&gt;
+PREFIX rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt;
+
+SELECT DISTINCT ?label WHERE {
+  &lt;http://dbpedia.org/resource/Romania&gt; dbo:officialLanguage ?langResource .
+  ?langResource rdfs:label ?label .
+  FILTER(LANG(?label) = "en")
+} LIMIT 50</code></pre>
+      <p><strong>Pattern:</strong> When a property points to another resource (not a literal), we follow the link and fetch its <code>rdfs:label</code> for a human-readable name.</p>
+    </section>
+
+    <section id="linked-data-principles">
+      <h3>5.4 Conformance to Linked Data Principles</h3>
+      <p>MeAd follows Tim Berners-Lee's four Linked Data principles:</p>
+      <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+          <tr><th>Principle</th><th>Implementation</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>1. URIs as names</strong></td><td>Each entity has a URI: <code>https://mead.example/condition/asthma</code></td></tr>
+          <tr><td><strong>2. HTTP URIs</strong></td><td>All URIs use HTTPS scheme, accessible via REST API</td></tr>
+          <tr><td><strong>3. Standard formats</strong></td><td>RDF/Turtle storage, SPARQL endpoint, schema.org vocabulary</td></tr>
+          <tr><td><strong>4. Links to other URIs</strong></td><td><code>schema:sameAs</code> links to Wikidata and DBpedia for each entity</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- <section id="data-merging">
+      <h3>5.6 Data Merging and Normalization</h3>
+      <p>The <code>ConditionService</code> implements sophisticated data merging strategies:</p>
+
+      <h4>Merging Strategy</h4>
+      <pre><code>// Priority: DBpedia description (more detailed) over Wikidata
+String description = pickFirstNotBlank(
+    dbpediaEnrichment.description(), 
+    wikidataEnrichment.description()
+);
+
+// Priority: Wikidata symptoms (more structured via P780)
+List&lt;String&gt; symptoms = pickFirstNotEmpty(
+    wikidataEnrichment.symptoms(), 
+    dbpediaEnrichment.symptoms()
+);
+
+// Images: Combined from both sources
+List&lt;String&gt; images = combineAndNormalizeImages(
+    wikidataEnrichment.images(), 
+    dbpediaEnrichment.images()
+);</code></pre>
+
+      <h4>Image URL Normalization</h4>
+      <p>The <code>ImageNormalizer</code> class handles various Wikimedia Commons URL formats:</p>
+      <pre><code>public class ImageNormalizer {
+    private static final String COMMONS_PATH = 
+        "https://commons.wikimedia.org/wiki/Special:FilePath/";
+
+    public static String normalizeSingle(String url) {
+        // 1. Strip query params and enforce HTTPS
+        String res = url.trim().split("\\?")[0]
+                       .replace("http://", "https://");
+
+        // 2. Normalize Wikimedia Commons URLs
+        if (res.contains("commons.wikimedia.org")) {
+            String filename = extractFilename(res);
+            if (filename != null) {
+                String clean = URLDecoder.decode(filename, UTF_8)
+                                        .replace(" ", "_");
+                return COMMONS_PATH + URLEncoder.encode(clean, UTF_8)
+                                               .replace("+", "_");
+            }
+        }
+        return res;
+    }
+
+    public static List&lt;String&gt; normalize(List&lt;String&gt; urls) {
+        // Deduplicate using case-insensitive comparison
+        Map&lt;String, String&gt; map = new LinkedHashMap&lt;&gt;();
+        for (String url : urls) {
+            String norm = normalizeSingle(url);
+            if (norm != null && !norm.isBlank()) {
+                map.putIfAbsent(norm.toLowerCase(), norm);
+            }
+        }
+        return new ArrayList&lt;&gt;(map.values());
+    }
+}</code></pre>
+
+      <h4>Comma-Separated Value Parsing</h4>
+      <p>DBpedia property literals often contain comma-separated lists that need parsing:</p>
+      <pre><code>private static List&lt;String&gt; splitCommaList(List&lt;String&gt; rawList) {
+    return rawList.stream()
+        .flatMap(s -> Arrays.stream(s.split(",")))
+        .map(String::trim)
+        .filter(x -> !x.isBlank())
+        .toList();
+}
+
+private static List&lt;String&gt; removeDuplicates(List&lt;String&gt; inputList) {
+    Map&lt;String, String&gt; map = new LinkedHashMap&lt;&gt;();
+    inputList.forEach(s -> map.putIfAbsent(s.toLowerCase(), s));
+    return new ArrayList&lt;&gt;(map.values());
+}</code></pre>
+    </section> -->
+  </section>
+
+
+  <!-- ============================================================ -->
+  <!-- USER GUIDE -->
+  <!-- ============================================================ -->
+  <section id="user-guide">
+    <h2>6. User Guide</h2>
+
+    <section id="use-cases">
+      <h3>Use Cases</h3>
+
+    <section id="case-study-1">
+      <h4>Case Study 1: Exploring a Medical Condition</h4>
+
+      <figure>
+        <img src="images/case1-search.png" alt="Search conditions" style="max-width: 100%; border: 1px solid #ccc;" />
+        <figcaption>
+          <strong>Search:</strong> Users can filter conditions by typing in the search bar. 
+          The list updates instantly, showing matching conditions (e.g., "Anemia", "Iron deficiency anemia").
+          Clicking "View details" opens the condition detail page.
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/case1-detail.png" alt="Condition details" style="max-width: 100%; border: 1px solid #ccc;" />
+        <figcaption>
+          <strong>Detail:</strong> The condition page displays enriched information from Wikidata and DBpedia:
+          image carousel, description, symptoms (e.g., "Headache", "Blurred vision"), and risk factors.
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- <section id="case-study-2">
+      <h3>6.3 Case Study 2: Running Custom SPARQL Queries</h3>
+      <p>
+        <strong>Scenario:</strong> A developer or data analyst wants to directly query the RDF knowledge graph
+        to extract custom data for analysis or integration with other systems.
+      </p>
+
+      <h4>Step 1: Choose a SPARQL Client</h4>
+      <p>You can use any HTTP client to send SPARQL queries:</p>
+      <ul>
+        <li><strong>curl</strong> – Command-line tool (shown below)</li>
+        <li><strong>Postman</strong> – GUI REST client</li>
+        <li><strong>Python</strong> – Using <code>requests</code> or <code>SPARQLWrapper</code></li>
+        <li><strong>Browser</strong> – Direct POST with fetch API</li>
+      </ul>
+
+      <h4>Step 2: Query All Conditions with External Links</h4>
+      <pre><code>curl -X POST "http://localhost:8081/mead-conditions-service/api/v1/sparql" \
+  -H "Content-Type: application/sparql-query" \
+  -H "Accept: application/sparql-results+json" \
+  -d 'PREFIX schema: &lt;https://schema.org/&gt;
+SELECT ?id ?name ?sameAs WHERE {
+  ?c a schema:MedicalCondition ;
+     schema:identifier ?id ;
+     schema:name ?name ;
+     schema:sameAs ?sameAs .
+}
+ORDER BY ?id
+LIMIT 10'</code></pre>
+
+      <h4>Step 3: Analyze the Response</h4>
+      <pre><code>{
+  "head": { "vars": ["id", "name", "sameAs"] },
+  "results": {
+    "bindings": [
+      {
+        "id": { "type": "literal", "value": "acne" },
+        "name": { "type": "literal", "value": "Acne", "xml:lang": "en" },
+        "sameAs": { "type": "uri", "value": "https://www.wikidata.org/entity/Q79928" }
+      },
+      {
+        "id": { "type": "literal", "value": "acne" },
+        "name": { "type": "literal", "value": "Acne", "xml:lang": "en" },
+        "sameAs": { "type": "uri", "value": "http://dbpedia.org/resource/Acne" }
+      },
+      {
+        "id": { "type": "literal", "value": "adhd" },
+        "name": { "type": "literal", "value": "Attention deficit hyperactivity disorder", "xml:lang": "en" },
+        "sameAs": { "type": "uri", "value": "https://www.wikidata.org/entity/Q181923" }
+      }
+    ]
+  }
+}</code></pre>
+
+      <h4>Step 4: Advanced Query - Count Conditions by First Letter</h4>
+      <pre><code>curl -X POST "http://localhost:8081/mead-conditions-service/api/v1/sparql" \
+  -H "Content-Type: application/sparql-query" \
+  -d 'PREFIX schema: &lt;https://schema.org/&gt;
+SELECT ?firstLetter (COUNT(?c) AS ?count) WHERE {
+  ?c a schema:MedicalCondition ;
+     schema:name ?name .
+  BIND(UCASE(SUBSTR(?name, 1, 1)) AS ?firstLetter)
+}
+GROUP BY ?firstLetter
+ORDER BY ?firstLetter
+LIMIT 26'</code></pre>
+
+      <h4>Step 5: Query Geography Service SPARQL</h4>
+      <pre><code>curl -X POST "http://localhost:8082/mead-geography-service/api/v1/sparql" \
+  -H "Content-Type: application/sparql-query" \
+  -d 'PREFIX schema: &lt;https://schema.org/&gt;
+SELECT ?place ?name ?wikidata WHERE {
+  ?place a schema:Place ;
+         schema:name ?name ;
+         schema:sameAs ?wikidata .
+  FILTER(CONTAINS(STR(?wikidata), "wikidata"))
+}
+ORDER BY ?name
+LIMIT 20'</code></pre>
+
+      <figure>
+        <p><em>[Screenshot: SPARQL query execution in Postman showing request and response. Suggested file: docs/images/case2-sparql-query.png]</em></p>
+        <figcaption>Figure 6. SPARQL query execution using Postman with JSON response.</figcaption>
+      </figure> -->
+    </section>
+
+    <section id="case-study-2">
+      <h4>Case Study 2: Exploring Geographic Data</h4>
+
+      <figure>
+        <img src="images/case2-geography-list.png" alt="Geography regions list" style="max-width: 100%; border: 1px solid #ccc;" />
+        <figcaption>
+          <strong>List:</strong> The Geography service provides 43 locations organized by type 
+          (continents, countries, cities). Each location shows its name, type, and Linked Data references.
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/case2-geography-detail.png" alt="Geography region details" style="max-width: 100%; border: 1px solid #ccc;" />
+        <figcaption>
+          <strong>Detail:</strong> Each region displays enriched data from Wikidata: population, 
+          climate types, industries, cultural factors, and images.
+        </figcaption>
+      </figure>
+    </section>
+    </section>
+
+  <!-- ============================================================ -->
+  <!-- DEMO VIDEO -->
+  <!-- ============================================================ -->
+  <section id="demo-video">
+    <h2>7. Video Demonstration</h2>
+    <p>
+      A comprehensive video demonstration showing the MeAd Medical Web Advisor platform in action:
+    </p>
+    <figure>
+      <iframe 
+        width="100%" 
+        height="500"
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        title="MeAd Medical Web Advisor Demo"
+        frameborder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+      </iframe>
+      <figcaption>Video demonstration of the MeAd platform (placeholder - replace with actual demo).</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- CONCLUSION -->
+  <!-- ============================================================ -->
+  <!-- <section id="conclusion">
+    <h2>8. Conclusion and Future Work</h2>
+    <p>
+      MeAd (Medical Web Advisor) demonstrates a practical and scalable approach to combining RDF-based
+      semantic modeling with RESTful APIs and external knowledge bases to create an educational platform
+      for high-school students. The system successfully achieves its core objectives:
+    </p>
+
+    <h3>Key Achievements</h3>
+    <ul>
+      <li><strong>Semantic Web Integration:</strong> Uses schema.org vocabulary with Apache Jena for RDF storage, enabling SPARQL queries and linked data compatibility</li>
+      <li><strong>External Knowledge Enrichment:</strong> Dynamically fetches descriptions, symptoms, risk factors, and images from Wikidata and DBpedia using parallel SPARQL queries</li>
+      <li><strong>Microservices Architecture:</strong> Clean separation between conditions and geography domains with independent services and APIs</li>
+      <li><strong>Comprehensive API:</strong> RESTful endpoints for data access plus SPARQL endpoints for advanced queries</li>
+      <li><strong>User-Friendly Frontend:</strong> React-based SPA with search, pagination, image carousels, and responsive design</li>
+      <li><strong>Linked Data Conformance:</strong> Full adherence to the four Linked Data principles with <code>sameAs</code> links to external knowledge bases</li>
+      <li><strong>Curated Educational Content:</strong> 50 WikiDoc snippets providing student-friendly medical descriptions</li>
+    </ul>
+
+    <h3>Technical Highlights</h3>
+    <table>
+      <thead>
+        <tr><th>Feature</th><th>Implementation</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Medical Conditions</td><td>51 conditions with dual Wikidata/DBpedia links</td></tr>
+        <tr><td>Geographic Locations</td><td>43 places (6 continents, 16 countries, 21 cities) with Linked Data links</td></tr>
+        <tr><td>Parallel Enrichment</td><td>CompletableFuture-based async queries to Wikidata and DBpedia</td></tr>
+        <tr><td>Caching</td><td>Spring @Cacheable + ConcurrentHashMap for performance</td></tr>
+        <tr><td>SPARQL Security</td><td>Query limits, timeouts, LIMIT requirements for SELECT</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Future Work</h3>
+    <ul>
+      <li><strong>Expand Medical Content:</strong> Add treatments, medications, prevalence statistics, and ICD-10 classifications</li>
+      <li><strong>Geographic Coverage:</strong> Add more Romanian regions, European countries, and global regions with health data</li>
+      <li><strong>Geography Explorer UI:</strong> Implement interactive map-based visualization for regional health data</li>
+      <li><strong>AI Chatbot Service:</strong> Implement the mead-ai-service microservice with natural language query processing for interactive student assistance and conversational exploration of medical conditions</li>
+      <li><strong>User Personalization:</strong> Add authentication, learning progress tracking, and personalized recommendations</li>
+      <li><strong>External Data Sources:</strong> Integrate WHO Global Health Observatory, CDC APIs, and Eurostat health data</li>
+      <li><strong>Automated Data Refresh:</strong> Implement scheduled updates from external SPARQL endpoints</li>
+      <li><strong>Multilingual Support:</strong> Extend to Romanian, French, and other languages using Wikidata's multilingual labels</li>
+      <li><strong>Mobile Application:</strong> Develop native mobile apps for iOS and Android</li>
+    </ul>
+
+    <p>
+      The modular architecture and standard-based design ensure that MeAd can evolve to incorporate
+      new data sources, additional features, and expanded coverage while maintaining the semantic web
+      principles that enable interoperability with the broader linked data ecosystem.
+    </p>
+  </section> -->
+
+  <!-- ============================================================ -->
+  <!-- REFERENCES -->
+  <!-- ============================================================ -->
+  <section id="references">
+    <h2>9. References</h2>
+
+
+    <h3>Knowledge Bases</h3>
+    <ul>
+      <li><a href="https://www.wikidata.org/">Wikidata</a> – Free and open knowledge base with structured data</li>
+      <li><a href="https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service">Wikidata Query Service</a> – SPARQL endpoint for Wikidata</li>
+      <li><a href="https://dbpedia.org/">DBpedia</a> – Structured content extracted from Wikipedia</li>
+      <li><a href="https://dbpedia.org/sparql">DBpedia SPARQL Endpoint</a> – Public SPARQL endpoint for DBpedia</li>
+    </ul>
+
+    <h3>Technologies and Frameworks</h3>
+    <ul>
+      <li><a href="https://jena.apache.org/">Apache Jena</a> – Java framework for building Semantic Web applications</li>
+      <li><a href="https://spring.io/projects/spring-boot">Spring Boot</a> – Java-based framework for microservices</li>
+      <li><a href="https://react.dev/">React</a> – JavaScript library for building user interfaces</li>
+      <li><a href="https://vitejs.dev/">Vite</a> – Next-generation frontend build tool</li>
+      <li><a href="https://reactrouter.com/">React Router</a> – Declarative routing for React applications</li>
+      <li><a href="https://gradle.org/">Gradle</a> – Build automation tool for Java projects</li>
+    </ul>
+
+  </section>
+
+</body>
+</html>
