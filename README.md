@@ -51,5 +51,13 @@ Frontend:
 - Conditions service: `./gradlew test`
 - Geography service: `./gradlew test`
 
+## Docker (all services)
+- `docker compose up --build`
+- Frontend: http://localhost:8080
+- Conditions API: http://localhost:8081/mead-conditions-service/api/v1
+- Geography API: http://localhost:8082/mead-geography-service/api/v1
+
+If you deploy to a public host, rebuild the UI image with updated `VITE_CONDITIONS_API_BASE_URL` and `VITE_GEOGRAPHY_API_BASE_URL` in `docker-compose.yml`.
+
 ## Project Wiki
 Public wiki: https://github.com/ManuBerea/MeAd-Medical-Web-Advisor/wiki
