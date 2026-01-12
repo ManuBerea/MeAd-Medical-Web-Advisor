@@ -1,0 +1,7 @@
+tasks.register("test") {
+    dependsOn(":mead-conditions-service:test", ":mead-geography-service:test")
+}
+
+tasks.register("build") {
+    dependsOn(":mead-conditions-service:build", ":mead-geography-service:build")
+}

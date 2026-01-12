@@ -1,0 +1,2 @@
+rootProject.name = "MeAd-Medical-Web-Advisor"
+include("mead-conditions-service", "mead-geography-service")
