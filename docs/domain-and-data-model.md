@@ -20,7 +20,7 @@ Geography dataset:
 - File: `mead-geography-service/src/main/resources/rdf/geography-data.ttl`
 - RDF service: `mead-geography-service/src/main/java/com/mead/geography/rdf/RdfService.java`
 
-### RDF shape (simplified)
+### RDF shape
 ```turtle
 @prefix schema: <https://schema.org/> .
 @prefix condition: <https://mead.example/condition/> .
@@ -71,7 +71,7 @@ Inputs: `sameAs` links from RDF.
 
 - **Wikidata**: description, symptoms, risk factors, images.
 - **DBpedia**: description, symptoms, risk factors, images (fallback when Wikidata is empty).
-- **WikiDoc**: summary paragraph, causes, risk factors; fallback symptoms from the main page when KB symptoms are missing.
+- **WikiDoc**: summary paragraph, causes, risk factors.
 - Risk factors are merged, normalized, and filtered to keep short UI-friendly labels.
 
 Implementation entry point:
@@ -80,12 +80,9 @@ Implementation entry point:
 ## Enrichment pipeline (geography)
 Inputs: `sameAs` links from RDF.
 
-- **Wikidata**: description, population total, area-derived population density, cultural factors (languages, demonyms), images, region type (instance of).
+- **Wikidata**: description, population total, area-derived population density, cultural factors, images, region type.
 - **DBpedia**: description, population total/density (fallback), cultural factors, images.
 - **Wikipedia**: short summary via REST API.
-
-Data quality enforcement:
-- Regions must have **numeric** population total and population density. If values are missing or non-numeric, the region is excluded from the list and rejected on detail requests.
 
 Implementation entry points:
 - `mead-geography-service/src/main/java/com/mead/geography/service/GeographyService.java`
