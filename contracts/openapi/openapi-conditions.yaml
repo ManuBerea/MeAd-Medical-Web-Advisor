@@ -1,0 +1,140 @@
+openapi: 3.0.3
+info:
+  title: MeAd Conditions Service API
+  version: 1.0.0
+  description: REST API for medical conditions enrichment and local SPARQL queries.
+servers:
+  - url: http://localhost:8081/mead-conditions-service
+paths:
+  /api/v1/health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Service status
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /api/v1/conditions:
+    get:
+      summary: List conditions
+      responses:
+        "200":
+          description: Condition summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConditionSummary"
+  /api/v1/conditions/{id}:
+    get:
+      summary: Get condition details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Condition details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConditionDetail"
+        "404":
+          description: Condition not found
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/v1/sparql:
+    post:
+      summary: Run a local SPARQL query
+      requestBody:
+        required: true
+        content:
+          application/sparql-query:
+            schema:
+              type: string
+          text/plain:
+            schema:
+              type: string
+      responses:
+        "200":
+          description: SPARQL result
+          content:
+            application/sparql-results+json:
+              schema:
+                type: string
+            text/turtle:
+              schema:
+                type: string
+        "400":
+          description: Invalid or unsupported query
+          content:
+            text/plain:
+              schema:
+                type: string
+        "413":
+          description: Query too long
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          description: Query execution error
+          content:
+            text/plain:
+              schema:
+                type: string
+components:
+  schemas:
+    ConditionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        sameAs:
+          type: array
+          items:
+            type: string
+    ConditionDetail:
+      type: object
+      properties:
+        context:
+          type: string
+        id:
+          type: string
+        type:
+          type: string
+        identifier:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        symptoms:
+          type: array
+          items:
+            type: string
+        riskFactors:
+          type: array
+          items:
+            type: string
+        sameAs:
+          type: array
+          items:
+            type: string
+        wikidocSnippet:
+          type: string

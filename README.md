@@ -7,5 +7,4 @@ MeAd is an innovative multimedia experience that helps high-school students to l
 ## Modules
 - `mead-conditions-service` – medical conditions microservice
 - `mead-geography-service` – geography & context indicators microservice
-- `mead-ai-service` – AI chatbot microservice
 - `mead-ui` – frontend React application

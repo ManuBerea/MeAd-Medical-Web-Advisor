@@ -1,0 +1,142 @@
+openapi: 3.0.3
+info:
+  title: MeAd Geography Service API
+  version: 1.0.0
+  description: REST API for geographic population insights and local SPARQL queries.
+servers:
+  - url: http://localhost:8082/mead-geography-service
+paths:
+  /api/v1/health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Service status
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /api/v1/regions:
+    get:
+      summary: List regions
+      responses:
+        "200":
+          description: Region summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RegionSummary"
+  /api/v1/regions/{id}:
+    get:
+      summary: Get region details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Region details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegionDetail"
+        "404":
+          description: Region not found
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/v1/sparql:
+    post:
+      summary: Run a local SPARQL query
+      requestBody:
+        required: true
+        content:
+          application/sparql-query:
+            schema:
+              type: string
+          text/plain:
+            schema:
+              type: string
+      responses:
+        "200":
+          description: SPARQL result
+          content:
+            application/sparql-results+json:
+              schema:
+                type: string
+            text/turtle:
+              schema:
+                type: string
+        "400":
+          description: Invalid or unsupported query
+          content:
+            text/plain:
+              schema:
+                type: string
+        "413":
+          description: Query too long
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          description: Query execution error
+          content:
+            text/plain:
+              schema:
+                type: string
+components:
+  schemas:
+    RegionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        sameAs:
+          type: array
+          items:
+            type: string
+    RegionDetail:
+      type: object
+      properties:
+        context:
+          type: string
+        id:
+          type: string
+        type:
+          type: string
+        identifier:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        populationTotal:
+          type: string
+        populationDensity:
+          type: string
+        culturalFactors:
+          type: array
+          items:
+            type: string
+        images:
+          type: array
+          items:
+            type: string
+        sameAs:
+          type: array
+          items:
+            type: string
+        wikipediaSnippet:
+          type: string
