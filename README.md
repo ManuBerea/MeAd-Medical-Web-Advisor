@@ -61,3 +61,6 @@ If you deploy to a public host, rebuild the UI image with updated `VITE_CONDITIO
 
 ## Project Wiki
 Public wiki: https://github.com/ManuBerea/MeAd-Medical-Web-Advisor/wiki
+
+## Deployed application
+URL: https://mead-ui.onrender.com/
