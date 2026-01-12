@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -34,7 +33,6 @@ public class GeographyService {
     private final WikidataClient wikidata;
     private final DbpediaClient dbpedia;
     private final WikipediaSummaryLoader wikipedia;
-    private volatile List<RegionSummary> cachedSummaries = List.of();
 
     public GeographyService(RegionsRepository repo,
                             WikidataClient wikidata,
@@ -47,19 +45,15 @@ public class GeographyService {
     }
 
     public List<RegionSummary> listRegions() {
-        if (!cachedSummaries.isEmpty()) {
-            return cachedSummaries;
-        }
-        List<Region> regions = repo.findAll();
-        List<CompletableFuture<RegionSummary>> futures = regions.stream()
-                .map(this::buildSummaryAsync)
+        return repo.findAll().stream()
+                .filter(this::hasPopulationMetrics)
+                .map(r -> new RegionSummary(
+                        r.identifier(),
+                        r.name(),
+                        resolveRegionType(r.sameAs()),
+                        r.sameAs()
+                ))
                 .toList();
-        List<RegionSummary> summaries = futures.stream()
-                .map(CompletableFuture::join)
-                .filter(Objects::nonNull)
-                .toList();
-        cachedSummaries = summaries;
-        return summaries;
     }
 
     public RegionDetail getRegion(String regionId) {
@@ -166,6 +160,35 @@ public class GeographyService {
         return "Wikipedia summary unavailable.";
     }
 
+    private boolean hasPopulationMetrics(Region region) {
+        String wikidataUri = findUriByMarker(region.sameAs(), WIKIDATA_ENTITY_MARKER);
+        String dbpediaUri = findUriByMarker(region.sameAs(), DBPEDIA_RESOURCE_MARKER);
+
+        try {
+            CompletableFuture<WikidataEnrichment> wikidataFuture = executeAsync(() ->
+                    wikidataUri == null
+                            ? new WikidataEnrichment(null, null, null, List.of(), List.of())
+                            : wikidata.enrichFromEntityUri(wikidataUri)
+            );
+
+            CompletableFuture<DbpediaEnrichment> dbpediaFuture = executeAsync(() ->
+                    dbpediaUri == null
+                            ? new DbpediaEnrichment(null, null, null, List.of(), List.of())
+                            : dbpedia.enrichFromResourceUri(dbpediaUri)
+            );
+
+            CompletableFuture.allOf(wikidataFuture, dbpediaFuture).join();
+
+            WikidataEnrichment wikidataEnrichment = wikidataFuture.join();
+            DbpediaEnrichment dbpediaEnrichment = dbpediaFuture.join();
+            String populationTotal = pickFirstNumeric(wikidataEnrichment.populationTotal(), dbpediaEnrichment.populationTotal());
+            String populationDensity = pickFirstNumeric(dbpediaEnrichment.populationDensity(), wikidataEnrichment.populationDensity());
+            return hasPopulationValues(populationTotal, populationDensity);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private boolean hasPopulationValues(String populationTotal, String populationDensity) {
         return isNumeric(populationTotal) && isNumeric(populationDensity);
     }
@@ -186,46 +209,5 @@ public class GeographyService {
         if (isNumeric(first)) return first;
         if (isNumeric(second)) return second;
         return pickFirstNotBlank(first, second);
-    }
-
-    private CompletableFuture<RegionSummary> buildSummaryAsync(Region region) {
-        String wikidataUri = findUriByMarker(region.sameAs(), WIKIDATA_ENTITY_MARKER);
-        String dbpediaUri = findUriByMarker(region.sameAs(), DBPEDIA_RESOURCE_MARKER);
-
-        CompletableFuture<WikidataEnrichment> wikidataFuture = executeAsync(() ->
-                wikidataUri == null
-                        ? new WikidataEnrichment(null, null, null, List.of(), List.of())
-                        : wikidata.enrichFromEntityUri(wikidataUri)
-        );
-
-        CompletableFuture<DbpediaEnrichment> dbpediaFuture = executeAsync(() ->
-                dbpediaUri == null
-                        ? new DbpediaEnrichment(null, null, null, List.of(), List.of())
-                        : dbpedia.enrichFromResourceUri(dbpediaUri)
-        );
-
-        CompletableFuture<String> typeFuture = executeAsync(() ->
-                wikidataUri == null ? null : wikidata.fetchRegionType(wikidataUri)
-        );
-
-        return CompletableFuture.allOf(wikidataFuture, dbpediaFuture, typeFuture)
-                .thenApply(ignored -> {
-                    WikidataEnrichment wikidataEnrichment = wikidataFuture.join();
-                    DbpediaEnrichment dbpediaEnrichment = dbpediaFuture.join();
-                    String populationTotal = pickFirstNumeric(wikidataEnrichment.populationTotal(), dbpediaEnrichment.populationTotal());
-                    String populationDensity = pickFirstNumeric(dbpediaEnrichment.populationDensity(), wikidataEnrichment.populationDensity());
-                    if (!hasPopulationValues(populationTotal, populationDensity)) {
-                        return null;
-                    }
-                    String type = typeFuture.join();
-                    if (type == null || type.isBlank()) type = PLACE_TYPE;
-                    return new RegionSummary(
-                            region.identifier(),
-                            region.name(),
-                            type,
-                            region.sameAs()
-                    );
-                })
-                .exceptionally(ignored -> null);
     }
 }
