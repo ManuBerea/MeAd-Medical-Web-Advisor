@@ -264,12 +264,12 @@ public class WikidataClient {
     private static boolean containsLabel(List<String> labels, String keyword) {
         return labels.stream()
                 .map(String::toLowerCase)
-                .anyMatch(label -> label.contains(keyword));
+                .anyMatch(label -> label.equals(keyword));
     }
 
     private static boolean containsAnyLabel(List<String> labels, List<String> keywords) {
         return labels.stream()
                 .map(String::toLowerCase)
-                .anyMatch(label -> keywords.stream().anyMatch(label::contains));
+                .anyMatch(label -> keywords.stream().anyMatch(label::equals));
     }
 }
