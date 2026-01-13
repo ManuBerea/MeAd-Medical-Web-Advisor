@@ -1,0 +1,22 @@
+services:
+  mead-conditions-service:
+    build: ./mead-conditions-service
+    ports:
+      - "8081:8080"
+
+  mead-geography-service:
+    build: ./mead-geography-service
+    ports:
+      - "8082:8080"
+
+  mead-ui:
+    build:
+      context: ./mead-ui
+      args:
+        VITE_CONDITIONS_API_BASE_URL: http://localhost:8081/mead-conditions-service
+        VITE_GEOGRAPHY_API_BASE_URL: http://localhost:8082/mead-geography-service
+    ports:
+      - "8080:10000"
+    depends_on:
+      - mead-conditions-service
+      - mead-geography-service
