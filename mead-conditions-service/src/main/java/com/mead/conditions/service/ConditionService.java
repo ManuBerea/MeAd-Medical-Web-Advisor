@@ -9,14 +9,18 @@ import com.mead.conditions.enrich.DbpediaClient;
 import com.mead.conditions.enrich.WikidataClient;
 import com.mead.conditions.enrich.WikidocSnippetLoader;
 import com.mead.conditions.repository.ConditionsRepository.Condition;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 import static com.mead.conditions.enrich.ImageNormalizer.*;
+import static com.mead.conditions.config.AsyncConfig.MEAD_EXECUTOR;
 
 @Service
 public class ConditionService {
@@ -33,15 +37,18 @@ public class ConditionService {
     private final WikidataClient wikidata;
     private final DbpediaClient dbpedia;
     private final WikidocSnippetLoader wikidoc;
+    private final Executor asyncExecutor;
 
     public ConditionService(ConditionsRepository repo,
                             WikidataClient wikidata,
                             DbpediaClient dbpedia,
-                            WikidocSnippetLoader wikidoc) {
+                            WikidocSnippetLoader wikidoc,
+                            @Qualifier(MEAD_EXECUTOR) Executor asyncExecutor) {
         this.repo = repo;
         this.wikidata = wikidata;
         this.dbpedia = dbpedia;
         this.wikidoc = wikidoc;
+        this.asyncExecutor = asyncExecutor;
     }
 
     public List<ConditionSummary> list() {
@@ -50,6 +57,7 @@ public class ConditionService {
                 .toList();
     }
 
+    @Cacheable(cacheNames = "conditionDetails", key = "#conditionId")
     public ConditionDetail get(String conditionId) {
         Condition condition = repo.findById(conditionId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown condition: " + conditionId));
@@ -124,8 +132,8 @@ public class ConditionService {
         );
     }
 
-    private static <T> CompletableFuture<T> executeAsync(Supplier<T> supplier) {
-        return CompletableFuture.supplyAsync(supplier);
+    private <T> CompletableFuture<T> executeAsync(Supplier<T> supplier) {
+        return CompletableFuture.supplyAsync(supplier, asyncExecutor);
     }
 
     private static String findUriByMarker(List<String> sameAsList, String marker) {

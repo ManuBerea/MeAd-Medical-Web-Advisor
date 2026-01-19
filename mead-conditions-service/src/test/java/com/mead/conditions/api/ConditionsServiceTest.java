@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -25,6 +26,7 @@ class ConditionServiceTest {
     private DbpediaClient dbpedia;
     private WikidocSnippetLoader wikidoc;
     private ConditionService service;
+    private Executor executor;
 
     @BeforeEach
     void setUp() {
@@ -32,7 +34,8 @@ class ConditionServiceTest {
         wikidata = mock(WikidataClient.class);
         dbpedia = mock(DbpediaClient.class);
         wikidoc = mock(WikidocSnippetLoader.class);
-        service = new ConditionService(repo, wikidata, dbpedia, wikidoc);
+        executor = runnable -> runnable.run();
+        service = new ConditionService(repo, wikidata, dbpedia, wikidoc, executor);
     }
 
     @Test

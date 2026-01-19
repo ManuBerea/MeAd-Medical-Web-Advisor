@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,6 +27,7 @@ class GeographyServiceTest {
     private DbpediaClient dbpedia;
     private WikipediaSummaryLoader wikipedia;
     private GeographyService service;
+    private Executor executor;
 
     @BeforeEach
     void setUp() {
@@ -33,7 +35,8 @@ class GeographyServiceTest {
         wikidata = mock(WikidataClient.class);
         dbpedia = mock(DbpediaClient.class);
         wikipedia = mock(WikipediaSummaryLoader.class);
-        service = new GeographyService(repo, wikidata, dbpedia, wikipedia);
+        executor = runnable -> runnable.run();
+        service = new GeographyService(repo, wikidata, dbpedia, wikipedia, executor);
     }
 
     @Test
@@ -41,6 +44,7 @@ class GeographyServiceTest {
         Region region = new Region(
                 "germany",
                 "Germany",
+                "Country",
                 List.of("http://dbpedia.org/resource/Germany", "https://www.wikidata.org/entity/Q183")
         );
         when(repo.findById("germany")).thenReturn(Optional.of(region));
@@ -69,6 +73,7 @@ class GeographyServiceTest {
         Region region = new Region(
                 "france",
                 "France",
+                "Country",
                 List.of("http://dbpedia.org/resource/France", "https://www.wikidata.org/entity/Q142")
         );
         when(repo.findById("france")).thenReturn(Optional.of(region));
@@ -98,6 +103,7 @@ class GeographyServiceTest {
         Region region = new Region(
                 "berlin",
                 "Berlin",
+                "City",
                 List.of("http://dbpedia.org/resource/Berlin")
         );
 
@@ -118,31 +124,52 @@ class GeographyServiceTest {
     }
 
     @Test
+    void missingPopulationMetrics_returnsDetailWithNulls() {
+        Region region = new Region(
+                "unknown",
+                "Unknown",
+                "City",
+                List.of("http://dbpedia.org/resource/Unknown", "https://www.wikidata.org/entity/Q0")
+        );
+        when(repo.findById("unknown")).thenReturn(Optional.of(region));
+
+        when(wikidata.enrichFromEntityUri("https://www.wikidata.org/entity/Q0"))
+                .thenReturn(new WikidataClient.WikidataEnrichment(
+                        "wd desc", null, null,
+                        List.of(), List.of()
+                ));
+
+        when(dbpedia.enrichFromResourceUri("http://dbpedia.org/resource/Unknown"))
+                .thenReturn(new DbpediaEnrichment(
+                        "db desc", null, null,
+                        List.of(), List.of()
+                ));
+
+        when(wikipedia.loadSummary("unknown", "Unknown")).thenReturn("snippet");
+
+        RegionDetail detail = service.getRegion("unknown");
+
+        assertThat(detail.populationTotal()).isNull();
+        assertThat(detail.populationDensity()).isNull();
+    }
+
+    @Test
     void list_returnsSummaries() {
         when(repo.findAll()).thenReturn(List.of(
                 new Region(
                         "europe",
                         "Europe",
+                        "Continent",
                         List.of("http://dbpedia.org/resource/Europe", "https://www.wikidata.org/entity/Q46")
                 )
         ));
-        when(wikidata.fetchRegionType("https://www.wikidata.org/entity/Q46"))
-                .thenReturn("Continent");
-        when(wikidata.enrichFromEntityUri("https://www.wikidata.org/entity/Q46"))
-                .thenReturn(new WikidataClient.WikidataEnrichment(
-                        "desc", "100", "5.0", List.of(), List.of()
-                ));
-        when(dbpedia.enrichFromResourceUri("http://dbpedia.org/resource/Europe"))
-                .thenReturn(new DbpediaEnrichment(
-                        "desc", "100", "5.0", List.of(), List.of()
-                ));
-
         List<RegionSummary> regionsList = service.listRegions();
 
         assertThat(regionsList).hasSize(1);
         assertThat(regionsList.get(0).id()).isEqualTo("europe");
         assertThat(regionsList.get(0).type()).isEqualTo("Continent");
         assertThat(regionsList.get(0).sameAs()).hasSize(2);
+        verifyNoInteractions(wikidata, dbpedia);
     }
 
     @Test

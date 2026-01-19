@@ -42,6 +42,7 @@ public class RegionsRepository {
     public record Region(
             String identifier,
             String name,
+            String type,
             List<String> sameAs
     ) {}
 
@@ -56,11 +57,12 @@ public class RegionsRepository {
     private List<Region> fetchAllFromRdf() {
         String sparqlQuery = """
                 PREFIX schema: <https://schema.org/>
-                SELECT ?identifier ?name ?sameAs WHERE {
+                SELECT ?identifier ?name ?type ?sameAs WHERE {
                   ?region a schema:Place ;
                           schema:identifier ?identifier ;
                           schema:name ?name ;
                           schema:sameAs ?sameAs .
+                  OPTIONAL { ?region schema:additionalType ?type . }
                 }
                 ORDER BY ?identifier
                 """;
@@ -75,9 +77,11 @@ public class RegionsRepository {
                     String id = row.getLiteral("identifier").getString();
                     String name = row.getLiteral("name").getString();
                     String sameAs = readNodeValue(row.get("sameAs"));
+                    String type = row.contains("type") ? readNodeValue(row.get("type")) : null;
 
                     builders.computeIfAbsent(id, key -> new RegionBuilder(id, name))
-                            .addSameAs(sameAs);
+                            .addSameAs(sameAs)
+                            .type(type);
                 }
             }
 
@@ -97,6 +101,7 @@ public class RegionsRepository {
     private static class RegionBuilder {
         private final String id;
         private final String name;
+        private String type;
         private final List<String> sameAs = new ArrayList<>();
 
         private RegionBuilder(String id, String name) {
@@ -109,10 +114,18 @@ public class RegionsRepository {
             return this;
         }
 
+        RegionBuilder type(String typeValue) {
+            if (typeValue != null && !typeValue.isBlank()) {
+                this.type = typeValue.trim();
+            }
+            return this;
+        }
+
         Region build() {
             return new Region(
                     id,
                     name,
+                    type,
                     List.copyOf(sameAs)
             );
         }

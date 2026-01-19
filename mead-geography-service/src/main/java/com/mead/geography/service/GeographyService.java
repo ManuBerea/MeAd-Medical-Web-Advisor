@@ -10,14 +10,20 @@ import com.mead.geography.enrich.WikidataClient.WikidataEnrichment;
 import com.mead.geography.enrich.WikipediaSummaryLoader;
 import com.mead.geography.repository.RegionsRepository;
 import com.mead.geography.repository.RegionsRepository.Region;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Supplier;
+
+import static com.mead.geography.config.AsyncConfig.MEAD_EXECUTOR;
 
 @Service
 public class GeographyService {
@@ -33,29 +39,32 @@ public class GeographyService {
     private final WikidataClient wikidata;
     private final DbpediaClient dbpedia;
     private final WikipediaSummaryLoader wikipedia;
+    private final Executor asyncExecutor;
 
     public GeographyService(RegionsRepository repo,
                             WikidataClient wikidata,
                             DbpediaClient dbpedia,
-                            WikipediaSummaryLoader wikipedia) {
+                            WikipediaSummaryLoader wikipedia,
+                            @Qualifier(MEAD_EXECUTOR) Executor asyncExecutor) {
         this.repo = repo;
         this.wikidata = wikidata;
         this.dbpedia = dbpedia;
         this.wikipedia = wikipedia;
+        this.asyncExecutor = asyncExecutor;
     }
 
     public List<RegionSummary> listRegions() {
-        return repo.findAll().stream()
-                .filter(this::hasPopulationMetrics)
-                .map(r -> new RegionSummary(
-                        r.identifier(),
-                        r.name(),
-                        resolveRegionType(r.sameAs()),
-                        r.sameAs()
-                ))
+        List<CompletableFuture<RegionSummary>> summaries = repo.findAll().stream()
+                .map(region -> CompletableFuture.supplyAsync(() -> toSummaryIfEligible(region), asyncExecutor))
+                .toList();
+
+        return summaries.stream()
+                .map(CompletableFuture::join)
+                .filter(Objects::nonNull)
                 .toList();
     }
 
+    @Cacheable(cacheNames = "regionDetails", key = "#regionId")
     public RegionDetail getRegion(String regionId) {
         Region region = repo.findById(regionId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown region: " + regionId));
@@ -88,16 +97,12 @@ public class GeographyService {
         List<String> cultural = mergeUnique(dbpediaEnrichment.culturalFactors(), wikidataEnrichment.culturalFactors());
         List<String> images = combineAndNormalizeImages(wikidataEnrichment.images(), dbpediaEnrichment.images());
 
-        if (!hasPopulationValues(populationTotal, populationDensity)) {
-            throw new IllegalArgumentException("Missing population data for region: " + regionId);
-        }
-
         String wikipediaSnippet = fallbackSnippet(summaryFuture.join());
 
         return new RegionDetail(
                 SCHEMA_ORG_CONTEXT,
                 MEAD_REGION_BASE_URL + region.identifier(),
-                resolveRegionType(region.sameAs()),
+                resolveRegionType(region.type(), region.sameAs()),
                 region.identifier(),
                 region.name(),
                 description,
@@ -110,8 +115,8 @@ public class GeographyService {
         );
     }
 
-    private static <T> CompletableFuture<T> executeAsync(Supplier<T> supplier) {
-        return CompletableFuture.supplyAsync(supplier);
+    private <T> CompletableFuture<T> executeAsync(Supplier<T> supplier) {
+        return CompletableFuture.supplyAsync(supplier, asyncExecutor);
     }
 
     private static String findUriByMarker(List<String> sameAsList, String marker) {
@@ -121,7 +126,10 @@ public class GeographyService {
                 .orElse(null);
     }
 
-    private String resolveRegionType(List<String> sameAsList) {
+    private String resolveRegionType(String preferredType, List<String> sameAsList) {
+        if (preferredType != null && !preferredType.isBlank()) {
+            return preferredType;
+        }
         String wikidataUri = findUriByMarker(sameAsList, WIKIDATA_ENTITY_MARKER);
         String type = wikidataUri == null ? null : wikidata.fetchRegionType(wikidataUri);
         return type == null ? PLACE_TYPE : type;
@@ -160,39 +168,6 @@ public class GeographyService {
         return "Wikipedia summary unavailable.";
     }
 
-    private boolean hasPopulationMetrics(Region region) {
-        String wikidataUri = findUriByMarker(region.sameAs(), WIKIDATA_ENTITY_MARKER);
-        String dbpediaUri = findUriByMarker(region.sameAs(), DBPEDIA_RESOURCE_MARKER);
-
-        try {
-            CompletableFuture<WikidataEnrichment> wikidataFuture = executeAsync(() ->
-                    wikidataUri == null
-                            ? new WikidataEnrichment(null, null, null, List.of(), List.of())
-                            : wikidata.enrichFromEntityUri(wikidataUri)
-            );
-
-            CompletableFuture<DbpediaEnrichment> dbpediaFuture = executeAsync(() ->
-                    dbpediaUri == null
-                            ? new DbpediaEnrichment(null, null, null, List.of(), List.of())
-                            : dbpedia.enrichFromResourceUri(dbpediaUri)
-            );
-
-            CompletableFuture.allOf(wikidataFuture, dbpediaFuture).join();
-
-            WikidataEnrichment wikidataEnrichment = wikidataFuture.join();
-            DbpediaEnrichment dbpediaEnrichment = dbpediaFuture.join();
-            String populationTotal = pickFirstNumeric(wikidataEnrichment.populationTotal(), dbpediaEnrichment.populationTotal());
-            String populationDensity = pickFirstNumeric(dbpediaEnrichment.populationDensity(), wikidataEnrichment.populationDensity());
-            return hasPopulationValues(populationTotal, populationDensity);
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private boolean hasPopulationValues(String populationTotal, String populationDensity) {
-        return isNumeric(populationTotal) && isNumeric(populationDensity);
-    }
-
     private boolean isNumeric(String value) {
         if (value == null) return false;
         String normalized = value.replace(",", "").trim();
@@ -210,4 +185,17 @@ public class GeographyService {
         if (isNumeric(second)) return second;
         return pickFirstNotBlank(first, second);
     }
+
+    private RegionSummary toSummaryIfEligible(Region region) {
+        if (region.type() == null || region.type().isBlank()) {
+            return null;
+        }
+        return new RegionSummary(
+            region.identifier(),
+            region.name(),
+            resolveRegionType(region.type(), region.sameAs()),
+            region.sameAs()
+        );
+    }
+
 }

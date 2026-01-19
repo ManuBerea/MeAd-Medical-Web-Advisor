@@ -18,7 +18,7 @@ const REGION_TYPE_KEYS = {
 };
 
 const REGION_TYPES = [
-    { key: REGION_TYPE_KEYS.all, label: "All regions" },
+    { key: REGION_TYPE_KEYS.all, label: "All locations" },
     { key: REGION_TYPE_KEYS.city, label: "Cities" },
     { key: REGION_TYPE_KEYS.country, label: "Countries" },
     { key: REGION_TYPE_KEYS.continent, label: "Continents" },
@@ -229,7 +229,7 @@ export default function GeographyPage() {
             <div className="hero">
                 <div className="hero-copy">
                     <p className="eyebrow">Geography explorer</p>
-                    <h1 className="hero-title">Population insights by region</h1>
+                    <h1 className="hero-title">Population insights</h1>
                     <p className="hero-subtitle">
                         Explore population density and cultural factors using linked open data.
                     </p>
@@ -238,22 +238,22 @@ export default function GeographyPage() {
 
             <div className="search-panel">
                 <div>
-                    <h2>Search regions</h2>
+                    <h2>Search locations</h2>
                     <p className="muted">Filter by name or id.</p>
                 </div>
                 <div className="search-field">
                     <input
-                        id="region-search"
+                        id="location-search"
                         className="search-input"
                         type="search"
-                        placeholder="Start typing a region..."
+                        placeholder="Start typing a location..."
                         value={searchQuery}
                         onChange={handleSearchChange}
                     />
                 </div>
                 <div className="filter-row">
                     <span className="filter-label">Filter by type:</span>
-                    <div className="filter-chips" role="group" aria-label="Filter regions by type">
+                    <div className="filter-chips" role="group" aria-label="Filter locations by type">
                         {REGION_TYPES.map((type) => (
                             <button
                                 key={type.key}
@@ -269,18 +269,18 @@ export default function GeographyPage() {
                 </div>
             </div>
 
-            {isListLoading && <p className="status">Loading regions...</p>}
+            {isListLoading && <p className="status">Loading locations...</p>}
             {listError && <p className="status error">Error: {listError}</p>}
 
             {!isListLoading && !listError && (
                 <div className="split-layout">
                     <div className="list-column">
                         <div className="section-head">
-                            <h2>Region list</h2>
+                            <h2>Location list</h2>
                         </div>
 
                         {filteredRegions.length === 0 ? (
-                            <p className="status">No regions match your search.</p>
+                            <p className="status">No locations match your search.</p>
                         ) : (
                             <>
                                 <div className="list-panel" ref={listPanelRef}>
@@ -336,12 +336,12 @@ export default function GeographyPage() {
 
                     <div className="detail-column">
                         <div className="section-head">
-                            <h2>Region details</h2>
+                            <h2>Location details</h2>
                         </div>
-                        {isDetailLoading && <p className="status">Loading region details...</p>}
+                        {isDetailLoading && <p className="status">Loading location details...</p>}
                         {detailError && <p className="status error">Error: {detailError}</p>}
                         {!isDetailLoading && !detailError && !regionDetail && filteredRegions.length > 0 && (
-                            <p className="status">Select a region to see details.</p>
+                            <p className="status">Select a location to see details.</p>
                         )}
 
                         {!isDetailLoading && !detailError && regionDetail && (
@@ -354,7 +354,7 @@ export default function GeographyPage() {
                             >
                                 <header className="detail-header single">
                                     <div className="title-group">
-                                        <p className="eyebrow">Geographic region</p>
+                                        <p className="eyebrow">Geographic location</p>
                                         <h1 property="name">{regionDetail.name}</h1>
                                         <p className="muted">ID: {regionDetail.identifier}</p>
                                     </div>

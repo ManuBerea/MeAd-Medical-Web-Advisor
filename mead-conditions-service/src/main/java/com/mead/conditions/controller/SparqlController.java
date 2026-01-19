@@ -45,7 +45,12 @@ public class SparqlController {
             produces = {APPLICATION_SPARQL_RESULTS_JSON, TEXT_TURTLE}
     )
     public ResponseEntity<String> sparqlPost(@RequestBody String queryString) {
-        if (queryString != null && queryString.length() > MAX_QUERY_LENGTH) {
+        if (queryString == null || queryString.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body("SPARQL query body is required.");
+        }
+        if (queryString.length() > MAX_QUERY_LENGTH) {
             return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
                     .body("Query too long. Max allowed: " + MAX_QUERY_LENGTH);
         }
@@ -82,7 +87,7 @@ public class SparqlController {
                     ResultSetFormatter.outputAsJSON(outputStream, resultSet);
                     return ResponseEntity.ok()
                             .contentType(MediaType.valueOf(APPLICATION_SPARQL_RESULTS_JSON))
-                            .body(outputStream.toString(StandardCharsets.UTF_8));
+                            .body(new String(outputStream.toByteArray(), StandardCharsets.UTF_8));
                 }
 
                 if (query.isAskType()) {
@@ -101,7 +106,7 @@ public class SparqlController {
                     RDFDataMgr.write(outputStream, model, Lang.TURTLE);
                     return ResponseEntity.ok()
                             .contentType(MediaType.valueOf(TEXT_TURTLE))
-                            .body(outputStream.toString(StandardCharsets.UTF_8));
+                            .body(new String(outputStream.toByteArray(), StandardCharsets.UTF_8));
                 }
 
                 if (query.isDescribeType()) {
@@ -110,7 +115,7 @@ public class SparqlController {
                     RDFDataMgr.write(outputStream, model, Lang.TURTLE);
                     return ResponseEntity.ok()
                             .contentType(MediaType.valueOf(TEXT_TURTLE))
-                            .body(outputStream.toString(StandardCharsets.UTF_8));
+                            .body(new String(outputStream.toByteArray(), StandardCharsets.UTF_8));
                 }
 
                 return ResponseEntity.badRequest()
