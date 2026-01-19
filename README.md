@@ -64,3 +64,6 @@ Public wiki: https://github.com/ManuBerea/MeAd-Medical-Web-Advisor/wiki
 
 ## Deployed application
 URL: https://mead-ui.onrender.com/
+
+## Scholarly report
+URL: https://manuberea.github.io/mead-scholarly-report/scholarly-report.html
